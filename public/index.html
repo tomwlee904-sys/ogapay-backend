@@ -317,7 +317,7 @@ button{font:inherit}
 .path-card svg{margin-left:auto;color:var(--text3);width:18px;height:18px}
 
 /* Ã¢â€â‚¬Ã¢â€â‚¬ jobs Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
-.jobs-wrap{padding:44px 0 34px;overflow:hidden;background:linear-gradient(180deg,#fff 0%,#f7fbff 100%)}
+.jobs-wrap{padding:44px 0 34px;overflow:hidden;background:linear-gradient(180deg,#fff 0%,#f7fbff 100%)}.job-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-top:24px}
 [data-theme="dark"] .jobs-wrap{background:#05070b}
 .jobs-track{margin-top:24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:stretch;grid-auto-rows:1fr}
 .job-card{
@@ -325,7 +325,7 @@ button{font:inherit}
   border:1.5px solid var(--border);border-radius:var(--radius);
   background:var(--card);overflow:hidden;
   box-shadow:var(--shadow-soft);text-align:left;
-  display:flex;flex-direction:column;height:100%;min-height:430px;
+  display:flex;flex-direction:column;min-height:auto;
   transition:border-color .28s cubic-bezier(.4,0,.2,1),box-shadow .28s cubic-bezier(.4,0,.2,1),transform .28s cubic-bezier(.4,0,.2,1),opacity .28s ease;
 }
 [data-theme="dark"] .job-card{background:#080b13;border-color:#252b36;box-shadow:0 12px 30px rgba(0,0,0,.28)}
@@ -547,7 +547,7 @@ footer{
 }
 @media(max-width:760px){
   :root{--nav-h:72px}
-  body{padding-bottom:92px;background:var(--card)}
+  body{padding-bottom:92px;background:var(--card).section{padding:48px 0}.stats-row{padding:0}.path-section{padding:48px 0}.earn-section{padding:48px 0}.info-section{padding:48px 0}.testimonials-section{padding:48px 0}.footer-new{padding:40px 0 0}}
   [data-theme="dark"] body{background:#05070b}
   .container{width:100%;padding:0 24px}
   .nav{box-shadow:0 10px 28px rgba(16,21,37,.04)}
@@ -777,7 +777,8 @@ body.auth-open{overflow:hidden}
 [data-theme="dark"] .oga-drawer-close{background:#111725;border-color:#2d384d;color:#cbd5e1}
 .oga-drawer-nav{padding:12px 10px 18px;overflow-y:auto;flex:1}
 .oga-drawer-section{margin-bottom:6px}
-.oga-drawer-item{width:100%;min-height:74px;display:flex;align-items:center;gap:14px;padding:12px 12px;border:0;border-radius:14px;background:transparent;color:inherit;text-align:left;text-decoration:none;cursor:pointer;font:inherit}
+.oga-drawer-item{width:100%;min-height:74px;display:flex;align-items:center;gap:14px;padding:12px 12px;border:0;border-radius:14px;background:transparent;color:inherit;text-align:left;text-decoration:none;cursor:pointer;font:inherit
+}
 /* ── New section styles ── */
 /* Dot matrix LED numbers */
 .dot-matrix{position:absolute;right:18px;top:8px;display:grid;grid-template-columns:repeat(5,6px);gap:3px;opacity:.15}.dot-matrix .dot{width:6px;height:6px;border-radius:50%;background:var(--text)}.dot-matrix .dot.on{background:var(--accent);box-shadow:0 0 6px var(--accent)}.dot-matrix .dot.off{opacity:.08}
@@ -1105,7 +1106,7 @@ body.auth-open{overflow:hidden}
           <span class="qb-badge">NEW</span>
         </div>
         <div class="qb-title">X Raid</div>
-        <div class="qb-price">$x.com post engagement • $x500</div>
+        <div class="qb-price">$x.com post engagement • ₦500</div>
       </div>
       <div class="qb-card">
         <div class="qb-top"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M8 12h8M12 8v8"/></svg></div>
@@ -1120,7 +1121,7 @@ body.auth-open{overflow:hidden}
       <div class="qb-card">
         <div class="qb-top"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg></div>
         <div class="qb-title">More options</div>
-        <div class="qb-price">Custom • from $x500</div>
+        <div class="qb-price">Custom • from ₦500</div>
       </div>
     </div>
   </div>
@@ -1136,7 +1137,7 @@ body.auth-open{overflow:hidden}
         <span class="job-tag social">Social</span>
         <h3>X (Twitter) Raid</h3>
         <p>Like, retweet, and comment on a brand post. Submit your profile link as proof.</p>
-        <div class="job-meta"><span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v3"/><path d="M12 20v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M1 12h3"/><path d="M20 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/></svg>200 slots left</span><span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v3"/><path d="M12 20v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M1 12h3"/><path d="M20 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/></svg>$x500</span></div>
+        <div class="job-meta"><span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v3"/><path d="M12 20v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M1 12h3"/><path d="M20 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/></svg>200 slots left</span><span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v3"/><path d="M12 20v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M1 12h3"/><path d="M20 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/></svg>₦500</span></div>
         <div class="job-progress"><div class="progress-fill progress-below50" style="width:35%"></div></div>
         <a class="view-task" href="tasks.html">View Task <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
       </div>
@@ -1144,7 +1145,7 @@ body.auth-open{overflow:hidden}
         <span class="job-tag survey">Survey</span>
         <h3>App Feedback Survey</h3>
         <p>Share your opinion on a new fintech app. 5-minute survey with guaranteed payout.</p>
-        <div class="job-meta"><span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v3"/><path d="M12 20v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M1 12h3"/><path d="M20 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/></svg>450 slots left</span><span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v3"/><path d="M12 20v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M1 12h3"/><path d="M20 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/></svg>$x200</span></div>
+        <div class="job-meta"><span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v3"/><path d="M12 20v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M1 12h3"/><path d="M20 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/></svg>450 slots left</span><span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v3"/><path d="M12 20v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M1 12h3"/><path d="M20 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/></svg>₦200</span></div>
         <div class="job-progress"><div class="progress-fill progress-above50" style="width:78%"></div></div>
         <a class="view-task" href="tasks.html">View Task <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
       </div>
@@ -1152,7 +1153,7 @@ body.auth-open{overflow:hidden}
         <span class="job-tag design">Design</span>
         <h3>Logo Rating</h3>
         <p>Rate 10 AI-generated logo concepts on a simple 1-5 scale. Quick and easy.</p>
-        <div class="job-meta"><span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v3"/><path d="M12 20v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M1 12h3"/><path d="M20 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/></svg>120 slots left</span><span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v3"/><path d="M12 20v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M1 12h3"/><path d="M20 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/></svg>$x800</span></div>
+        <div class="job-meta"><span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v3"/><path d="M12 20v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M1 12h3"/><path d="M20 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/></svg>120 slots left</span><span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v3"/><path d="M12 20v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M1 12h3"/><path d="M20 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/></svg>₦800</span></div>
         <div class="job-progress"><div class="progress-fill progress-nearfull" style="width:92%"></div></div>
         <a class="view-task" href="tasks.html">View Task <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
       </div>
@@ -1165,24 +1166,24 @@ body.auth-open{overflow:hidden}
   <div class="container">
     <h2 class="section-title">Deals</h2>
     <p class="section-sub">Featured products from workers</p>
-    <div class="store-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:24px">
-      <article class="store-card" style="border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;background:var(--card);text-align:left;position:relative">
-        <span style="font-size:28px;display:block;margin-bottom:10px"><svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span>
-        <h4 style="margin:0 0 6px;font-size:15px">Design templates</h4>
-        <p style="margin:0;color:var(--text2);font-size:13px;line-height:1.5">Social media templates for Instagram and X</p>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px"><strong style="font-size:16px">$x2,500</strong><button class="btn btn-primary" style="padding:8px 18px;font-size:12px;height:auto">Buy Now</button></div>
+    <div class="jobs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:24px">
+      <article class="job-card" style="padding:20px;min-height:auto">
+        <div style="font-size:28px;margin-bottom:12px"><svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4"/></svg></div>
+        <h4 style="margin:0 0 6px;font-size:16px;font-weight:700">Design templates</h4>
+        <p style="margin:0;color:var(--text2);font-size:13px;line-height:1.5">Social media templates for Instagram and X — editable Canva files.</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px"><strong style="font-size:18px;font-family:Outfit,sans-serif">₦2,500</strong><a class="btn btn-primary" href="store.html" style="padding:8px 20px;font-size:13px;height:auto;border-radius:10px">Buy Now</a></div>
       </article>
-      <article class="store-card" style="border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;background:var(--card);text-align:left;position:relative">
-        <span style="font-size:28px;display:block;margin-bottom:10px"><svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
-        <h4 style="margin:0 0 6px;font-size:15px">Copywriting gig</h4>
-        <p style="margin:0;color:var(--text2);font-size:13px;line-height:1.5">Product description for 5 items</p>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px"><strong style="font-size:16px">$x5,000</strong><button class="btn btn-primary" style="padding:8px 18px;font-size:12px;height:auto">Buy Now</button></div>
+      <article class="job-card" style="padding:20px;min-height:auto">
+        <div style="font-size:28px;margin-bottom:12px"><svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <h4 style="margin:0 0 6px;font-size:16px;font-weight:700">Copywriting gig</h4>
+        <p style="margin:0;color:var(--text2);font-size:13px;line-height:1.5">Product description for 5 items — SEO-optimized, delivered in 48hrs.</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px"><strong style="font-size:18px;font-family:Outfit,sans-serif">₦5,000</strong><a class="btn btn-primary" href="store.html" style="padding:8px 20px;font-size:13px;height:auto;border-radius:10px">Buy Now</a></div>
       </article>
-      <article class="store-card" style="border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;background:var(--card);text-align:left;position:relative">
-        <span style="font-size:28px;display:block;margin-bottom:10px"><svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
-        <h4 style="margin:0 0 6px;font-size:15px">Review pack</h4>
-        <p style="margin:0;color:var(--text2);font-size:13px;line-height:1.5">10 app reviews on Google Play</p>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px"><strong style="font-size:16px">$x3,000</strong><button class="btn btn-primary" style="padding:8px 18px;font-size:12px;height:auto">Buy Now</button></div>
+      <article class="job-card" style="padding:20px;min-height:auto">
+        <div style="font-size:28px;margin-bottom:12px"><svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+        <h4 style="margin:0 0 6px;font-size:16px;font-weight:700">Review pack</h4>
+        <p style="margin:0;color:var(--text2);font-size:13px;line-height:1.5">10 app reviews on Google Play — 5-star, written by real people.</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px"><strong style="font-size:18px;font-family:Outfit,sans-serif">₦3,000</strong><a class="btn btn-primary" href="store.html" style="padding:8px 20px;font-size:13px;height:auto;border-radius:10px">Buy Now</a></div>
       </article>
     </div>
   </div>
@@ -1202,7 +1203,26 @@ body.auth-open{overflow:hidden}
         <div class="scroll-track scroll-col-1" id="col-1">
           <!-- First copy -->
           <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2H4V7Z"/><path d="M4 11v4"/><path d="M4 19v2"/><path d="M20 11v4"/><path d="M20 19v2"/><circle cx="12" cy="17" r="3"/></svg> X / Twitter</div>
-          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4"/><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg> Instagram</div>
+      <div class="scroll-wrapper">
+        <div class="scroll-track scroll-col-2" id="col-2">
+          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/></svg>Farcaster</div>
+          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M8 10l4-4 4 4"/><path d="M8 14l4 4 4-4"/></svg>Base</div>
+          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Zora</div>
+          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>DexScreener</div>
+          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>hey.lol</div>
+          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>Lens Protocol</div>
+          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>Solana</div>
+          <!-- Second copy -->
+          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/></svg>Farcaster</div>
+          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M8 10l4-4 4 4"/><path d="M8 14l4 4 4-4"/></svg>Base</div>
+          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Zora</div>
+          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>DexScreener</div>
+          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>hey.lol</div>
+          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>Lens Protocol</div>
+          <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>Solana</div>
+        </div>
+      </div>
+</div></div>
           <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/><rect x="2" y="2" width="20" height="20" rx="4"/></svg> YouTube</div>
           <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z"/></svg> Telegram</div>
           <div class="platform-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/><path d="M9.5 9.5c0-2 1.5-3 3-3s2.5 1 2.5 2-1 1.5-2 2.5-1 2-1 3"/><line x1="12" y1="19" x2="12" y2="19.01"/></svg> Discord</div>
@@ -1260,19 +1280,19 @@ body.auth-open{overflow:hidden}
           <div class="stars"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
           <blockquote>"I completed 3 tasks in one evening and got paid before midnight. OgaPay is the real deal."</blockquote>
           <div class="author"><div class="av">C</div><div class="info"><div class="name">Chukwuemeka A.</div><div class="city">Lagos</div></div></div>
-          <div class="earnings-badge"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Earned $x38,500 this month</div>
+          <div class="earnings-badge"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Earned ₦38,500 this month</div>
         </div>
         <div class="testimonial-card">
           <div class="stars"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
           <blockquote>"Finally a platform that pays in Naira without stress. I have referred 5 friends already."</blockquote>
           <div class="author"><div class="av">F</div><div class="info"><div class="name">Fatima I.</div><div class="city">Abuja</div></div></div>
-          <div class="earnings-badge"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Earned $x21,200 this month</div>
+          <div class="earnings-badge"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Earned ₦21,200 this month</div>
         </div>
         <div class="testimonial-card">
           <div class="stars"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
           <blockquote>"The tasks are simple and the withdrawals are instant. I use OgaPay every day now."</blockquote>
           <div class="author"><div class="av">T</div><div class="info"><div class="name">Tunde B.</div><div class="city">Ibadan</div></div></div>
-          <div class="earnings-badge"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Earned $x54,000 this month</div>
+          <div class="earnings-badge"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Earned ₦54,000 this month</div>
         </div>
       </div>
     </div>
