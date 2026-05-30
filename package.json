@@ -1,44 +1,46 @@
 {
-  "name": "ogapay-backend",
-  "version": "1.0.0",
-  "description": "OgaPay — Gig platform backend with NGN + crypto wallets, KYC, tasks, leaderboard",
-  "main": "src/index.js",
-  "type": "commonjs",
-  "scripts": {
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js",
-    "migrate": "npx prisma migrate dev",
-    "migrate:deploy": "npx prisma migrate deploy",
-    "generate": "npx prisma generate",
-    "seed": "node prisma/seed.js",
-    "lint": "eslint src/",
-    "test": "jest --detectOpenHandles"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.43.0",
-    "axios": "^1.7.2",
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "express-async-errors": "^3.1.1",
-    "express-rate-limit": "^7.3.1",
-    "express-validator": "^7.1.0",
-    "helmet": "^7.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "morgan": "^1.10.0",
-    "multer": "^1.4.5-lts.1",
-    "pg": "^8.12.0",
-    "prisma": "^5.16.1",
-    "@prisma/client": "^5.16.1",
-    "uuid": "^10.0.0",
-    "winston": "^3.13.0",
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.4",
-    "jest": "^29.7.0",
-    "supertest": "^7.0.0",
-    "eslint": "^9.6.0"
-  }
+    "name":  "ogapay-backend",
+    "version":  "1.0.0",
+    "description":  "OgaPay — Gig platform backend with NGN + crypto wallets, KYC, tasks, leaderboard",
+    "main":  "src/index.js",
+    "type":  "commonjs",
+    "scripts":  {
+                    "dev":  "nodemon src/index.js",
+                    "start":  "node src/index.js",
+                    "vercel-build":  "prisma generate",
+                    "migrate":  "npx prisma migrate dev",
+                    "migrate:deploy":  "npx prisma migrate deploy",
+                    "generate":  "npx prisma generate",
+                    "seed":  "node prisma/seed.js",
+                    "lint":  "eslint src/",
+                    "test":  "jest --detectOpenHandles",
+                    "smoke":  "node scripts/smoke-test.js"
+                },
+    "dependencies":  {
+                         "@supabase/supabase-js":  "^2.43.0",
+                         "axios":  "^1.7.2",
+                         "bcryptjs":  "^2.4.3",
+                         "cors":  "^2.8.5",
+                         "dotenv":  "^16.4.5",
+                         "express":  "^4.19.2",
+                         "express-async-errors":  "^3.1.1",
+                         "express-rate-limit":  "^7.3.1",
+                         "express-validator":  "^7.1.0",
+                         "helmet":  "^7.1.0",
+                         "jsonwebtoken":  "^9.0.2",
+                         "morgan":  "^1.10.0",
+                         "multer":  "^1.4.5-lts.1",
+                         "pg":  "^8.12.0",
+                         "prisma":  "^5.16.1",
+                         "@prisma/client":  "^5.16.1",
+                         "uuid":  "^10.0.0",
+                         "winston":  "^3.13.0",
+                         "zod":  "^3.23.8"
+                     },
+    "devDependencies":  {
+                            "nodemon":  "^3.1.4",
+                            "jest":  "^29.7.0",
+                            "supertest":  "^7.0.0",
+                            "eslint":  "^9.6.0"
+                        }
 }

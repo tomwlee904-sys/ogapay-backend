@@ -117,7 +117,13 @@ mountRoutes(API_ALIAS);
 const publicDir = path.join(__dirname, '..', 'public');
 app.use(express.static(publicDir, { extensions: ['html'] }));
 app.get('/', (req, res) => {
-  res.sendFile(path.join(publicDir, 'index.html'));
+  res.json({
+    status: 'ok',
+    service: 'ogapay-api',
+    version: process.env.API_VERSION || 'v1',
+    health: '/health',
+    apiBase: `/api/${process.env.API_VERSION || 'v1'}`,
+  });
 });
 
 // ── 404 & Error Handlers ──────────────────────
