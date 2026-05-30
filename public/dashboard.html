@@ -10,112 +10,165 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
-:root{
-  --bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--border2:#2d384d;--text:#f4f7fb;--text2:#9aa7bc;--text3:#667186;--primary:#f4f7fb;--accent:#7C3AED;--accent2:#3B82F6;--green:#16a34a;--red:#ef4444;--gold:#f5b301;--brand:linear-gradient(135deg,#7C3AED,#6366F1,#3B82F6);--shadow:0 4px 24px rgba(0,0,0,.3),0 1px 4px rgba(0,0,0,.2);--shadow-sm:0 2px 8px rgba(0,0,0,.2);--radius:14px;--radius-sm:10px;--nav-h:60px;
-}
-[data-theme="light"]{
-  --bg:#f5f7fa;--bg2:#ffffff;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#0f141e;--text2:#64748b;--text3:#94a3b8;--primary:#0f141e;--shadow:0 4px 20px rgba(15,20,30,.06),0 1px 4px rgba(15,20,30,.03);--shadow-sm:0 2px 8px rgba(15,20,30,.04);
-  --brand:linear-gradient(135deg,#7C3AED,#6366F1,#3B82F6);
-}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
-.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(8,11,19,.88);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4)}[data-theme="light"] .nav{background:rgba(255,255,255,.9)}
-.nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;width:min(900px,calc(100% - 32px));margin:0 auto}.brand{display:flex;align-items:center;gap:8px;font-family:"Outfit";font-weight:800;font-size:17px}.logo{width:30px;height:30px;border-radius:8px;background:var(--primary);color:var(--bg);display:grid;place-items:center;font-size:16px}.nav-links{display:flex;gap:2px}.nav-link{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:8px;color:var(--text3);font-size:13px;font-weight:600}.nav-link:hover,.nav-link.active{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;align-items:center;gap:6px}.icon-btn{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text2);display:grid;place-items:center}.icon-btn:hover{background:var(--bg2);color:var(--text)}.page-wrap{width:min(900px,calc(100% - 32px));margin:0 auto;padding:24px 0 72px}
-.profile-head{display:flex;align-items:center;gap:18px;padding:20px 0 18px}.profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--brand);display:grid;place-items:center;color:#fff;font-family:"Outfit";font-size:26px;font-weight:800;flex-shrink:0}.profile-info{flex:1;min-width:0}.profile-info h1{margin:0;font-family:"Outfit";font-size:20px;font-weight:800;letter-spacing:-.3px}.profile-info .meta{display:flex;align-items:center;gap:10px;margin-top:3px;color:var(--text2);font-size:13px;flex-wrap:wrap}.profile-info .meta span{display:inline-flex;align-items:center;gap:4px}
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px}.stat-card .num{font-family:"Outfit";font-size:20px;font-weight:800;letter-spacing:-.3px}.stat-card .lbl{color:var(--text3);font-size:11px;font-weight:600;margin-top:2px}
-.ql-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}.ql-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px 8px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);text-align:center;color:var(--text2);font-size:12px;font-weight:600;transition:.15s}.ql-item:hover{background:var(--bg2);border-color:var(--border2);color:var(--text)}.ql-item i{font-size:20px;color:var(--accent2)}.ql-item .ql-label{line-height:1.2}
-.content-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.content-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}.content-card h3{margin:0 0 12px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text3)}.activity-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}.activity-item:last-child{border:0}.activity-item .act-icon{width:28px;height:28px;border-radius:6px;background:var(--bg2);display:grid;place-items:center;color:var(--text2);font-size:14px;flex-shrink:0}.activity-item .act-info{flex:1;min-width:0}.activity-item .act-title{font-size:13px;font-weight:600}.activity-item .act-meta{color:var(--text3);font-size:11px;margin-top:1px}.activity-item .act-amount{font-family:"Outfit";font-size:14px;font-weight:800}
-@media(max-width:700px){.stats-row{grid-template-columns:repeat(2,1fr)}.ql-grid{grid-template-columns:repeat(2,1fr)}.content-grid{grid-template-columns:1fr}}
+:root{--bg:#09090b;--bg2:#0f0f13;--card:#141418;--card2:#1a1a20;--border:#1e1e26;--border2:#2a2a34;--text:#f4f4f6;--text2:#9a9aa6;--text3:#6a6a78;--accent:#7C3AED;--accent2:#3B82F6;--green:#22c55e;--gold:#f59e0b;--brand:linear-gradient(135deg,#7C3AED,#6366F1,#3B82F6);--radius:12px;--nav-h:56px}
+[data-theme="light"]{--bg:#f2f3f7;--bg2:#ffffff;--card:#ffffff;--card2:#f7f8fc;--border:#e2e4ec;--border2:#d1d4de;--text:#0f1016;--text2:#5e6472;--text3:#8e94a2;--accent:#7C3AED;--accent2:#2563EB;--brand:linear-gradient(135deg,#7C3AED,#6366F1,#3B82F6)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cursor:pointer}
+/* Nav */
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(9,9,11,.88);border-bottom:1px solid var(--border);backdrop-filter:blur(16px)}[data-theme="light"] .nav{background:rgba(255,255,255,.88)}
+.nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;width:min(960px,calc(100% - 28px));margin:0 auto}.brand{display:flex;align-items:center;gap:8px;font-family:"Outfit";font-weight:800;font-size:16px}.logo{width:28px;height:28px;border-radius:7px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:14px}.nav-links{display:flex;gap:2px}.nav-link{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:7px;color:var(--text3);font-size:12px;font-weight:600}.nav-link:hover{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;gap:6px}.icon-btn{width:32px;height:32px;border:1px solid var(--border);border-radius:7px;background:transparent;color:var(--text2);display:grid;place-items:center;font-size:16px}.icon-btn:hover{background:var(--bg2);color:var(--text)}
+/* Layout */
+.page-wrap{width:min(960px,calc(100% - 28px));margin:0 auto;padding:20px 0 80px}
+/* Profile */
+.profile{display:flex;align-items:center;gap:16px;padding:16px 0 18px}.profile-av{width:52px;height:52px;border-radius:50%;background:var(--brand);display:grid;place-items:center;color:#fff;font-family:"Outfit";font-size:22px;font-weight:800;flex-shrink:0}.profile-info{flex:1;min-width:0}.profile-info h1{margin:0;font-family:"Outfit";font-size:18px;font-weight:800}.profile-info .tags{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}.profile-info .tags span{display:inline-flex;align-items:center;gap:4px;color:var(--text2);font-size:12px}.profile-info .tags .tag{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;background:rgba(124,58,237,.12);color:var(--accent);font-size:11px;font-weight:700}
+/* Stats row */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}.stat-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}.stat-box .n{font-family:"Outfit";font-size:18px;font-weight:800;letter-spacing:-.2px}.stat-box .l{color:var(--text3);font-size:11px;font-weight:600;margin-top:2px}
+/* Section title */
+.sec{margin:18px 0 10px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);display:flex;align-items:center;gap:8px}.sec:after{content:'';flex:1;height:1px;background:var(--border)}
+/* Quick links grid */
+.links{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}.links a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 6px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);font-size:12px;font-weight:600;transition:.15s;text-align:center;line-height:1.2}.links a:hover{background:var(--card2);border-color:var(--border2);color:var(--text)}.links a i{font-size:18px;color:var(--accent2)}
+/* Card grid */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:10px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}.card h3{margin:0 0 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--text3)}
+/* Activity */
+.act{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}.act:last-child{border:0}.act i{width:26px;height:26px;border-radius:6px;background:var(--bg2);display:grid;place-items:center;color:var(--text2);font-size:13px;flex-shrink:0}.act-info{flex:1;min-width:0}.act-info .t{font-size:13px;font-weight:600}.act-info .m{color:var(--text3);font-size:11px;margin-top:1px}.act-amt{font-family:"Outfit";font-size:14px;font-weight:700}
+/* Referral */
+.inp-row{display:flex;gap:6px;margin:10px 0 14px}.inp-row input{flex:1;height:34px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--text);padding:0 10px;font-size:12px;outline:none}.btn{height:34px;border:1px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:0 12px;font-weight:600;font-size:12px;transition:.15s;text-decoration:none}.btn:hover{background:var(--card2);border-color:var(--border2)}.btn.p{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.d{background:rgba(239,68,68,.12);color:var(--red);border-color:transparent}.badge{display:inline-flex;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:700}.badge.g{background:rgba(34,197,94,.12);color:var(--green)}.badge.r{background:rgba(239,68,68,.12);color:#ef4444}.badge.y{background:rgba(245,158,11,.12);color:var(--gold)}
+/* Connected accounts */
+.cn{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}.cn:last-child{border:0}.cn .cn-i{width:28px;height:28px;border-radius:6px;background:var(--bg2);display:grid;place-items:center;font-size:15px}.cn .cn-n{flex:1;font-size:13px;font-weight:600}.cn .cn-s{font-size:11px;color:var(--green);display:flex;align-items:center;gap:3px}
+/* Stats grid */
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-top:14px}.sg .n{font-family:"Outfit";font-size:16px;font-weight:800}.sg .l{color:var(--text3);font-size:11px;margin-top:1px}
+/* Row */
+.r{display:flex;align-items:center;gap:8px}.rw{display:flex;align-items:center;justify-content:space-between;gap:8px}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}.links{grid-template-columns:repeat(2,1fr)}.cg{grid-template-columns:1fr}}
+/* Mobile nav */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:99;background:var(--card);border-top:1px solid var(--border);padding:6px 12px 10px}.mobile-nav a{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text3);font-size:10px;font-weight:700;padding:4px 0}.mobile-nav a.active{color:var(--accent2)}.mobile-nav a svg{width:22px;height:22px}.mobile-nav .create svg{width:28px;height:28px;stroke-width:2}.dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);display:inline-block}
+@media(max-width:860px){.nav-links{display:none}.mobile-nav{display:flex;justify-content:space-around;align-items:flex-end}}
 </style>
 </head>
 <body data-page="dashboard.html">
-<header class="nav"><div class="nav-inner"><a class="brand" href="index.html"><span class="logo">O</span>OgaPay</a><nav class="nav-links"><a class="nav-link" href="tasks.html"><i class="ti ti-briefcase"></i>Tasks</a><a class="nav-link" href="store.html"><i class="ti ti-discount-2"></i>Deals</a><a class="nav-link" href="wallet.html"><i class="ti ti-wallet"></i>Wallet</a></nav><div class="nav-actions"><button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="ti ti-sun"></i></button><a class="icon-btn" href="settings.html"><i class="ti ti-settings"></i></a></div></div></header>
+<header class="nav"><div class="nav-inner"><a class="brand" href="index.html"><span class="logo">O</span>OgaPay</a><div class="nav-links"><a class="nav-link" href="tasks.html"><i class="ti ti-briefcase"></i>Tasks</a><a class="nav-link" href="store.html"><i class="ti ti-discount-2"></i>Deals</a><a class="nav-link" href="wallet.html"><i class="ti ti-wallet"></i>Wallet</a></div><div class="nav-actions"><button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="ti ti-sun"></i></button></div></div></header>
 <main class="page-wrap">
-  <div class="profile-head">
-    <div class="profile-avatar">AD</div>
+  <!-- Profile -->
+  <div class="profile">
+    <div class="profile-av">AD</div>
     <div class="profile-info">
       <h1>Ada Danladi</h1>
-      <div class="meta">
+      <div class="tags">
         <span><i class="ti ti-at"></i>@ada_earns</span>
-        <span><i class="ti ti-badge"></i>Worker</span>
-        <span><i class="ti ti-shield-check"></i>KYC verified</span>
+        <span class="tag"><i class="ti ti-badge"></i>Worker</span>
+        <span class="tag" style="background:rgba(59,130,246,.12);color:var(--accent2)"><i class="ti ti-shield-check"></i>KYC verified</span>
         <span><i class="ti ti-calendar"></i>Joined May 2026</span>
       </div>
     </div>
-    <a class="btn primary small" href="profile.html"><i class="ti ti-edit"></i>Edit</a>
+    <a class="btn" href="profile.html" style="flex-shrink:0"><i class="ti ti-edit"></i>Edit</a>
   </div>
-  <div class="stats-row">
-    <div class="stat-card"><div class="num">₦42,850</div><div class="lbl">Available balance</div></div>
-    <div class="stat-card"><div class="num">₦18,200</div><div class="lbl">Pending review</div></div>
-    <div class="stat-card"><div class="num">8</div><div class="lbl">Active tasks</div></div>
-    <div class="stat-card"><div class="num">4.9</div><div class="lbl">Rating</div></div>
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-box"><div class="n">₦42,850</div><div class="l">Available balance</div></div>
+    <div class="stat-box"><div class="n">₦18,200</div><div class="l">Pending review</div></div>
+    <div class="stat-box"><div class="n">8</div><div class="l">Active tasks</div></div>
+    <div class="stat-box"><div class="n">4.9</div><div class="l">Rating</div></div>
   </div>
-  <div class="ql-grid">
-    <a class="ql-item" href="tasks.html"><i class="ti ti-briefcase"></i><span class="ql-label">Browse Tasks</span></a>
-    <a class="ql-item" href="my-tasks.html"><i class="ti ti-checklist"></i><span class="ql-label">My Tasks</span></a>
-    <a class="ql-item" href="monitor.html"><i class="ti ti-eye"></i><span class="ql-label">Job Monitor</span></a>
-    <a class="ql-item" href="post-task.html"><i class="ti ti-square-plus"></i><span class="ql-label">Post Task</span></a>
-    <a class="ql-item" href="wallet.html"><i class="ti ti-wallet"></i><span class="ql-label">Wallet</span></a>
-    <a class="ql-item" href="vault.html"><i class="ti ti-building-bank"></i><span class="ql-label">Rewards Vault</span></a>
-    <a class="ql-item" href="communities.html"><i class="ti ti-users-group"></i><span class="ql-label">Communities</span></a>
-    <a class="ql-item" href="referrals.html"><i class="ti ti-link"></i><span class="ql-label">Referrals</span></a>
-    <a class="ql-item" href="leaderboard.html"><i class="ti ti-trophy"></i><span class="ql-label">Leaderboard</span></a>
-    <a class="ql-item" href="messages.html"><i class="ti ti-message-2"></i><span class="ql-label">Messages</span></a>
-    <a class="ql-item" href="kyc.html"><i class="ti ti-shield-check"></i><span class="ql-label">KYC</span></a>
-    <a class="ql-item" href="analytics.html"><i class="ti ti-chart-line"></i><span class="ql-label">Analytics</span></a>
+  <!-- Quick Links -->
+  <div class="sec">Quick links</div>
+  <div class="links">
+    <a href="tasks.html"><i class="ti ti-briefcase"></i>Browse Tasks</a>
+    <a href="my-tasks.html"><i class="ti ti-checklist"></i>My Tasks</a>
+    <a href="monitor.html"><i class="ti ti-eye"></i>Job Monitor</a>
+    <a href="post-task.html"><i class="ti ti-square-plus"></i>Post Task</a>
+    <a href="wallet.html"><i class="ti ti-wallet"></i>Wallet</a>
+    <a href="vault.html"><i class="ti ti-building-bank"></i>Rewards Vault</a>
+    <a href="communities.html"><i class="ti ti-users-group"></i>Communities</a>
+    <a href="referrals.html"><i class="ti ti-link"></i>Referrals</a>
+    <a href="leaderboard.html"><i class="ti ti-trophy"></i>Leaderboard</a>
+    <a href="messages.html"><i class="ti ti-message-2"></i>Messages</a>
+    <a href="kyc.html"><i class="ti ti-shield-check"></i>KYC</a>
+    <a href="analytics.html"><i class="ti ti-chart-line"></i>Analytics</a>
   </div>
-  <div class="content-grid">
-    <div class="content-card">
+  <!-- Cards -->
+  <div class="sec">Activity &amp; Growth</div>
+  <div class="cg">
+    <div class="card">
       <h3>Recent activity</h3>
-      <div class="activity-item">
-        <div class="act-icon"><i class="ti ti-check"></i></div>
-        <div class="act-info"><div class="act-title">X campaign proof accepted</div><div class="act-meta">2 hours ago</div></div>
-        <div class="act-amount">₦1,500</div>
-      </div>
-      <div class="activity-item">
-        <div class="act-icon"><i class="ti ti-coin"></i></div>
-        <div class="act-info"><div class="act-title">USDC payout queued</div><div class="act-meta">5 hours ago</div></div>
-        <div class="act-amount">4 USDC</div>
-      </div>
-      <div class="activity-item">
-        <div class="act-icon"><i class="ti ti-user-plus"></i></div>
-        <div class="act-info"><div class="act-title">New referral joined</div><div class="act-meta">1 day ago</div></div>
-        <div class="act-amount">₦850</div>
-      </div>
-      <div class="activity-item">
-        <div class="act-icon"><i class="ti ti-star"></i></div>
-        <div class="act-info"><div class="act-title">5-star rating received</div><div class="act-meta">2 days ago</div></div>
-        <div class="act-amount"></div>
+      <div class="act"><i class="ti ti-check"></i><div class="act-info"><div class="t">X campaign proof accepted</div><div class="m">2 hours ago</div></div><div class="act-amt">₦1,500</div></div>
+      <div class="act"><i class="ti ti-coin"></i><div class="act-info"><div class="t">USDC payout queued</div><div class="m">5 hours ago</div></div><div class="act-amt">4 USDC</div></div>
+      <div class="act"><i class="ti ti-user-plus"></i><div class="act-info"><div class="t">New referral joined</div><div class="m">1 day ago</div></div><div class="act-amt">₦850</div></div>
+      <div class="act"><i class="ti ti-star"></i><div class="act-info"><div class="t">5-star rating received</div><div class="m">2 days ago</div></div></div>
+    </div>
+    <div class="card">
+      <h3>Your referral link</h3>
+      <p style="margin:0;color:var(--text2);font-size:12px;line-height:1.5">Invite earners and earn 3% commission on their first 30 days.</p>
+      <div class="inp-row"><input value="https://ogapay.ng/r/adadearn" readonly><button class="btn p" data-copy="https://ogapay.ng/r/adadearn"><i class="ti ti-copy"></i>Copy</button></div>
+      <div class="sg"><div><div class="n">184</div><div class="l">Users</div></div><div><div class="n">62</div><div class="l">Active</div></div><div><div class="n">₦34,850</div><div class="l">Commission</div></div></div>
+    </div>
+  </div>
+  <!-- Connected Accounts & Task History -->
+  <div class="sec">Connections &amp; History</div>
+  <div class="cg">
+    <div class="card">
+      <h3>Connected accounts</h3>
+      <div class="cn"><div class="cn-i"><i class="ti ti-brand-x" style="font-size:16px"></i></div><div class="cn-n">X / Twitter</div><span class="cn-s"><i class="ti ti-circle-filled" style="font-size:6px"></i>Connected</span></div>
+      <div class="cn"><div class="cn-i"><i class="ti ti-brand-telegram" style="font-size:16px"></i></div><div class="cn-n">Telegram</div><span class="cn-s"><i class="ti ti-circle-filled" style="font-size:6px"></i>Connected</span></div>
+      <div class="cn"><div class="cn-i"><i class="ti ti-brand-instagram" style="font-size:16px"></i></div><div class="cn-n">Instagram</div><span style="color:var(--text3);font-size:11px">Connect</span></div>
+      <div class="cn"><div class="cn-i"><i class="ti ti-brand-discord" style="font-size:16px"></i></div><div class="cn-n">Discord</div><span style="color:var(--text3);font-size:11px">Connect</span></div>
+    </div>
+    <div class="card">
+      <h3>Recent tasks</h3>
+      <div class="rw" style="padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:600">Like &amp; retweet campaign</div><div style="color:var(--text3);font-size:11px">X / Twitter</div></div><div style="text-align:right"><div style="font-family:Outfit;font-size:14px;font-weight:700">₦500</div><span class="badge g">Completed</span></div></div>
+      <div class="rw" style="padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:600">Telegram group join</div><div style="color:var(--text3);font-size:11px">Telegram</div></div><div style="text-align:right"><div style="font-family:Outfit;font-size:14px;font-weight:700">₦350</div><span class="badge y">Pending</span></div></div>
+      <div class="rw" style="padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:600">Instagram reel comment</div><div style="color:var(--text3);font-size:11px">Instagram</div></div><div style="text-align:right"><div style="font-family:Outfit;font-size:14px;font-weight:700">₦300</div><span class="badge r">Rejected</span></div></div>
+      <div class="rw" style="padding:7px 0"><div><div style="font-size:13px;font-weight:600">Survey: App feedback</div><div style="color:var(--text3);font-size:11px">Survey</div></div><div style="text-align:right"><div style="font-family:Outfit;font-size:14px;font-weight:700">₦800</div><span class="badge g">Completed</span></div></div>
+      <a href="my-tasks.html" style="display:block;text-align:center;margin-top:10px;color:var(--accent2);font-size:12px;font-weight:600">View all tasks →</a>
+    </div>
+  </div>
+  <!-- Payout Info & Account -->
+  <div class="sec">Payout &amp; Account</div>
+  <div class="cg">
+    <div class="card">
+      <h3>Payout method</h3>
+      <div class="rw" style="padding:6px 0"><span style="font-size:13px">Bank transfer</span><span style="font-size:13px;font-weight:600">Opay ••• 6789</span></div>
+      <div class="rw" style="padding:6px 0;border-top:1px solid var(--border)"><span style="font-size:13px">USDC wallet</span><span style="font-size:13px;font-weight:600">7xQp...9mDa</span></div>
+      <div class="rw" style="padding:6px 0;border-top:1px solid var(--border)"><span style="font-size:13px">Total earned</span><span style="font-family:Outfit;font-size:15px;font-weight:700">₦284,500</span></div>
+      <div class="rw" style="padding:6px 0;border-top:1px solid var(--border)"><span style="font-size:13px">This month</span><span style="font-family:Outfit;font-size:15px;font-weight:700;color:var(--green)">₦52,300</span></div>
+      <a href="wallet.html" style="display:block;text-align:center;margin-top:10px;color:var(--accent2);font-size:12px;font-weight:600">Manage wallet →</a>
+    </div>
+    <div class="card">
+      <h3>Account</h3>
+      <div class="rw" style="padding:6px 0"><span style="font-size:13px">Email</span><span style="font-size:13px;color:var(--text2)">ada@ogapay.ng</span></div>
+      <div class="rw" style="padding:6px 0;border-top:1px solid var(--border)"><span style="font-size:13px">Phone</span><span style="font-size:13px;color:var(--text2)">+234 801 234 5678</span></div>
+      <div class="rw" style="padding:6px 0;border-top:1px solid var(--border)"><span style="font-size:13px">Notifications</span><span style="font-size:11px;color:var(--green)">Email + Push</span></div>
+      <div class="rw" style="padding:6px 0;border-top:1px solid var(--border)"><span style="font-size:13px">KYC level</span><span class="badge g">Verified</span></div>
+      <a href="settings.html" style="display:block;text-align:center;margin-top:10px;color:var(--accent2);font-size:12px;font-weight:600">Account settings →</a>
+    </div>
+  </div>
+  <!-- Achievements -->
+  <div class="sec">Achievements</div>
+  <div class="cg">
+    <div class="card">
+      <h3>Badges &amp; milestones</h3>
+      <div class="r" style="flex-wrap:wrap;gap:6px">
+        <span class="badge" style="background:rgba(124,58,237,.12);color:var(--accent);padding:4px 10px">🏆 Top 10% earner</span>
+        <span class="badge" style="background:rgba(245,158,11,.12);color:var(--gold);padding:4px 10px">⭐ 100 tasks completed</span>
+        <span class="badge" style="background:rgba(34,197,94,.12);color:var(--green);padding:4px 10px">🎯 50 referrals</span>
+        <span class="badge" style="background:rgba(59,130,246,.12);color:var(--accent2);padding:4px 10px">📱 Early adopter</span>
       </div>
     </div>
-    <div class="content-card">
-      <h3>Referral link</h3>
-      <p style="margin:0 0 10px;color:var(--text2);font-size:13px;line-height:1.5">Share your link and earn 3% commission on referrals' first 30 days.</p>
-      <div style="display:flex;gap:6px"><input value="https://ogapay.ng/r/adadearn" readonly style="flex:1;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);padding:0 10px;font-size:13px;outline:none"><button class="btn primary small" data-copy="https://ogapay.ng/r/adadearn"><i class="ti ti-copy"></i></button></div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;text-align:center"><div><div class="num" style="font-size:16px">184</div><div class="lbl" style="font-size:11px">Users</div></div><div><div class="num" style="font-size:16px">62</div><div class="lbl" style="font-size:11px">Active</div></div><div><div class="num" style="font-size:16px">₦34,850</div><div class="lbl" style="font-size:11px">Commission</div></div></div>
+    <div class="card">
+      <h3>Quick stats</h3>
+      <div class="sg"><div><div class="n">247</div><div class="l">Total tasks</div></div><div><div class="n">98%</div><div class="l">Completion</div></div><div><div class="n">₦284.5K</div><div class="l">All-time earnings</div></div></div>
     </div>
   </div>
 </main>
-<div class="toast" id="toast">Done</div>
-<style>
-.mobile-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:99;background:var(--card);border-top:1px solid var(--border);padding:6px 12px 10px}
-.mobile-bottom-nav a{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text3);font-size:10px;font-weight:700;text-decoration:none;padding:4px 0}
-.mobile-bottom-nav a.active{color:var(--accent2)}
-.mobile-bottom-nav a svg{width:22px;height:22px}
-.mobile-bottom-nav .create svg{width:28px;height:28px;stroke-width:2}
-.profile-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);display:inline-block}
-@media(max-width:860px){.nav-links{display:none}.mobile-bottom-nav{display:flex;justify-content:space-around;align-items:flex-end}}
-.btn{height:36px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 14px;font-weight:600;font-size:13px;transition:.15s;text-decoration:none}.btn:hover{background:var(--bg2);border-color:var(--border2)}.btn.primary{background:var(--primary);color:var(--bg);border-color:var(--primary)}.btn.small{height:32px;padding:0 12px;font-size:12px}
-</style>
+<div class="toast" id="toast" style="position:fixed;right:16px;bottom:80px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-weight:600;font-size:13px;opacity:0;transform:translateY(8px);transition:.2s;z-index:200">Done</div>
 <script>
-(function(){const html=document.documentElement,theme=document.getElementById('themeToggle'),toast=document.getElementById('toast');function setTheme(v){html.setAttribute('data-theme',v);try{localStorage.setItem('ogapay-theme',v)}catch(e){} if(theme) theme.innerHTML='<i class="ti '+(v==='dark'?'ti-sun':'ti-moon')+'"></i>'}setTheme(html.getAttribute('data-theme')||'dark');theme&&theme.addEventListener('click',()=>setTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));function say(text){if(!toast)return;toast.textContent=text;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800)}document.querySelectorAll('[data-copy]').forEach(el=>el.addEventListener('click',()=>{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));say('Copied')}));})();
+(function(){const h=document.documentElement,t=document.getElementById('themeToggle'),o=document.getElementById('toast');function s(v){h.setAttribute('data-theme',v);try{localStorage.setItem('ogapay-theme',v)}catch(e){}if(t)t.innerHTML='<i class="ti '+(v==='dark'?'ti-sun':'ti-moon')+'"></i>'}s(h.getAttribute('data-theme')||'dark');t&&t.addEventListener('click',()=>s(h.getAttribute('data-theme')==='dark'?'light':'dark'));function say(text){if(!o)return;o.textContent=text;o.classList.add('show');o.style.opacity='1';o.style.transform='translateY(0)';setTimeout(()=>{o.style.opacity='0';o.style.transform='translateY(8px)'},1800)}document.querySelectorAll('[data-copy]').forEach(e=>e.addEventListener('click',()=>{navigator.clipboard&&navigator.clipboard.writeText(e.getAttribute('data-copy'));say('Copied')}));})();
 </script>
 <script src="assets/ogapay-live.js"></script>
-<nav class="mobile-bottom-nav">
+<nav class="mobile-nav">
   <a href="tasks.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Jobs</span></a>
   <a href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Deals</span></a>
   <a href="post-task.html" class="create"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Create</span></a>
   <a href="notifications.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Alerts</span></a>
-  <a href="dashboard.html" class="active"><span class="profile-dot"></span><span>Profile</span></a>
+  <a href="dashboard.html" class="active"><span class="dot"></span><span>Profile</span></a>
 </nav>
 </body>
 </html>
