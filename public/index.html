@@ -23,9 +23,10 @@
   --text2:#525252;
   --text3:#a1a1aa;
   --primary:#111111;
-  --accent:#030341;
-  --accent2:#030341;
-  --brand-gradient:linear-gradient(90deg,#030341,#1a1a6e);
+  --accent:#7C3AED;
+  --accent2:#2563EB;
+  --brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);
+  --earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);
   --gold:#f5b301;
   --shadow:0 4px 16px rgba(0,0,0,.06),0 1px 4px rgba(0,0,0,.03);
   --shadow-soft:0 2px 8px rgba(0,0,0,.04);
@@ -43,8 +44,8 @@
   --text2:#a1a1aa;
   --text3:#667186;
   --primary:#ffffff;
-  --accent:#030341;
-  --accent2:#030341;
+  --accent:#A78BFA;
+  --accent2:#60A5FA;
   --shadow:0 4px 16px rgba(0,0,0,.5),0 1px 4px rgba(0,0,0,.3);
   --shadow-soft:0 2px 8px rgba(0,0,0,.4);
 }
@@ -111,7 +112,7 @@ button{font:inherit}
 }
 .wallet-btn:hover{border-color:var(--text);background:var(--bg2)}
 .wallet-btn svg{width:15px;height:15px}
-.wallet-btn strong{background:var(--brand-gradient);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:15px}
+.wallet-btn strong{background:var(--brand-blue);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:15px}
 .icon-btn{
   width:36px;height:36px;
   display:grid;place-items:center;
@@ -162,7 +163,7 @@ button{font:inherit}
   opacity:.9;
   pointer-events:none;
 }
-[data-theme="dark"] .hero{background:radial-gradient(circle at 18% 8%,rgba(3,3,65,.15),transparent 32%),radial-gradient(circle at 84% 18%,rgba(3,3,65,.12),transparent 34%),linear-gradient(180deg,#000000 0%,#050505 100%)}
+[data-theme="dark"] .hero{background:radial-gradient(circle at 18% 8%,rgba(124,58,237,.18),transparent 32%),radial-gradient(circle at 84% 18%,rgba(37,99,235,.16),transparent 34%),linear-gradient(180deg,#000000 0%,#050505 100%)}
 .hero::after{
   content:"";position:absolute;inset:auto 0 0;
   height:120px;
@@ -188,7 +189,7 @@ button{font:inherit}
 }
 .hero h1 .arrow{color:#a1a1aa;font-weight:800}
 .hero h1 .earn{
-  background:var(--brand-gradient);
+  background:var(--brand-blue);
   background-size:300% 100%;
   -webkit-background-clip:text;background-clip:text;color:transparent;
   animation:gradientShift 4s ease-in-out infinite;
@@ -216,9 +217,9 @@ button{font:inherit}
   background:var(--primary);color:#fff;border-color:var(--primary);
   box-shadow:0 4px 14px rgba(16,21,37,.18);
 }
-.btn-primary:hover{background:#1a1a6e;box-shadow:0 6px 18px rgba(0,0,0,.12)}
-[data-theme="dark"] .btn-primary{background:#030341;color:#ffffff;border-color:#030341}
-[data-theme="dark"] .btn-primary:hover{background:#1a1a6e}
+.btn-primary:hover{background:#6D28D9;box-shadow:0 6px 18px rgba(0,0,0,.12)}
+[data-theme="dark"] .btn-primary{background:#A78BFA;color:#ffffff;border-color:#A78BFA}
+[data-theme="dark"] .btn-primary:hover{background:#8B5CF6}
 
 /* Ã¢â€â‚¬Ã¢â€â‚¬ analytics card Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .analytics-card{
@@ -241,13 +242,13 @@ button{font:inherit}
   color:var(--text);font-size:13.5px;font-weight:700;
 }
 .live{color:var(--accent2);font-size:11px;font-weight:800;letter-spacing:.8px;position:relative}
-.live::before{content:"";display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:#030341;box-shadow:0 0 14px rgba(3,3,65,.9);animation:livePulse 1.8s ease-in-out infinite}
+.live::before{content:"";display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:#7C3AED;box-shadow:0 0 14px rgba(124,58,237,.9);animation:livePulse 1.8s ease-in-out infinite}
 .analytics-body{padding:20px 22px 24px}
 .stat+.stat{margin-top:18px}
 .stat strong{
   display:block;font-family:"Outfit",sans-serif;
   font-size:30px;line-height:1;font-weight:900;letter-spacing:-.8px;
-  background:var(--brand-gradient);background-size:260% 100%;
+  background:var(--brand-blue);background-size:260% 100%;
   -webkit-background-clip:text;background-clip:text;color:transparent;
   animation:gradientShift 5s ease-in-out infinite,metricPulse 4.5s ease-in-out infinite;
 }
@@ -258,7 +259,7 @@ button{font:inherit}
   color:var(--text3);font-size:12px;font-weight:700;
   background:var(--bg2);
 }
-.sol{width:14px;height:8px;border-radius:999px;background:var(--brand-gradient);background-size:240% 100%;transform:skew(-18deg);animation:gradientShift 4s ease-in-out infinite}
+.sol{width:14px;height:8px;border-radius:999px;background:var(--brand-blue);background-size:240% 100%;transform:skew(-18deg);animation:gradientShift 4s ease-in-out infinite}
 
 /* Ã¢â€â‚¬Ã¢â€â‚¬ quick buy Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .quick{position:relative;padding:0 0 56px;z-index:2}
@@ -295,7 +296,7 @@ button{font:inherit}
 .info-section{padding:48px 0;background:var(--bg)}[data-theme="dark"] .info-section{background:#050505}
 .steps-grid{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .step-card{position:relative;min-height:200px;padding:20px;border:1.5px solid var(--border);border-radius:16px;background:var(--card);overflow:hidden;transition:.18s ease}
-.step-num{position:absolute;right:16px;top:12px;z-index:0}.step-dots{display:block;width:auto;height:100px;color:var(--text)}.step-card:hover .step-dots circle[fill="#030341"]{transition:.2s}.step-card h3,.step-card p,.step-icon{position:relative;z-index:1}
+.step-num{position:absolute;right:16px;top:12px;z-index:0}.step-dots{display:block;width:auto;height:100px;color:var(--text)}.step-card:hover .step-dots circle[fill="#7C3AED"]{transition:.2s}.step-card h3,.step-card p,.step-icon{position:relative;z-index:1}
 .step-card:hover{transform:translateY(-4px)}
 .step-icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:var(--bg2);color:var(--text);margin-bottom:18px}
 .step-card h3{margin:0 0 10px;font-size:20px}.step-card p{margin:0;color:var(--text2);line-height:1.6}
@@ -352,12 +353,12 @@ button{font:inherit}
   animation:softShimmer 7s ease-in-out infinite;
   pointer-events:none;
 }
-.job-card:hover{border-color:#030341;box-shadow:0 14px 36px rgba(37,99,235,.13);transform:translateY(-2px)}
+.job-card:hover{border-color:#315EFB;box-shadow:0 14px 36px rgba(37,99,235,.13);transform:translateY(-2px)}
 .job-card.is-active{
-  border-color:#030341;
-  box-shadow:0 16px 42px rgba(37,99,235,.14),0 0 0 1px rgba(3,3,65,.14);
+  border-color:#315EFB;
+  box-shadow:0 16px 42px rgba(37,99,235,.14),0 0 0 1px rgba(124,58,237,.14);
 }
-[data-theme="dark"] .job-card.is-active{border-color:#374151;box-shadow:0 0 0 1px rgba(3,3,65,.12),0 16px 34px rgba(0,0,0,.32)}
+[data-theme="dark"] .job-card.is-active{border-color:#374151;box-shadow:0 0 0 1px rgba(124,58,237,.12),0 16px 34px rgba(0,0,0,.32)}
 .job-card.is-moving{animation:cardOrderIn .42s cubic-bezier(.22,1,.36,1) both}
 .job-top{
   display:flex;align-items:center;gap:13px;
@@ -381,7 +382,7 @@ button{font:inherit}
 .progress-line strong{color:var(--text);letter-spacing:0;font-size:13px}
 .progress{height:10px;border-radius:99px;background:var(--bg2);overflow:hidden;margin:12px 0 14px}
 [data-theme="dark"] .progress{background:#0a0a0a}
-.progress span{position:relative;display:block;height:100%;background:var(--brand-gradient);background-size:240% 100%;border-radius:99px;animation:gradientShift 4s ease-in-out infinite,progressLoad 1.1s ease-out both}
+.progress span{position:relative;display:block;height:100%;background:var(--brand-blue);background-size:240% 100%;border-radius:99px;animation:gradientShift 4s ease-in-out infinite,progressLoad 1.1s ease-out both}
 .progress span::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:barSheen 2.8s ease-in-out infinite}
 .dot-indicators{display:flex;gap:16px;margin-bottom:14px;font-size:12px;font-weight:700}
 .dot-indicators span{display:flex;align-items:center;gap:5px;color:var(--text2)}
@@ -389,7 +390,7 @@ button{font:inherit}
 .dot-indicators .dot-green{background:#16a34a}
 .dot-indicators .dot-yellow{background:#d97706}
 .dot-indicators .dot-purple{background:#7c3aed}
-.dot-indicators .dot-blue{background:#030341}
+.dot-indicators .dot-blue{background:#2563eb}
 .reward{
   height:100px;margin:0 0 12px;padding:14px 18px;
   border:1.5px solid var(--border);border-radius:10px;
@@ -397,7 +398,7 @@ button{font:inherit}
   background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(147,197,253,.14));
 }
 [data-theme="dark"] .reward{background:linear-gradient(135deg,rgba(37,99,235,.14),rgba(124,58,237,.08));border-color:#232323}
-.reward strong{font-family:"Outfit",sans-serif;background:var(--brand-gradient);background-size:240% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;font-size:32px;font-weight:900;letter-spacing:-.6px;animation:gradientShift 5s ease-in-out infinite,metricPulse 4.8s ease-in-out infinite}
+.reward strong{font-family:"Outfit",sans-serif;background:var(--brand-blue);background-size:240% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;font-size:32px;font-weight:900;letter-spacing:-.6px;animation:gradientShift 5s ease-in-out infinite,metricPulse 4.8s ease-in-out infinite}
 .reward span{color:var(--text2);font-size:12px;font-weight:800}
 .reward small{display:block;margin-top:3px;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px}
 .reward .usd-equiv{display:block;margin-top:2px;color:var(--text3);font-size:10px;font-weight:600;opacity:.7}
@@ -425,7 +426,7 @@ button{font:inherit}
   animation:dotBreathe 2.8s ease-in-out infinite;
 }
 [data-theme="dark"] .dots span{background:#232323;box-shadow:none}
-[data-theme="dark"] .dots span.active{background:#030341;box-shadow:0 0 18px rgba(3,3,65,.3)}
+[data-theme="dark"] .dots span.active{background:#A78BFA;box-shadow:0 0 18px rgba(167,139,250,.3)}
 
 /* Ã¢â€â‚¬Ã¢â€â‚¬ store Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .store-grid,.community-grid{margin-top:24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:stretch;grid-auto-rows:1fr}
@@ -465,7 +466,7 @@ button{font:inherit}
   border:1.5px solid var(--border);border-radius:9px;
   background:var(--card2);margin-bottom:14px;margin-top:auto}
 [data-theme="dark"] .price{background:var(--card2);border-color:var(--border)}
-.price strong{background:var(--brand-gradient);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:20px;font-weight:900}
+.price strong{background:var(--brand-blue);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:20px;font-weight:900}
 .price span{
   padding:6px 12px;border:1.5px solid var(--border);border-radius:7px;
   background:var(--card);color:var(--text2);font-size:12px;font-weight:800;
@@ -594,7 +595,7 @@ footer{
   .hero{background:radial-gradient(circle at 50% 38%,rgba(124,58,237,.10),transparent 32%),radial-gradient(circle at 54% 72%,rgba(37,99,235,.11),transparent 42%),linear-gradient(180deg,#fff 0%,#f8fbff 100%)}
   .hero::before{background:radial-gradient(ellipse at 50% 58%,rgba(196,181,253,.17),transparent 48%);opacity:.75}
   .hero::after{height:72px;background:linear-gradient(transparent,#fff)}
-  [data-theme="dark"] .hero{background:radial-gradient(circle at 30% 52%,rgba(3,3,65,.18),transparent 36%),radial-gradient(circle at 70% 58%,rgba(3,3,65,.12),transparent 40%),linear-gradient(180deg,#050505 0%,#050505 100%)}
+  [data-theme="dark"] .hero{background:radial-gradient(circle at 30% 52%,rgba(124,58,237,.22),transparent 36%),radial-gradient(circle at 70% 58%,rgba(6,182,212,.16),transparent 40%),linear-gradient(180deg,#050505 0%,#050505 100%)}
   [data-theme="dark"] .hero::before{background:radial-gradient(ellipse at 50% 62%,rgba(96,165,250,.14),transparent 48%);opacity:.8}
   [data-theme="dark"] .hero::after{background:linear-gradient(transparent,#000000)}
   .hero-grid{display:block;padding:54px 0 30px;text-align:center}
@@ -652,7 +653,7 @@ footer{
   .jobs-track{grid-auto-rows:1fr}
   .job-card{min-height:420px;box-shadow:0 10px 26px rgba(16,21,37,.07)}
   [data-theme="dark"] .job-card{background:#000000;border-color:#232323;box-shadow:none}
-  [data-theme="dark"] .job-card.is-active{border-color:#374151;box-shadow:0 0 0 1px rgba(3,3,65,.12)}
+  [data-theme="dark"] .job-card.is-active{border-color:#374151;box-shadow:0 0 0 1px rgba(124,58,237,.12)}
   .job-top{min-height:64px;padding:13px 18px;gap:12px}
   [data-theme="dark"] .job-top{background:linear-gradient(120deg,rgba(124,58,237,.12),rgba(37,99,235,.08),rgba(6,182,212,.08));border-bottom-color:#232323}
   .avatar{width:40px;height:40px;font-size:12px}
@@ -784,7 +785,7 @@ footer{
 .auth-modal-panel{box-shadow:0 28px 80px rgba(8,11,19,.28);transform:translateY(10px) scale(.985);transition:transform .18s ease;max-height:min(92vh,760px);overflow-y:auto!important}
 .auth-modal.open .auth-modal-panel{transform:none}
 .auth-modal input{width:100%;border:1px solid var(--color-border-tertiary);background:var(--color-background-primary);color:var(--color-text-primary);padding:0 12px;outline:none;font-family:inherit}
-.auth-modal input:focus{border-color:#030341;box-shadow:0 0 0 3px rgba(49,94,251,.12)}
+.auth-modal input:focus{border-color:#315EFB;box-shadow:0 0 0 3px rgba(49,94,251,.12)}
 body.auth-open{overflow:hidden}
 [data-theme="dark"] .auth-modal{background:rgba(0,0,0,.72)}
 @media(max-width:520px){.auth-modal{align-items:flex-end;padding:12px}.auth-modal-panel{max-width:100%!important;border-radius:18px!important;max-height:88vh}}
@@ -807,7 +808,7 @@ body.auth-open{overflow:hidden}
 [data-theme="dark"] .oga-drawer-item:hover,[data-theme="dark"] .oga-drawer-group.open>.oga-drawer-group-toggle{background:#111111}
 .oga-drawer-icon{width:48px;height:48px;display:grid;place-items:center;border:1px solid #e0e3e8;border-radius:12px;background:#f9fafb;color:#4f5665;flex:0 0 auto;font-weight:800;font-size:23px}
 .oga-drawer-icon svg{width:22px;height:22px;stroke-width:2;fill:none;stroke:currentColor}
-.oga-drawer-icon.create-icon{background:#f5f0ff;border-color:#f5f0ff;color:#030341}
+.oga-drawer-icon.create-icon{background:#f5f0ff;border-color:#f5f0ff;color:#315EFB}
 .oga-drawer-icon.mini{width:38px;height:38px;border-radius:10px;background:var(--card)}
 [data-theme="dark"] .oga-drawer-icon{background:#050505;border-color:#333333;color:#b8c2d2}
 .oga-drawer-item strong,.oga-drawer-subnav strong{display:block;color:#171a22;font-size:21px;line-height:1.1;font-weight:800}
@@ -829,7 +830,7 @@ body.auth-open{overflow:hidden}
 .oga-drawer-actions svg{width:19px;height:19px;stroke-width:2.3}
 .oga-balance-card{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;margin-bottom:10px;border:1px solid var(--border);border-radius:18px;background:var(--card);box-shadow:0 6px 20px rgba(16,21,37,.06)}
 .oga-balance-card span{color:#8f96a3;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
-.oga-balance-card strong{font-family:"Outfit",sans-serif;font-size:28px;background:var(--brand-gradient);-webkit-background-clip:text;background-clip:text;color:transparent}
+.oga-balance-card strong{font-family:"Outfit",sans-serif;font-size:28px;background:var(--brand-blue);-webkit-background-clip:text;background-clip:text;color:transparent}
 [data-theme="dark"] .oga-balance-card{background:#111111;border-color:#333333}
 .oga-profile-btn{width:100%;height:70px;margin-top:12px;border:2px solid var(--border2);border-radius:999px;background:var(--card);color:var(--text);font-size:21px;font-weight:900;cursor:pointer}
 [data-theme="dark"] .oga-profile-btn{background:#111111;border-color:#333333;color:#ffffff}
@@ -867,11 +868,11 @@ body.auth-open{overflow:hidden}
 /* Homepage 2026 additions */
 .trust-badges{display:flex;flex-wrap:wrap;gap:12px;margin:-18px 0 22px;color:var(--text2);font-size:13px;font-weight:800}
 .social-proof{display:flex;align-items:center;gap:12px;margin-top:16px;color:var(--text2);font-size:13px;font-weight:800}
-.proof-avatars{display:flex}.proof-avatars span{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;margin-right:-8px;border:2px solid var(--card);background:linear-gradient(135deg,#232323,#030341);color:#fff;font-size:10px;font-weight:900}.proof-avatars span:nth-child(2){background:#f5b301;color:#111111}.proof-avatars span:nth-child(3){background:#16a34a}.proof-avatars span:nth-child(4){background:#7c3aed}.proof-avatars span:nth-child(5){background:#ef4444}.proof-avatars span:nth-child(6){background:#0f766e}
+.proof-avatars{display:flex}.proof-avatars span{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;margin-right:-8px;border:2px solid var(--card);background:linear-gradient(135deg,#232323,#315EFB);color:#fff;font-size:10px;font-weight:900}.proof-avatars span:nth-child(2){background:#f5b301;color:#111111}.proof-avatars span:nth-child(3){background:#16a34a}.proof-avatars span:nth-child(4){background:#7c3aed}.proof-avatars span:nth-child(5){background:#ef4444}.proof-avatars span:nth-child(6){background:#0f766e}
 
-.category-pill{display:inline-flex;align-items:center;width:max-content;padding:6px 10px;border-radius:999px;background:rgba(37,99,235,.1);color:#030341;font-size:11px;font-weight:900;margin-bottom:10px}.category-pill.survey{background:rgba(245,179,1,.16);color:#92400e}.category-pill.design{background:rgba(124,58,237,.13);color:#030341}.job-card{border-left:3px solid transparent}.job-card:hover{border-left-color:#030341}.job-cta{height:42px;margin-top:auto;border-radius:10px;background:var(--primary);color:#fff;border:1.5px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900}.progress.good span{background:#16a34a}.progress.warn span{background:#d97706}.progress.full span{background:#dc2626}
+.category-pill{display:inline-flex;align-items:center;width:max-content;padding:6px 10px;border-radius:999px;background:rgba(37,99,235,.1);color:#315EFB;font-size:11px;font-weight:900;margin-bottom:10px}.category-pill.survey{background:rgba(245,179,1,.16);color:#92400e}.category-pill.design{background:rgba(124,58,237,.13);color:#315EFB}.job-card{border-left:3px solid transparent}.job-card:hover{border-left-color:#315EFB}.job-cta{height:42px;margin-top:auto;border-radius:10px;background:var(--primary);color:#fff;border:1.5px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900}.progress.good span{background:#16a34a}.progress.warn span{background:#d97706}.progress.full span{background:#dc2626}
 
-.quick-intro{margin-bottom:18px}.quick-intro .section-kicker{margin-bottom:6px}.quick-intro p{margin:0;color:var(--text2);font-weight:700}.quick-card.active,.quick-card:hover{border-color:#030341;transform:translateY(-2px)}.quick-card{transition:.16s ease}.community-card{--accent:#030341}.community-card:hover{border-color:var(--accent)}.community-card:nth-child(2){--accent:#16a34a}.community-card:nth-child(3){--accent:#f5b301}.activity{height:8px;margin:14px 0 12px;border-radius:999px;background:var(--bg2);overflow:hidden}.activity span{display:block;height:100%;border-radius:999px;background:#030341}.community-action{height:40px;border:1.5px solid var(--border2);border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--text);margin-top:14px;margin-top:auto}
+.quick-intro{margin-bottom:18px}.quick-intro .section-kicker{margin-bottom:6px}.quick-intro p{margin:0;color:var(--text2);font-weight:700}.quick-card.active,.quick-card:hover{border-color:#315EFB;transform:translateY(-2px)}.quick-card{transition:.16s ease}.community-card{--accent:#315EFB}.community-card:hover{border-color:var(--accent)}.community-card:nth-child(2){--accent:#16a34a}.community-card:nth-child(3){--accent:#f5b301}.activity{height:8px;margin:14px 0 12px;border-radius:999px;background:var(--bg2);overflow:hidden}.activity span{display:block;height:100%;border-radius:999px;background:#315EFB}.community-action{height:40px;border:1.5px solid var(--border2);border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--text);margin-top:14px;margin-top:auto}
 .footer-rich{background:#050505;color:#fff;border-top:1px solid #232323;padding:56px 24px 24px;text-align:left}.footer-rich .footer-content{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1.2fr repeat(3,1fr);gap:34px}.footer-rich .footer-logo{justify-content:flex-start;color:#fff}.footer-rich p,.footer-rich a,.footer-bottom{color:#a1a1aa}.footer-rich h4{margin:0 0 14px;color:#fff}.footer-rich nav{display:grid;gap:10px}.social-icons{display:flex;gap:10px;margin-top:18px}.social-icons a{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);color:#fff}.footer-bottom{max-width:1120px;margin:34px auto 0;padding-top:18px;border-top:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between;gap:18px}.solana-word{display:inline-flex;align-items:center;gap:8px}.solana-word:before{content:"";width:24px;height:12px;border-radius:999px;background:linear-gradient(90deg,#14f195,#9945ff);transform:skew(-18deg)}
 
 .earn-section{background:#fafafa;padding:72px 0;position:relative;overflow:hidden}
@@ -881,12 +882,12 @@ body.auth-open{overflow:hidden}
 .earn-section .earn-sub{color:var(--text2)}
 [data-theme="dark"] .earn-section .earn-sub{color:rgba(255,255,255,.6)}
 .earn-section .container{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
-.earn-label{font-family:"DM Mono",monospace;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--accent,#030341);margin:0 0 12px}
+.earn-label{font-family:"DM Mono",monospace;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--accent,#315EFB);margin:0 0 12px}
 .earn-heading{font-family:"Outfit";font-size:clamp(32px,4vw,44px);font-weight:800;letter-spacing:-1px;line-height:1.1;margin:0 0 16px;color:#ffffff}
 .earn-sub{font-size:16px;line-height:1.65;color:var(--text2);margin:0 0 28px;max-width:480px}
 .earn-cta{display:inline-flex;align-items:center;gap:10px;height:48px;padding:0 28px;border-radius:999px;background:#111111;color:#ffffff;font-weight:800;font-size:15px;text-decoration:none;transition:.2s}
-[data-theme="dark"] .earn-cta{background:#ffffff;color:#111111}.earn-cta:hover{background:#030341;transform:translateY(-1px)}
-[data-theme="dark"] .earn-cta:hover{background:#e5e5e5}
+[data-theme="dark"] .earn-cta{background:#ffffff;color:#111111}.earn-cta:hover{background:#6D28D9;transform:translateY(-1px)}
+[data-theme="dark"] .earn-cta:hover{background:#A78BFA}
 .scroll-col{display:flex;flex-direction:column;gap:10px;overflow:hidden;position:relative;height:440px}
 .scroll-col::before,.scroll-col::after{content:"";position:absolute;left:0;right:0;z-index:2;pointer-events:none}
 .scroll-col::before{top:0;height:60px;background:linear-gradient(to bottom,var(--nav-bg,#050505),transparent)}
@@ -897,7 +898,7 @@ body.auth-open{overflow:hidden}
 @keyframes scrollUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
 @keyframes scrollDown{0%{transform:translateY(-50%)}100%{transform:translateY(0)}}
 .platform-pill{display:flex;align-items:center;gap:10px;padding:13px 18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#ffffff;font-size:15px;font-weight:500;white-space:nowrap;transition:border-color .2s,box-shadow .2s}
-.platform-pill:hover{border-color:#030341;box-shadow:0 0 12px rgba(124,58,237,.25)}
+.platform-pill:hover{border-color:#315EFB;box-shadow:0 0 12px rgba(124,58,237,.25)}
 .platform-pill img{width:22px;height:22px;flex-shrink:0;display:block}
 @media(max-width:800px){.earn-section .container{grid-template-columns:1fr;gap:32px;text-align:center}.earn-sub{margin-left:auto;margin-right:auto}.scroll-col{height:360px}.col-2{display:none}}
 
@@ -1100,7 +1101,7 @@ body.auth-open{overflow:hidden}
       </div>
       <div class="steps-grid">
         <article class="step-card"><span class="step-num"><svg class="step-dots" width="120" height="80" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="8" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="8" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="32" cy="8" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="44" cy="8" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="56" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="8" cy="20" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="20" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="20" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="8" cy="32" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="20" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="32" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="8" cy="44" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="20" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="44" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="8" cy="56" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="20" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="56" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="8" cy="68" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="20" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="68" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="8" cy="80" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="80" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="32" cy="80" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="44" cy="80" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="56" cy="80" r="4" fill="currentColor" opacity="0.08"/><circle cx="72" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="84" cy="8" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="96" cy="8" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="108" cy="8" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="120" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="72" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="84" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="96" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="108" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="120" cy="20" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="72" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="84" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="96" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="108" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="120" cy="32" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="72" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="84" cy="44" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="96" cy="44" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="108" cy="44" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="120" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="72" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="84" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="96" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="108" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="120" cy="56" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="72" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="84" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="96" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="108" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="120" cy="68" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="72" cy="80" r="4" fill="currentColor" opacity="0.08"/><circle cx="84" cy="80" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="96" cy="80" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="108" cy="80" r="4" fill="#030341"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="120" cy="80" r="4" fill="currentColor" opacity="0.08"/>
+  <circle cx="8" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="8" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="32" cy="8" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="44" cy="8" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="56" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="8" cy="20" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="20" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="20" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="8" cy="32" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="20" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="32" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="8" cy="44" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="20" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="44" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="8" cy="56" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="20" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="56" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="8" cy="68" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="20" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="68" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="8" cy="80" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="80" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="32" cy="80" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="44" cy="80" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="56" cy="80" r="4" fill="currentColor" opacity="0.08"/><circle cx="72" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="84" cy="8" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="96" cy="8" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="108" cy="8" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="120" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="72" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="84" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="96" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="108" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="120" cy="20" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="72" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="84" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="96" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="108" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="120" cy="32" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="72" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="84" cy="44" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="96" cy="44" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="108" cy="44" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="120" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="72" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="84" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="96" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="108" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="120" cy="56" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="72" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="84" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="96" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="108" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="120" cy="68" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="72" cy="80" r="4" fill="currentColor" opacity="0.08"/><circle cx="84" cy="80" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="96" cy="80" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="108" cy="80" r="4" fill="#7C3AED"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="120" cy="80" r="4" fill="currentColor" opacity="0.08"/>
 </svg></span><div class="step-icon"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></div><h3>Create Your Account</h3><p>Sign up free with your email or connect a crypto wallet. Takes under 2 minutes.</p></article>
         <article class="step-card"><span class="step-num"><svg class="step-dots" width="56" height="80" viewBox="0 0 56 80" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -1109,7 +1110,7 @@ body.auth-open{overflow:hidden}
       <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-  <circle cx="8" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="8" r="4" fill="#030341" filter="url(#glow)"/><circle cx="32" cy="8" r="4" fill="#030341" filter="url(#glow)"/><circle cx="44" cy="8" r="4" fill="#030341" filter="url(#glow)"/><circle cx="56" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="8" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="20" r="4" fill="#030341" filter="url(#glow)"/><circle cx="8" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="32" r="4" fill="#030341" filter="url(#glow)"/><circle cx="8" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="44" r="4" fill="#030341" filter="url(#glow)"/><circle cx="32" cy="44" r="4" fill="#030341" filter="url(#glow)"/><circle cx="44" cy="44" r="4" fill="#030341" filter="url(#glow)"/><circle cx="56" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="8" cy="56" r="4" fill="#030341" filter="url(#glow)"/><circle cx="20" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="8" cy="68" r="4" fill="#030341" filter="url(#glow)"/><circle cx="20" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="8" cy="80" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="80" r="4" fill="#030341" filter="url(#glow)"/><circle cx="32" cy="80" r="4" fill="#030341" filter="url(#glow)"/><circle cx="44" cy="80" r="4" fill="#030341" filter="url(#glow)"/><circle cx="56" cy="80" r="4" fill="currentColor" opacity="0.08"/>
+  <circle cx="8" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="8" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="32" cy="8" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="44" cy="8" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="56" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="8" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="20" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="8" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="32" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="8" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="44" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="32" cy="44" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="44" cy="44" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="56" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="8" cy="56" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="20" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="8" cy="68" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="20" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="8" cy="80" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="80" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="32" cy="80" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="44" cy="80" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="56" cy="80" r="4" fill="currentColor" opacity="0.08"/>
 </svg></span><div class="step-icon"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3>Pick a Task</h3><p>Browse hundreds of micro-jobs — social tasks, surveys, design gigs, and more. Filter by pay and category.</p></article>
         <article class="step-card"><span class="step-num"><svg class="step-dots" width="56" height="80" viewBox="0 0 56 80" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -1118,7 +1119,7 @@ body.auth-open{overflow:hidden}
       <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-  <circle cx="8" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="8" r="4" fill="#030341" filter="url(#glow)"/><circle cx="32" cy="8" r="4" fill="#030341" filter="url(#glow)"/><circle cx="44" cy="8" r="4" fill="#030341" filter="url(#glow)"/><circle cx="56" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="8" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="20" r="4" fill="#030341" filter="url(#glow)"/><circle cx="8" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="32" r="4" fill="#030341" filter="url(#glow)"/><circle cx="8" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="44" r="4" fill="#030341" filter="url(#glow)"/><circle cx="32" cy="44" r="4" fill="#030341" filter="url(#glow)"/><circle cx="44" cy="44" r="4" fill="#030341" filter="url(#glow)"/><circle cx="56" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="8" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="56" r="4" fill="#030341" filter="url(#glow)"/><circle cx="8" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="68" r="4" fill="#030341" filter="url(#glow)"/><circle cx="8" cy="80" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="80" r="4" fill="#030341" filter="url(#glow)"/><circle cx="32" cy="80" r="4" fill="#030341" filter="url(#glow)"/><circle cx="44" cy="80" r="4" fill="#030341" filter="url(#glow)"/><circle cx="56" cy="80" r="4" fill="currentColor" opacity="0.08"/>
+  <circle cx="8" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="8" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="32" cy="8" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="44" cy="8" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="56" cy="8" r="4" fill="currentColor" opacity="0.08"/><circle cx="8" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="20" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="20" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="8" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="32" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="32" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="8" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="44" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="32" cy="44" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="44" cy="44" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="56" cy="44" r="4" fill="currentColor" opacity="0.08"/><circle cx="8" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="56" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="56" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="8" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="32" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="44" cy="68" r="4" fill="currentColor" opacity="0.08"/><circle cx="56" cy="68" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="8" cy="80" r="4" fill="currentColor" opacity="0.08"/><circle cx="20" cy="80" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="32" cy="80" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="44" cy="80" r="4" fill="#7C3AED" filter="url(#glow)"/><circle cx="56" cy="80" r="4" fill="currentColor" opacity="0.08"/>
 </svg></span><div class="step-icon"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12h4v4h-4a2 2 0 0 1 0-4Z"/></svg></div><h3>Get Paid</h3><p>Complete the task and get paid instantly in Naira or USDC directly to your wallet or bank.</p></article>
       </div>
       <div class="center-cta"><a class="btn btn-primary" href="tasks.html">Start Earning Free →</a></div>
@@ -1313,9 +1314,9 @@ body.auth-open{overflow:hidden}
 
     <div style="padding:20px 20px 8px; display:flex; flex-direction:column; gap:6px;">
 
-      <button onclick="show('screen-email')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#030341'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
+      <button onclick="show('screen-email')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#315EFB'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
         <div style="width:40px; height:40px; border-radius:10px; background:#EEF2FF; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-          <i class="ti ti-mail" style="font-size:20px; color:#030341;" aria-hidden="true"></i>
+          <i class="ti ti-mail" style="font-size:20px; color:#315EFB;" aria-hidden="true"></i>
         </div>
         <div style="flex:1; min-width:0;">
           <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Sign in / Sign up</div>
@@ -1330,9 +1331,9 @@ body.auth-open{overflow:hidden}
         <div style="flex:1; height:0.5px; background:var(--color-border-tertiary);"></div>
       </div>
 
-      <button onclick="show('screen-wallet')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#030341'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
+      <button onclick="show('screen-wallet')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#315EFB'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
         <div style="width:40px; height:40px; border-radius:10px; background:#EEF2FF; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-          <i class="ti ti-wallet" style="font-size:20px; color:#030341;" aria-hidden="true"></i>
+          <i class="ti ti-wallet" style="font-size:20px; color:#315EFB;" aria-hidden="true"></i>
         </div>
         <div style="flex:1; min-width:0;">
           <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Connect Wallet</div>
@@ -1410,9 +1411,9 @@ body.auth-open{overflow:hidden}
         <div style="flex:1; height:0.5px; background:var(--color-border-tertiary);"></div>
       </div>
 
-      <button onclick="show('screen-sigtx')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#030341'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
+      <button onclick="show('screen-sigtx')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#315EFB'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
         <div style="width:40px; height:40px; border-radius:10px; background:#EEF2FF; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-          <i class="ti ti-shield-check" style="font-size:20px; color:#030341;" aria-hidden="true"></i>
+          <i class="ti ti-shield-check" style="font-size:20px; color:#315EFB;" aria-hidden="true"></i>
         </div>
         <div style="flex:1; min-width:0;">
           <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Sign in with Transaction</div>
@@ -1420,9 +1421,9 @@ body.auth-open{overflow:hidden}
         </div>
         <i class="ti ti-arrow-right" style="font-size:16px; color:var(--color-text-secondary);" aria-hidden="true"></i>
       </button>
-      <button onclick="show('screen-pair')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#030341'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
+      <button onclick="show('screen-pair')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#315EFB'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
         <div style="width:40px; height:40px; border-radius:10px; background:#EEF2FF; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-          <i class="ti ti-devices" style="font-size:20px; color:#030341;" aria-hidden="true"></i>
+          <i class="ti ti-devices" style="font-size:20px; color:#315EFB;" aria-hidden="true"></i>
         </div>
         <div style="flex:1; min-width:0;">
           <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Pair devices</div>
@@ -1444,7 +1445,7 @@ body.auth-open{overflow:hidden}
       </button>
       <div style="flex:1;">
         <div style="display:flex; background:var(--color-background-secondary); border-radius:10px; padding:3px; border:0.5px solid var(--color-border-tertiary);">
-          <button id="tab-login" onclick="switchTab('login')" style="flex:1; padding:7px; border:none; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; background:#030341; color:#fff;">Sign in</button>
+          <button id="tab-login" onclick="switchTab('login')" style="flex:1; padding:7px; border:none; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; background:#315EFB; color:#fff;">Sign in</button>
           <button id="tab-signup" onclick="switchTab('signup')" style="flex:1; padding:7px; border:none; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; background:transparent; color:var(--color-text-secondary);">Sign up</button>
         </div>
       </div>
@@ -1470,7 +1471,7 @@ body.auth-open{overflow:hidden}
         <div style="text-align:right; margin-bottom:18px;">
           <a href="settings.html" style="font-size:12px; color:var(--accent2); text-decoration:none;">Forgot password?</a>
         </div>
-        <button onclick="show('screen-success')" style="width:100%; padding:12px; background:linear-gradient(135deg,#030341,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;">Sign in to OgaPay</button>
+        <button onclick="show('screen-success')" style="width:100%; padding:12px; background:linear-gradient(135deg,#315EFB,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;">Sign in to OgaPay</button>
       </div>
 
       <div id="form-signup" style="display:none;">
@@ -1499,10 +1500,10 @@ body.auth-open{overflow:hidden}
           </div>
         </div>
         <div style="margin-bottom:16px; display:flex; align-items:flex-start; gap:8px;">
-          <input type="checkbox" id="tos" style="width:16px; height:16px; flex-shrink:0; margin-top:2px; accent-color:#030341;"/>
+          <input type="checkbox" id="tos" style="width:16px; height:16px; flex-shrink:0; margin-top:2px; accent-color:#315EFB;"/>
           <label for="tos" style="font-size:12px; color:var(--color-text-secondary); line-height:1.5; font-weight:400;">I agree to OgaPay's <a href="terms.html" style="color:var(--accent2); text-decoration:none;">Terms of Service</a> and <a href="privacy.html" style="color:var(--accent2); text-decoration:none;">Privacy Policy</a></label>
         </div>
-        <button onclick="show('screen-success')" style="width:100%; padding:12px; background:linear-gradient(135deg,#030341,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;">Create my account</button>
+        <button onclick="show('screen-success')" style="width:100%; padding:12px; background:linear-gradient(135deg,#315EFB,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;">Create my account</button>
       </div>
 
       <div style="display:flex; align-items:center; gap:10px; margin:18px 0 14px;">
@@ -1515,7 +1516,7 @@ body.auth-open{overflow:hidden}
           <i class="ti ti-brand-google" style="font-size:16px; color:#EA4335;" aria-hidden="true"></i> Google
         </button>
         <button onclick="show('screen-wallet')" style="display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; border:0.5px solid var(--color-border-tertiary); border-radius:10px; font-size:13px; font-weight:500; cursor:pointer; background:var(--color-background-secondary); color:var(--color-text-primary);">
-          <i class="ti ti-wallet" style="font-size:16px; color:#030341;" aria-hidden="true"></i> Wallet
+          <i class="ti ti-wallet" style="font-size:16px; color:#315EFB;" aria-hidden="true"></i> Wallet
         </button>
       </div>
     </div>
@@ -1527,9 +1528,9 @@ body.auth-open{overflow:hidden}
       <h3 id="conn-title" style="font-size:17px; font-weight:500; color:var(--color-text-primary); margin:0 0 6px;">Connecting to Phantom</h3>
       <p style="font-size:13px; color:var(--color-text-secondary); margin:0 0 24px; line-height:1.5;">Accept the connection request in your wallet</p>
       <div style="display:flex; justify-content:center; gap:6px; margin-bottom:28px;" id="conn-dots">
-        <div class="dot-anim" style="width:8px; height:8px; border-radius:50%; background:#030341; animation:dotPulse 1.4s infinite 0s;"></div>
-        <div class="dot-anim" style="width:8px; height:8px; border-radius:50%; background:#030341; animation:dotPulse 1.4s infinite 0.2s;"></div>
-        <div class="dot-anim" style="width:8px; height:8px; border-radius:50%; background:#030341; animation:dotPulse 1.4s infinite 0.4s;"></div>
+        <div class="dot-anim" style="width:8px; height:8px; border-radius:50%; background:#315EFB; animation:dotPulse 1.4s infinite 0s;"></div>
+        <div class="dot-anim" style="width:8px; height:8px; border-radius:50%; background:#315EFB; animation:dotPulse 1.4s infinite 0.2s;"></div>
+        <div class="dot-anim" style="width:8px; height:8px; border-radius:50%; background:#315EFB; animation:dotPulse 1.4s infinite 0.4s;"></div>
       </div>
       <button onclick="show('screen-wallet')" style="color:var(--color-text-secondary); background:none; border:none; font-size:13px; cursor:pointer;">Cancel</button>
     </div>
@@ -1546,7 +1547,7 @@ body.auth-open{overflow:hidden}
     <div style="padding:20px 24px 24px;">
       <div style="background:var(--color-background-secondary); border-radius:14px; padding:16px; margin-bottom:16px; border:0.5px solid var(--color-border-tertiary);">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-          <i class="ti ti-shield-check" style="font-size:20px; color:#030341;" aria-hidden="true"></i>
+          <i class="ti ti-shield-check" style="font-size:20px; color:#315EFB;" aria-hidden="true"></i>
           <div style="font-size:13.5px; font-weight:500; color:var(--color-text-primary);">How it works</div>
         </div>
         <p style="font-size:12.5px; color:var(--color-text-secondary); margin:0; line-height:1.6;">Send a tiny SOL transaction (about $0.001) to prove wallet ownership. The funds are returned instantly. No password needed - your wallet is your account.</p>
@@ -1558,7 +1559,7 @@ body.auth-open{overflow:hidden}
           <input type="text" placeholder="Paste your Solana address" style="padding-left:36px; font-size:13px; border-radius:10px; height:42px; font-family:monospace;"/>
         </div>
       </div>
-      <button onclick="show('screen-success')" style="width:100%; padding:12px; background:linear-gradient(135deg,#030341,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+      <button onclick="show('screen-success')" style="width:100%; padding:12px; background:linear-gradient(135deg,#315EFB,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
         <i class="ti ti-bolt" style="font-size:16px;" aria-hidden="true"></i> Send verification transaction
       </button>
     </div>
@@ -1589,7 +1590,7 @@ body.auth-open{overflow:hidden}
           <input type="text" placeholder="XXXX-XXXX-XXXX" style="font-size:14px; border-radius:10px; height:42px; text-align:center; font-family:monospace; letter-spacing:0.1em;"/>
         </div>
       </div>
-      <button onclick="show('screen-success')" style="width:100%; padding:12px; background:linear-gradient(135deg,#030341,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;">Pair device</button>
+      <button onclick="show('screen-success')" style="width:100%; padding:12px; background:linear-gradient(135deg,#315EFB,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;">Pair device</button>
     </div>
   </div>
   <div id="screen-success" class="screen" style="display:none;">
@@ -1599,7 +1600,7 @@ body.auth-open{overflow:hidden}
       </div>
       <h2 style="font-size:20px; font-weight:500; color:var(--color-text-primary); margin:0 0 8px;">You're connected!</h2>
       <p style="font-size:13.5px; color:var(--color-text-secondary); margin:0 0 28px; line-height:1.6;">Welcome to OgaPay. Start browsing tasks and earning Naira or crypto instantly.</p>
-      <button onclick="closeModal()" style="width:100%; padding:13px; background:linear-gradient(135deg,#030341,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer; margin-bottom:10px;">Browse Tasks -></button>
+      <button onclick="closeModal()" style="width:100%; padding:13px; background:linear-gradient(135deg,#315EFB,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer; margin-bottom:10px;">Browse Tasks -></button>
       <button onclick="closeModal()" style="width:100%; padding:11px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:12px; font-size:13.5px; cursor:pointer; color:var(--color-text-secondary);">Set up my profile first</button>
     </div>
   </div>
@@ -1657,9 +1658,9 @@ function switchTab(tab) {
   const isLogin = tab === 'login';
   document.getElementById('form-login').style.display = isLogin ? 'block' : 'none';
   document.getElementById('form-signup').style.display = isLogin ? 'none' : 'block';
-  document.getElementById('tab-login').style.background = isLogin ? '#030341' : 'transparent';
+  document.getElementById('tab-login').style.background = isLogin ? '#315EFB' : 'transparent';
   document.getElementById('tab-login').style.color = isLogin ? '#fff' : 'var(--color-text-secondary)';
-  document.getElementById('tab-signup').style.background = isLogin ? 'transparent' : '#030341';
+  document.getElementById('tab-signup').style.background = isLogin ? 'transparent' : '#315EFB';
   document.getElementById('tab-signup').style.color = isLogin ? 'var(--color-text-secondary)' : '#fff';
 }
 function closeModal() {
