@@ -5,6 +5,7 @@ const { validate, registerSchema, loginSchema, refreshTokenSchema } = require('.
 const { authenticate } = require('../middleware/auth.middleware');
 const authService = require('../services/auth.service');
 const { successResponse, createdResponse } = require('../utils/apiResponse');
+const { supabase } = require('../config/supabase');
 
 const router = express.Router();
 
@@ -30,6 +31,23 @@ router.post('/register', normalizeRegisterBody, validate(registerSchema), async 
 router.post('/signup', normalizeRegisterBody, validate(registerSchema), async (req, res) => {
   const result = await authService.register(req.body);
   createdResponse(res, result, 'Account created successfully');
+});
+
+// GET /api/v1/auth/google — redirect to Google OAuth via Supabase
+router.get('/google', async (req, res) => {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${process.env.FRONTEND_URL || 'https://ogapay-five.vercel.app'}/auth-callback.html`,
+        queryParams: { access_type: 'offline', prompt: 'consent' },
+      },
+    });
+    if (error) throw error;
+    res.redirect(data.url);
+  } catch (err) {
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login.html?error=google_auth_failed`);
+  }
 });
 
 // POST /api/v1/auth/google/exchange
