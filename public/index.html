@@ -217,9 +217,9 @@ button{font:inherit}
   background:var(--primary);color:#fff;border-color:var(--primary);
   box-shadow:0 4px 14px rgba(16,21,37,.18);
 }
-.btn-primary:hover{background:#6D28D9;box-shadow:0 6px 18px rgba(0,0,0,.12)}
-[data-theme="dark"] .btn-primary{background:#A78BFA;color:#ffffff;border-color:#A78BFA}
-[data-theme="dark"] .btn-primary:hover{background:#8B5CF6}
+.btn-primary:hover{background:var(--border2);box-shadow:0 6px 18px rgba(0,0,0,.12)}
+[data-theme="dark"] .btn-primary{background:var(--primary);color:var(--bg);border-color:var(--primary)}
+[data-theme="dark"] .btn-primary:hover{background:var(--border2)}
 
 /* Ã¢â€â‚¬Ã¢â€â‚¬ analytics card Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .analytics-card{
@@ -902,8 +902,8 @@ body.auth-open{overflow:hidden}
 .earn-heading{font-family:"Outfit";font-size:clamp(32px,4vw,44px);font-weight:800;letter-spacing:-1px;line-height:1.1;margin:0 0 16px;color:#ffffff}
 .earn-sub{font-size:16px;line-height:1.65;color:var(--text2);margin:0 0 28px;max-width:480px}
 .earn-cta{display:inline-flex;align-items:center;gap:10px;height:48px;padding:0 28px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:800;font-size:15px;text-decoration:none;transition:.2s}
-[data-theme="dark"] .earn-cta{background:#2a2a2a;color:#ffffff}.earn-cta:hover{background:#6D28D9;transform:translateY(-1px)}
-[data-theme="dark"] .earn-cta:hover{background:#A78BFA}
+[data-theme="dark"] .earn-cta{background:#2a2a2a;color:#ffffff}.earn-cta:hover{background:var(--border2);transform:translateY(-1px)}
+[data-theme="dark"] .earn-cta:hover{background:var(--border2)}
 .scroll-col{display:flex;flex-direction:column;gap:10px;overflow:hidden;position:relative;height:440px}
 .scroll-col::before,.scroll-col::after{content:"";position:absolute;left:0;right:0;z-index:2;pointer-events:none}
 .scroll-col::before{top:0;height:60px;background:linear-gradient(to bottom,var(--nav-bg,var(--bg2)),transparent)}
