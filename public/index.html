@@ -305,9 +305,23 @@ button{font:inherit}
 .steps-grid::before{content:"";position:absolute;left:18%;right:18%;top:36px;border-top:2px dashed var(--border2);opacity:.7;z-index:0;pointer-events:none}
 @media(max-width:800px){.steps-grid{grid-template-columns:1fr;gap:12px}.steps-grid::before{display:none}.step-dots-svg{width:70px}}
 
-/* Get started */
-.gs{text-align:center;padding:32px 0 28px}.gs-h{font-size:20px;font-weight:700;letter-spacing:-.3px}.gs-p{color:var(--text2);font-size:14px;margin:8px 0 0;line-height:1.5}
-.gs-b{display:flex;gap:14px;justify-content:center;margin-top:24px}.gs-btn{display:flex;align-items:center;gap:14px;padding:16px 24px;background:var(--card);border:1px solid var(--border);border-radius:14px;min-width:260px;text-decoration:none;transition:.2s;flex:1;max-width:340px;cursor:pointer}.gs-btn:hover{border-color:var(--accent2);box-shadow:0 0 24px rgba(59,130,246,.12)}.gs-ic{width:42px;height:42px;border-radius:10px;background:var(--bg2);display:grid;place-items:center;color:var(--text);flex-shrink:0}.gs-l{flex:1;text-align:left;font-size:15px;font-weight:600;color:var(--text)}.gs-ar{color:var(--text3);flex-shrink:0}
+/* Onboarding */
+.gs{padding:40px 0 56px}.gs-head{text-align:center;margin-bottom:36px}.gs-head h2{margin:0;font-family:"Outfit",sans-serif;font-size:clamp(28px,3vw,40px);line-height:1.05;letter-spacing:-1.2px;font-weight:900}.gs-head p{margin:10px auto 0;color:var(--text2);font-size:16px;line-height:1.55;font-weight:500;max-width:520px}
+.gs-grid{display:grid;grid-template-columns:340px 1fr;gap:32px;align-items:start;max-width:920px;margin:0 auto}
+.gs-left{display:flex;flex-direction:column;gap:12px}
+.gs-role{display:flex;align-items:center;gap:14px;padding:18px 22px;background:var(--card);border:2px solid var(--border);border-radius:16px;cursor:pointer;transition:all .25s ease;text-align:left;width:100%;font:inherit;color:var(--text)}.gs-role:hover{border-color:var(--border2)}.gs-role.active{border-color:#030341;box-shadow:0 0 0 3px rgba(3,3,65,.08);background:var(--card)}
+.gs-role-icon{width:44px;height:44px;border-radius:12px;background:var(--bg2);display:grid;place-items:center;color:var(--text);flex-shrink:0;transition:.25s}.gs-role.active .gs-role-icon{background:#030341;color:#fff}
+.gs-role-label{flex:1;font-size:16px;font-weight:700;letter-spacing:-.2px}.gs-role-arrow{color:var(--text3);flex-shrink:0;width:18px;height:18px;transition:.25s}.gs-role.active .gs-role-arrow{color:#030341;transform:translateX(3px)}
+.gs-right{position:relative;min-height:380px}
+.gs-panel{position:absolute;inset:0;opacity:0;visibility:hidden;transform:translateY(12px);transition:all .4s cubic-bezier(.4,0,.2,1);pointer-events:none;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:28px 30px;overflow-y:auto}
+.gs-panel.active{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto;position:relative}
+.gs-panel-title{font-family:"Outfit",sans-serif;font-size:24px;font-weight:800;letter-spacing:-.6px;margin:0 0 8px}.gs-panel-desc{color:var(--text2);font-size:14px;line-height:1.6;margin:0 0 24px}
+.gs-steps{display:grid;gap:14px;margin-bottom:28px}.gs-step{display:flex;align-items:flex-start;gap:14px}
+.gs-step-num{width:28px;height:28px;min-width:28px;border-radius:50%;background:#030341;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800;margin-top:2px}
+.gs-step-text strong{display:block;font-size:14px;font-weight:700;margin-bottom:2px;color:var(--text)}.gs-step-text span{display:block;color:var(--text2);font-size:13px;line-height:1.45}
+.gs-btns{display:flex;gap:12px;flex-wrap:wrap}
+.gs-btn-primary{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 26px;border-radius:10px;background:#030341;color:#fff;border:none;font-weight:800;font-size:14px;cursor:pointer;text-decoration:none;transition:.2s}.gs-btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+.gs-btn-secondary{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 26px;border-radius:10px;background:var(--card);border:1.5px solid var(--border);color:var(--text);font-weight:700;font-size:14px;cursor:pointer;text-decoration:none;transition:.2s}.gs-btn-secondary:hover{border-color:var(--border2)}
 
 .section-title{
   margin:0;font-family:"Outfit",sans-serif;
@@ -902,7 +916,7 @@ body.auth-open{overflow:hidden}
 .platform-pill img{width:22px;height:22px;flex-shrink:0;display:block}
 @media(max-width:800px){.earn-section .container{grid-template-columns:1fr;gap:32px;text-align:center}.earn-sub{margin-left:auto;margin-right:auto}.scroll-col{height:360px}.col-2{display:none}}
 
-@media(max-width:640px){.gs-b{flex-direction:column;align-items:center}.gs-btn{max-width:100%;min-width:0}}</style>
+@media(max-width:768px){.gs-grid{grid-template-columns:1fr;gap:24px}.gs-left{flex-direction:row}.gs-role{flex:1}.gs-right{min-height:auto}.gs-panel{position:relative;inset:auto;opacity:1;visibility:visible;transform:none;pointer-events:auto;display:none}.gs-panel.active{display:block}.gs-head{margin-bottom:24px}}@media(max-width:520px){.gs-left{flex-direction:column}.gs-panel{padding:22px 20px}}</style>
 </head>
 <body>
 <header class="nav">
@@ -1070,25 +1084,63 @@ body.auth-open{overflow:hidden}
   </section>
 
 
-  <section class="gs">
+  <section class="gs" id="onboarding">
     <div class="container">
-      <div class="gs-h">Get started with OgaPay</div>
-      <div class="gs-p">Whether you're here to earn or grow, choose your path below.</div>
-      <div class="gs-b">
-        <a class="gs-btn" href="tasks.html">
-          <span class="gs-ic">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-          </span>
-          <span class="gs-l">I'm a Worker</span>
-          <svg class="gs-ar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </a>
-        <a class="gs-btn" href="post-task.html">
-          <span class="gs-ic">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg>
-          </span>
-          <span class="gs-l">I'm an Advertiser</span>
-          <svg class="gs-ar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </a>
+      <div class="gs-head">
+        <h2>Get started with OgaPay</h2>
+        <p>Whether you're here to earn or grow, choose your path below.</p>
+      </div>
+      <div class="gs-grid">
+        <div class="gs-left">
+          <button class="gs-role active" data-role="worker" type="button">
+            <span class="gs-role-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+            </span>
+            <span class="gs-role-label">I'm a Worker</span>
+            <svg class="gs-role-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="gs-role" data-role="advertiser" type="button">
+            <span class="gs-role-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg>
+            </span>
+            <span class="gs-role-label">I'm an Advertiser</span>
+            <svg class="gs-role-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div class="gs-right">
+          <!-- Worker panel -->
+          <div class="gs-panel active" data-panel="worker">
+            <h3 class="gs-panel-title">Start earning</h3>
+            <p class="gs-panel-desc">Complete simple tasks, join communities, participate in campaigns and earn rewards directly to your wallet or bank account.</p>
+            <div class="gs-steps">
+              <div class="gs-step"><span class="gs-step-num">1</span><div class="gs-step-text"><strong>Create your OgaPay account</strong><span>Sign up with email or connect your wallet.</span></div></div>
+              <div class="gs-step"><span class="gs-step-num">2</span><div class="gs-step-text"><strong>Complete your profile</strong><span>Add username, social accounts and payment details.</span></div></div>
+              <div class="gs-step"><span class="gs-step-num">3</span><div class="gs-step-text"><strong>Browse available tasks</strong><span>Choose jobs, social tasks, surveys and community campaigns.</span></div></div>
+              <div class="gs-step"><span class="gs-step-num">4</span><div class="gs-step-text"><strong>Submit proof</strong><span>Complete the task and upload required proof.</span></div></div>
+              <div class="gs-step"><span class="gs-step-num">5</span><div class="gs-step-text"><strong>Receive rewards</strong><span>Get paid instantly after approval.</span></div></div>
+            </div>
+            <div class="gs-btns">
+              <a class="gs-btn-primary" href="tasks.html">Browse Tasks <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+              <a class="gs-btn-secondary" href="communities.html">Join Communities</a>
+            </div>
+          </div>
+          <!-- Advertiser panel -->
+          <div class="gs-panel" data-panel="advertiser">
+            <h3 class="gs-panel-title">Grow your project</h3>
+            <p class="gs-panel-desc">Launch campaigns and reach thousands of verified workers across multiple platforms.</p>
+            <div class="gs-steps">
+              <div class="gs-step"><span class="gs-step-num">1</span><div class="gs-step-text"><strong>Create an advertiser account</strong><span>Register and access the advertiser dashboard.</span></div></div>
+              <div class="gs-step"><span class="gs-step-num">2</span><div class="gs-step-text"><strong>Create a campaign</strong><span>Set campaign title, budget, rewards and requirements.</span></div></div>
+              <div class="gs-step"><span class="gs-step-num">3</span><div class="gs-step-text"><strong>Choose target audience</strong><span>Select categories, countries and platforms.</span></div></div>
+              <div class="gs-step"><span class="gs-step-num">4</span><div class="gs-step-text"><strong>Launch your campaign</strong><span>Workers begin completing your tasks immediately.</span></div></div>
+              <div class="gs-step"><span class="gs-step-num">5</span><div class="gs-step-text"><strong>Track results</strong><span>Monitor submissions, engagement and conversions in real time.</span></div></div>
+            </div>
+            <div class="gs-btns">
+              <a class="gs-btn-primary" href="post-task.html">Post a Task <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+              <a class="gs-btn-secondary" href="pricing.html">View Pricing</a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -1466,7 +1518,21 @@ body.auth-open{overflow:hidden}
     if(localStorage.getItem("ogapay-authenticated")==="true"){
       document.querySelectorAll(".wallet-btn strong").forEach(el=>el.textContent="Connected");
     }
-  }catch(e){}  document.querySelectorAll(".jobs-wrap").forEach(section=>{
+  }catch(e){}  // Onboarding role switching
+  (function(){
+    const roles = document.querySelectorAll('.gs-role');
+    const panels = document.querySelectorAll('.gs-panel');
+    if(!roles.length||!panels.length)return;
+    roles.forEach(role=>{
+      role.addEventListener('click',()=>{
+        const target = role.dataset.role;
+        roles.forEach(r=>r.classList.toggle('active',r===role));
+        panels.forEach(p=>p.classList.toggle('active',p.dataset.panel===target));
+      });
+    });
+  })();
+
+  document.querySelectorAll(".jobs-wrap").forEach(section=>{
     const cards=[...section.querySelectorAll(".job-card")];
     const dots=[...section.querySelectorAll(".dots span")];
     if(!cards.length||!dots.length)return;
