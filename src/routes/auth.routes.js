@@ -8,8 +8,26 @@ const { successResponse, createdResponse } = require('../utils/apiResponse');
 
 const router = express.Router();
 
+const normalizeRegisterBody = (req, res, next) => {
+  const body = req.body || {};
+  req.body = {
+    ...body,
+    firstName: body.firstName || body.first_name || String(body.full_name || '').trim().split(/\s+/)[0],
+    lastName: body.lastName || body.last_name || String(body.full_name || '').trim().split(/\s+/).slice(1).join(' '),
+    referralCode: body.referralCode || body.referral_code,
+    role: String(body.role || 'WORKER').toUpperCase(),
+  };
+  next();
+};
+
 // POST /api/v1/auth/register
-router.post('/register', validate(registerSchema), async (req, res) => {
+router.post('/register', normalizeRegisterBody, validate(registerSchema), async (req, res) => {
+  const result = await authService.register(req.body);
+  createdResponse(res, result, 'Account created successfully');
+});
+
+// POST /api/v1/auth/signup - frontend/spec alias
+router.post('/signup', normalizeRegisterBody, validate(registerSchema), async (req, res) => {
   const result = await authService.register(req.body);
   createdResponse(res, result, 'Account created successfully');
 });

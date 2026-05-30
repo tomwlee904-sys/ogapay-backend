@@ -7,6 +7,7 @@ const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
 
 const DOJAH_BASE = process.env.DOJAH_BASE_URL || 'https://api.dojah.io';
+const KYC_BUCKET = process.env.SUPABASE_KYC_BUCKET || 'Kyc-Documents';
 
 // ── Submit KYC ─────────────────────────────────
 
@@ -79,7 +80,7 @@ const uploadKycDocument = async (userId, file, documentType) => {
   const fileName = `kyc/${userId}/${documentType}_${Date.now()}.${file.mimetype.split('/')[1]}`;
 
   const { data, error } = await supabaseAdmin.storage
-    .from('kyc-documents')
+    .from(KYC_BUCKET)
     .upload(fileName, file.buffer, {
       contentType: file.mimetype,
       upsert: true,
@@ -87,7 +88,7 @@ const uploadKycDocument = async (userId, file, documentType) => {
 
   if (error) throw ApiError.internal('Failed to upload document');
 
-  const { data: urlData } = supabaseAdmin.storage.from('kyc-documents').getPublicUrl(fileName);
+  const { data: urlData } = supabaseAdmin.storage.from(KYC_BUCKET).getPublicUrl(fileName);
 
   // Save URL to KYC record
   const fieldMap = {

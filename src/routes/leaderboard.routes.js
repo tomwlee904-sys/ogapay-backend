@@ -86,8 +86,13 @@ router.get('/top-earners', async (req, res) => {
     topEarners.map(async (e) => {
       const user = await prisma.user.findUnique({
         where: { id: e.userId },
-        select: { id: true, username: true, firstName: true, avatarUrl: true },
-        include: { workerProfile: { select: { level: true } } },
+        select: {
+          id: true,
+          username: true,
+          firstName: true,
+          avatarUrl: true,
+          workerProfile: { select: { level: true } },
+        },
       });
       return { ...user, weeklyEarnings: e._sum.amount };
     }),

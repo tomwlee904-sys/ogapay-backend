@@ -9,6 +9,18 @@ const { successResponse, paginatedResponse, paginate } = require('../utils/apiRe
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
+// GET /api/v1/users/me - current frontend alias
+router.get('/me', authenticate, async (req, res) => {
+  const data = await userService.getProfile(req.user.id);
+  successResponse(res, data, 'Profile fetched');
+});
+
+// PATCH /api/v1/users/me - current frontend alias
+router.patch('/me', authenticate, async (req, res) => {
+  const data = await userService.updateProfile(req.user.id, req.body);
+  successResponse(res, data, 'Profile updated');
+});
+
 // GET /api/v1/users/profile
 router.get('/profile', authenticate, async (req, res) => {
   const data = await userService.getProfile(req.user.id);
@@ -28,12 +40,6 @@ router.post('/avatar', authenticate, upload.single('avatar'), async (req, res) =
   successResponse(res, data, 'Avatar updated');
 });
 
-// GET /api/v1/users/:username
-router.get('/:username', async (req, res) => {
-  const data = await userService.getWorkerPublicProfile(req.params.username);
-  successResponse(res, data, 'Profile fetched');
-});
-
 // GET /api/v1/users/transactions/history
 router.get('/transactions/history', authenticate, async (req, res) => {
   const { page = 1, limit = 20, type, currency } = req.query;
@@ -47,6 +53,12 @@ router.get('/transactions/history', authenticate, async (req, res) => {
 router.get('/referrals/stats', authenticate, async (req, res) => {
   const data = await userService.getReferralStats(req.user.id);
   successResponse(res, data, 'Referral stats fetched');
+});
+
+// GET /api/v1/users/:username
+router.get('/:username', async (req, res) => {
+  const data = await userService.getWorkerPublicProfile(req.params.username);
+  successResponse(res, data, 'Profile fetched');
 });
 
 module.exports = router;

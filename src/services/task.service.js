@@ -101,7 +101,14 @@ const getTask = async (taskId, userId) => {
     where: { id: taskId },
     include: {
       poster: {
-        select: { id: true, username: true, avatarUrl: true, firstName: true, lastName: true, posterProfile: { select: { avgRating: true, isVerified: true } } },
+        select: {
+          id: true,
+          username: true,
+          avatarUrl: true,
+          firstName: true,
+          lastName: true,
+          posterProfile: { select: { avgRating: true, isVerified: true } },
+        },
       },
       _count: { select: { submissions: true } },
     },

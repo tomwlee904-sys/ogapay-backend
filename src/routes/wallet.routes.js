@@ -17,6 +17,20 @@ router.get('/', async (req, res) => {
   successResponse(res, wallets, 'Wallets fetched');
 });
 
+// GET /api/v1/wallet/balance - frontend-friendly balance shape
+router.get('/balance', async (req, res) => {
+  const wallets = await walletService.getUserWallets(req.user.id);
+  const balances = wallets.reduce((acc, wallet) => {
+    acc[wallet.currency] = {
+      balance: Number(wallet.balance),
+      lockedBalance: Number(wallet.lockedBalance),
+      available: Number(wallet.balance) - Number(wallet.lockedBalance),
+    };
+    return acc;
+  }, {});
+  successResponse(res, balances, 'Wallet balance fetched');
+});
+
 // POST /api/v1/wallets/deposit
 router.post('/deposit', validate(depositSchema), async (req, res) => {
   const data = await walletService.initiateDeposit(req.user.id, req.body);
