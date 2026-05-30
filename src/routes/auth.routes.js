@@ -72,4 +72,17 @@ router.get('/me', authenticate, async (req, res) => {
   successResponse(res, req.user, 'User fetched');
 });
 
+
+// POST /api/v1/auth/forgot-password
+router.post('/forgot-password', async (req, res) => {
+  const result = await authService.forgotPassword(req.body.email);
+  successResponse(res, result);
+});
+
+// POST /api/v1/auth/reset-password
+router.post('/reset-password', async (req, res) => {
+  const result = await authService.resetPassword(req.body.token, req.body.newPassword);
+  successResponse(res, result);
+});
+
 module.exports = router;

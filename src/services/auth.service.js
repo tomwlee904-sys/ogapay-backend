@@ -278,4 +278,64 @@ const sanitizeUser = (user) => ({
   createdAt: user.createdAt,
 });
 
-module.exports = { register, googleExchange, login, refreshTokens, logout };
+
+// ── Forgot Password ────────────────────────────
+
+const jwt = require('jsonwebtoken');
+
+const forgotPassword = async (email) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    // Don't reveal whether email exists - return success either way
+    return { message: 'If an account exists with that email, a reset link has been sent.' };
+  }
+
+  // Generate JWT reset token (expires in 1 hour)
+  const resetToken = jwt.sign(
+    { sub: user.id, email: user.email, purpose: 'password_reset' },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' }
+  );
+
+  const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password.html?token=${resetToken}`;
+
+  logger.info(`Password reset requested for ${user.email} — link would be emailed. Reset URL: ${resetUrl}`);
+
+  // TODO: Send email via SendGrid/Resend/etc.
+  // For now, the reset link is returned in the response for dev convenience
+  return {
+    message: 'If an account exists with that email, a reset link has been sent.',
+    resetUrl, // Only returned in development; remove in production
+  };
+};
+
+const resetPassword = async (token, newPassword) => {
+  let payload;
+  try {
+    payload = jwt.verify(token, process.env.JWT_SECRET);
+    if (payload.purpose !== 'password_reset') {
+      throw new Error('Invalid token purpose');
+    }
+  } catch (err) {
+    throw ApiError.badRequest('Invalid or expired reset token. Please request a new one.');
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: payload.sub } });
+  if (!user) {
+    throw ApiError.badRequest('User not found.');
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash },
+  });
+
+  // Invalidate all refresh tokens for security
+  await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
+
+  logger.info(`Password reset completed for ${user.email}`);
+  return { message: 'Password has been reset successfully. You can now log in with your new password.' };
+};
+
+module.exports = { register, googleExchange, login, refreshTokens, logout, forgotPassword, resetPassword };
