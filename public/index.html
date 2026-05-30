@@ -851,6 +851,26 @@ body.auth-open{overflow:hidden}
 .footer-rich{background:#101525;color:#fff;border-top:1px solid rgba(255,255,255,.08);padding:56px 24px 24px;text-align:left}.footer-rich .footer-content{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1.2fr repeat(3,1fr);gap:34px}.footer-rich .footer-logo{justify-content:flex-start;color:#fff}.footer-rich p,.footer-rich a,.footer-bottom{color:rgba(255,255,255,.64)}.footer-rich h4{margin:0 0 14px;color:#fff}.footer-rich nav{display:grid;gap:10px}.social-icons{display:flex;gap:10px;margin-top:18px}.social-icons a{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);color:#fff}.footer-bottom{max-width:1120px;margin:34px auto 0;padding-top:18px;border-top:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between;gap:18px}.solana-word{display:inline-flex;align-items:center;gap:8px}.solana-word:before{content:"";width:24px;height:12px;border-radius:999px;background:linear-gradient(90deg,#14f195,#9945ff);transform:skew(-18deg)}
 @media(max-width:760px){.trust-badges,.social-proof{justify-content:center}.steps-grid,.split-grid,.trust-layout{grid-template-columns:1fr}.steps-grid:before{display:none}.info-section{padding:52px 0}.footer-rich{padding-bottom:110px}.footer-rich .footer-content{grid-template-columns:1fr}.footer-bottom{flex-direction:column}.testimonials{grid-auto-columns:86%}}
 
+/* ── Earn Everywhere ── */
+.earn-section{background:var(--nav-bg,#0d111d);padding:72px 0;position:relative;overflow:hidden}
+.earn-section .container{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.earn-label{font-family:"DM Mono",monospace;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--accent,#7C3AED);margin:0 0 12px}
+.earn-heading{font-family:"Outfit";font-size:clamp(32px,4vw,44px);font-weight:800;letter-spacing:-1px;line-height:1.1;margin:0 0 16px;color:#f4f7fb}
+.earn-sub{font-size:16px;line-height:1.65;color:rgba(255,255,255,.6);margin:0 0 28px;max-width:480px}
+.earn-cta{display:inline-flex;align-items:center;gap:10px;height:48px;padding:0 28px;border-radius:999px;background:#f4f7fb;color:#0d111d;font-weight:800;font-size:15px;text-decoration:none;transition:.2s}.earn-cta:hover{background:#fff;transform:translateY(-1px)}
+.scroll-col{display:flex;flex-direction:column;gap:10px;overflow:hidden;position:relative;height:440px}
+.scroll-col::before,.scroll-col::after{content:"";position:absolute;left:0;right:0;z-index:2;pointer-events:none}
+.scroll-col::before{top:0;height:60px;background:linear-gradient(to bottom,var(--nav-bg,#0d111d),transparent)}
+.scroll-col::after{bottom:0;height:60px;background:linear-gradient(to top,var(--nav-bg,#0d111d),transparent)}
+.scroll-track{display:flex;flex-direction:column;gap:10px;will-change:transform}
+.col-1 .scroll-track{animation:scrollUp 18s linear infinite}
+.col-2 .scroll-track{animation:scrollDown 22s linear infinite}
+@keyframes scrollUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+@keyframes scrollDown{0%{transform:translateY(-50%)}100%{transform:translateY(0)}}
+.platform-pill{display:flex;align-items:center;gap:10px;padding:13px 18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#f4f7fb;font-size:15px;font-weight:500;white-space:nowrap;transition:border-color .2s,box-shadow .2s}
+.platform-pill:hover{border-color:#7C3AED;box-shadow:0 0 12px rgba(124,58,237,.25)}
+.platform-pill img{width:22px;height:22px;flex-shrink:0;display:block}
+@media(max-width:800px){.earn-section .container{grid-template-columns:1fr;gap:32px;text-align:center}.earn-sub{margin-left:auto;margin-right:auto}.scroll-col{height:360px}.col-2{display:none}}
 </style>
 </head>
 <body>
@@ -1086,7 +1106,57 @@ body.auth-open{overflow:hidden}
     </div>
   </section>
 
+  <section class="earn-section" id="earn-everywhere">
+    <div class="container">
+      <div class="earn-left">
+        <div class="earn-label">&gt; earn everywhere</div>
+        <h2 class="earn-heading">Post tasks across every platform your audience is already on.</h2>
+        <p class="earn-sub">Whether you're growing a brand on X, building a Telegram community, or launching a product on Base &mdash; OgaPay connects you to real humans ready to engage. No complex setup. Just paste your link and go.</p>
+        <a class="earn-cta" href="post-task.html">Post Your First Task <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+      </div>
+      <div class="scroll-cols" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="scroll-col col-1">
+          <div class="scroll-track">
+            <div class="platform-pill"><img src="assets/icons/x.svg" alt="X / Twitter"> X / Twitter</div>
+            <div class="platform-pill"><img src="assets/icons/instagram.svg" alt="Instagram"> Instagram</div>
+            <div class="platform-pill"><img src="assets/icons/youtube.svg" alt="YouTube"> YouTube</div>
+            <div class="platform-pill"><img src="assets/icons/telegram.svg" alt="Telegram"> Telegram</div>
+            <div class="platform-pill"><img src="assets/icons/discord.svg" alt="Discord"> Discord</div>
+            <div class="platform-pill"><img src="assets/icons/tiktok.svg" alt="TikTok"> TikTok</div>
+            <div class="platform-pill"><img src="assets/icons/facebook.svg" alt="Facebook"> Facebook</div>
+            <div class="platform-pill"><img src="assets/icons/x.svg" alt="X / Twitter"> X / Twitter</div>
+            <div class="platform-pill"><img src="assets/icons/instagram.svg" alt="Instagram"> Instagram</div>
+            <div class="platform-pill"><img src="assets/icons/youtube.svg" alt="YouTube"> YouTube</div>
+            <div class="platform-pill"><img src="assets/icons/telegram.svg" alt="Telegram"> Telegram</div>
+            <div class="platform-pill"><img src="assets/icons/discord.svg" alt="Discord"> Discord</div>
+            <div class="platform-pill"><img src="assets/icons/tiktok.svg" alt="TikTok"> TikTok</div>
+            <div class="platform-pill"><img src="assets/icons/facebook.svg" alt="Facebook"> Facebook</div>
+          </div>
+        </div>
+        <div class="scroll-col col-2">
+          <div class="scroll-track">
+            <div class="platform-pill"><img src="assets/icons/farcaster.svg" alt="Farcaster"> Farcaster</div>
+            <div class="platform-pill"><img src="assets/icons/base.svg" alt="Base"> Base</div>
+            <div class="platform-pill"><img src="assets/icons/zora.svg" alt="Zora"> Zora</div>
+            <div class="platform-pill"><img src="assets/icons/dexscreener.svg" alt="DexScreener"> DexScreener</div>
+            <div class="platform-pill"><img src="assets/icons/heylol.svg" alt="hey.lol"> hey.lol</div>
+            <div class="platform-pill"><img src="assets/icons/lens.svg" alt="Lens Protocol"> Lens Protocol</div>
+            <div class="platform-pill"><img src="assets/icons/solana.svg" alt="Solana"> Solana</div>
+            <div class="platform-pill"><img src="assets/icons/farcaster.svg" alt="Farcaster"> Farcaster</div>
+            <div class="platform-pill"><img src="assets/icons/base.svg" alt="Base"> Base</div>
+            <div class="platform-pill"><img src="assets/icons/zora.svg" alt="Zora"> Zora</div>
+            <div class="platform-pill"><img src="assets/icons/dexscreener.svg" alt="DexScreener"> DexScreener</div>
+            <div class="platform-pill"><img src="assets/icons/heylol.svg" alt="hey.lol"> hey.lol</div>
+            <div class="platform-pill"><img src="assets/icons/lens.svg" alt="Lens Protocol"> Lens Protocol</div>
+            <div class="platform-pill"><img src="assets/icons/solana.svg" alt="Solana"> Solana</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="section center" id="community-preview">
+
     <div class="container">
       <h2 class="section-title">Communities</h2>
       <p class="section-sub">Discover active OgaPay communities</p>
