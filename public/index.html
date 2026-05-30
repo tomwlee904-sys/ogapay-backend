@@ -341,10 +341,10 @@ button{font:inherit}
 .jobs-track{margin-top:24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:stretch;grid-auto-rows:1fr}
 .job-card{
   position:relative;
-  border:1.5px solid var(--border);border-radius:var(--radius);
+  border:1.5px solid var(--border);border-radius:16px;
   background:var(--card);overflow:hidden;
   box-shadow:var(--shadow-soft);text-align:left;
-  display:flex;flex-direction:column;height:100%;min-height:520px;
+  display:flex;flex-direction:column;height:100%;min-height:560px;
   transition:border-color .28s cubic-bezier(.4,0,.2,1),box-shadow .28s cubic-bezier(.4,0,.2,1),transform .28s cubic-bezier(.4,0,.2,1),opacity .28s ease;
 }
 [data-theme="dark"] .job-card{background:#080b13;border-color:#252b36;box-shadow:0 12px 30px rgba(0,0,0,.28)}
@@ -376,37 +376,45 @@ button{font:inherit}
 }
 .listed{color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700}
 .job-name{margin-top:2px;color:var(--text);font-size:14px;font-weight:800}
-.job-body{position:relative;z-index:1;padding:14px 16px 16px;display:flex;flex-direction:column;flex:1}
+.job-body{position:relative;z-index:1;padding:18px 20px 20px;display:flex;flex-direction:column;flex:1}
 .progress-line{
   display:flex;justify-content:space-between;align-items:center;
   color:var(--text2);font-size:11px;text-transform:uppercase;letter-spacing:.8px;font-weight:700;
 }
 .progress-line strong{color:var(--text);letter-spacing:0;font-size:13px}
-.progress{height:6px;border-radius:99px;background:var(--bg2);overflow:hidden;margin:9px 0 12px}
+.progress{height:10px;border-radius:99px;background:var(--bg2);overflow:hidden;margin:12px 0 14px}
 [data-theme="dark"] .progress{background:#0d1320}
 .progress span{position:relative;display:block;height:100%;background:var(--brand-blue);background-size:240% 100%;border-radius:99px;animation:gradientShift 4s ease-in-out infinite,progressLoad 1.1s ease-out both}
 .progress span::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:barSheen 2.8s ease-in-out infinite}
-.meta-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;color:var(--text2);font-size:12px;font-weight:700;margin-bottom:14px}
-.meta-row span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meta-row span:first-child{background:var(--brand-blue);-webkit-background-clip:text;background-clip:text;color:transparent}
+.dot-indicators{display:flex;gap:16px;margin-bottom:14px;font-size:12px;font-weight:700}
+.dot-indicators span{display:flex;align-items:center;gap:5px;color:var(--text2)}
+.dot-indicators .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dot-indicators .dot-green{background:#16a34a}
+.dot-indicators .dot-yellow{background:#d97706}
+.dot-indicators .dot-purple{background:#7c3aed}
+.dot-indicators .dot-blue{background:#2563eb}
 .reward{
-  height:86px;margin:0 0 12px;padding:12px 16px;
+  height:100px;margin:0 0 12px;padding:14px 18px;
   border:1.5px solid var(--border);border-radius:10px;
   display:flex;align-items:center;justify-content:space-between;
   background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(147,197,253,.14));
 }
 [data-theme="dark"] .reward{background:linear-gradient(135deg,rgba(37,99,235,.14),rgba(124,58,237,.08));border-color:#252b36}
-.reward strong{font-family:"Outfit",sans-serif;background:var(--brand-blue);background-size:240% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;font-size:26px;font-weight:900;letter-spacing:-.6px;animation:gradientShift 5s ease-in-out infinite,metricPulse 4.8s ease-in-out infinite}
+.reward strong{font-family:"Outfit",sans-serif;background:var(--brand-blue);background-size:240% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;font-size:32px;font-weight:900;letter-spacing:-.6px;animation:gradientShift 5s ease-in-out infinite,metricPulse 4.8s ease-in-out infinite}
 .reward span{color:var(--text2);font-size:12px;font-weight:800}
 .reward small{display:block;margin-top:3px;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px}
+.reward .usd-equiv{display:block;margin-top:2px;color:var(--text3);font-size:10px;font-weight:600;opacity:.7}
 .job-tags{color:var(--text3);font-size:12px;font-weight:700;margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .about{border-top:1px solid var(--border);padding-top:12px;margin-top:auto}
 [data-theme="dark"] .about{border-top-color:#252b36}
 .about-head{
-  display:flex;justify-content:space-between;
+  display:flex;align-items:center;justify-content:space-between;
   color:var(--text3);text-transform:uppercase;letter-spacing:1px;
   font-size:10px;font-weight:800;margin-bottom:8px;
 }
+.about-head .about-left{display:flex;align-items:center;gap:6px}
+.about-head .about-icon{width:14px;height:14px;flex-shrink:0}
+.about-head .about-timer{display:flex;align-items:center;gap:4px}
 .about p{margin:0;color:var(--text2);font-size:13px;line-height:1.5;min-height:40px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .dots{margin:28px auto 0;display:flex;justify-content:center;align-items:center;gap:10px}
 .dots span{
@@ -562,7 +570,7 @@ footer{
   .hero h1{font-size:clamp(42px,5.4vw,60px)}
   .analytics-card{max-width:480px;justify-self:end}
   .quick-grid,.jobs-track,.store-grid,.community-grid{grid-template-columns:1fr 1fr}
-  .job-card{min-height:390px}
+  .job-card{min-height:460px}
 }
 @media(max-width:768px){
   :root{--nav-h:72px}
@@ -657,16 +665,17 @@ footer{
   .progress-line{font-size:12px;letter-spacing:.7px}
   .progress-line strong{font-size:13px}
   .progress{height:6px;margin:10px 0 12px}
-  .meta-row{gap:7px;font-size:12px;margin-bottom:13px}
-  .reward{height:82px;border-radius:12px;justify-content:center;text-align:center}
+  .dot-indicators{gap:10px;font-size:12px;margin-bottom:13px}
+  .reward{height:96px;border-radius:12px;justify-content:center;text-align:center}
   [data-theme="dark"] .reward{background:linear-gradient(135deg,rgba(37,99,235,.13),rgba(124,58,237,.08));border-color:#252b36}
-  .reward strong{font-size:28px}
+  .reward strong{font-size:30px}
   .reward span{font-size:12px}
   .reward small{font-size:11px;letter-spacing:1px}
+  .reward .usd-equiv{font-size:10px}
   .job-tags{font-size:12px;margin-bottom:13px}
   .about{padding-top:12px}
   [data-theme="dark"] .about{border-top-color:#252b36}
-  .about-head{font-size:10px;margin-bottom:8px}
+  .about-head{font-size:10px;margin-bottom:8px;gap:8px}
   .about p{font-size:13px;line-height:1.45;min-height:39px}
   .dots{margin-top:24px;gap:14px}
   .dots span{width:38px;height:10px}
@@ -749,7 +758,7 @@ footer{
   .listed{font-size:10px}
   .job-name{font-size:15px}
   .job-body{padding:14px 16px 16px}
-  .progress-line,.meta-row{font-size:11px}
+  .progress-line,.dot-indicators{font-size:11px}
   .reward{height:78px}
   .reward strong{font-size:26px}
   .about p{font-size:13px;min-height:39px}
@@ -1119,15 +1128,15 @@ body.auth-open{overflow:hidden}
       <div class="jobs-track">
         <article class="job-card">
           <div class="job-top"><div class="avatar">BO</div><div><div class="listed">Listed by</div><div class="job-name">BrandOga</div></div></div>
-          <div class="job-body"><span class="category-pill">Social</span><div class="progress-line"><span>Progress</span><strong>65/100</strong></div><div class="progress good"><span style="width:65%"></span></div><div class="meta-row"><span>Submissions 65</span><span>Open 35</span><span>Status Open</span></div><div class="reward"><div><strong>&#8358;250</strong><small>PER COMPLETION</small></div></div><div class="job-tags">Social | X/Twitter | 50+ followers</div><div class="about"><div class="about-head"><span>About this task</span><span>~2 min</span></div><p>Follow our X account and repost the pinned tweet.</p></div><a class="job-cta" href="tasks.html">View Task ?</a></div>
+          <div class="job-body"><span class="category-pill">Social</span><div class="progress-line"><span>Progress</span><strong>65/100</strong></div><div class="progress good"><span style="width:65%"></span></div><div class="dot-indicators"><span><span class="dot dot-green"></span>Submissions 65</span><span><span class="dot dot-yellow"></span>Open 35</span><span><span class="dot dot-blue"></span>Status Open</span></div><div class="reward"><div><strong>&#8358;250</strong><small>PER COMPLETION</small><em class="usd-equiv">≈ $0.50</em></div></div><div class="job-tags">Social | X/Twitter | 50+ followers</div><div class="about"><div class="about-head"><span class="about-left"><svg class="about-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>About this task</span><span class="about-timer"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~2 min</span></div><p>Follow our X account and repost the pinned tweet.</p></div><a class="job-cta" href="tasks.html">View Task →</a></div>
         </article>
         <article class="job-card">
           <div class="job-top"><div class="avatar" style="background:#f5b301">TK</div><div><div class="listed">Listed by</div><div class="job-name">TechKing</div></div></div>
-          <div class="job-body"><span class="category-pill survey">Survey</span><div class="progress-line"><span>Progress</span><strong>40/100</strong></div><div class="progress warn"><span style="width:40%"></span></div><div class="meta-row"><span>Submissions 40</span><span>Open 60</span><span>Status Open</span></div><div class="reward"><div><strong>$1.50 <span>USDC</span></strong><small>PER COMPLETION</small></div></div><div class="job-tags">Survey | Fintech | Banking apps</div><div class="about"><div class="about-head"><span>About this task</span><span>~5 min</span></div><p>Rate our mobile banking app with eight quick questions.</p></div><a class="job-cta" href="tasks.html">View Task ?</a></div>
+          <div class="job-body"><span class="category-pill survey">Survey</span><div class="progress-line"><span>Progress</span><strong>40/100</strong></div><div class="progress warn"><span style="width:40%"></span></div><div class="dot-indicators"><span><span class="dot dot-green"></span>Submissions 40</span><span><span class="dot dot-yellow"></span>Open 60</span><span><span class="dot dot-blue"></span>Status Open</span></div><div class="reward"><div><strong>$1.50 <span>USDC</span></strong><small>PER COMPLETION</small><em class="usd-equiv">≈ ₦2,400</em></div></div><div class="job-tags">Survey | Fintech | Banking apps</div><div class="about"><div class="about-head"><span class="about-left"><svg class="about-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>About this task</span><span class="about-timer"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~5 min</span></div><p>Rate our mobile banking app with eight quick questions.</p></div><a class="job-cta" href="tasks.html">View Task →</a></div>
         </article>
         <article class="job-card">
           <div class="job-top"><div class="avatar">DS</div><div><div class="listed">Listed by</div><div class="job-name">DesignStudio</div></div></div>
-          <div class="job-body"><span class="category-pill design">Design</span><div class="progress-line"><span>Progress</span><strong>1/5</strong></div><div class="progress warn"><span style="width:20%"></span></div><div class="meta-row"><span>Submissions 1</span><span>Open 4</span><span>Status Open</span></div><div class="reward"><div><strong>&#8358;15,000</strong><small>PER ACCEPTED DESIGN</small></div></div><div class="job-tags">Design | PNG + SVG | Portfolio</div><div class="about"><div class="about-head"><span>About this task</span><span>1-2 days</span></div><p>Design a modern logo for a fintech startup.</p></div><a class="job-cta" href="tasks.html">View Task ?</a></div>
+          <div class="job-body"><span class="category-pill design">Design</span><div class="progress-line"><span>Progress</span><strong>1/5</strong></div><div class="progress warn"><span style="width:20%"></span></div><div class="dot-indicators"><span><span class="dot dot-green"></span>Submissions 1</span><span><span class="dot dot-yellow"></span>Open 4</span><span><span class="dot dot-blue"></span>Status Open</span></div><div class="reward"><div><strong>&#8358;15,000</strong><small>PER ACCEPTED DESIGN</small><em class="usd-equiv">≈ $30.00</em></div></div><div class="job-tags">Design | PNG + SVG | Portfolio</div><div class="about"><div class="about-head"><span class="about-left"><svg class="about-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>About this task</span><span class="about-timer"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>1-2 days</span></div><p>Design a modern logo for a fintech startup.</p></div><a class="job-cta" href="tasks.html">View Task →</a></div>
         </article>
       </div>
       <div class="dots"><span></span><span class="active"></span><span></span><span></span><span></span></div>
