@@ -307,7 +307,7 @@ button{font:inherit}
 
 /* Onboarding */
 .gs{padding:40px 0 56px}.gs-head{text-align:center;margin-bottom:36px}.gs-head h2{margin:0;font-family:"Outfit",sans-serif;font-size:clamp(28px,3vw,40px);line-height:1.05;letter-spacing:-1.2px;font-weight:900}.gs-head p{margin:10px auto 0;color:var(--text2);font-size:16px;line-height:1.55;font-weight:500;max-width:520px}
-.gs-accordion{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.gs-accordion{max-width:720px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .gs-item{background:var(--card);border:2px solid var(--border);border-radius:16px;overflow:hidden;transition:border-color .25s,box-shadow .25s}
 .gs-item.open{border-color:#030341;box-shadow:0 0 0 3px rgba(3,3,65,.08)}
 .gs-role{display:flex;align-items:center;gap:14px;padding:18px 22px;width:100%;background:none;border:none;cursor:pointer;transition:background .2s;text-align:left;font:inherit;color:var(--text)}.gs-role:hover{background:var(--bg2)}
@@ -918,7 +918,7 @@ body.auth-open{overflow:hidden}
 .platform-pill img{width:22px;height:22px;flex-shrink:0;display:block}
 @media(max-width:800px){.earn-section .container{grid-template-columns:1fr;gap:32px;text-align:center}.earn-sub{margin-left:auto;margin-right:auto}.scroll-col{height:360px}.col-2{display:none}}
 
-@media(max-width:520px){.gs-drop-inner{padding:0 18px 20px}}</style>
+@media(max-width:640px){.gs-accordion{grid-template-columns:1fr}}@media(max-width:520px){.gs-drop-inner{padding:0 18px 20px}}</style>
 </head>
 <body>
 <header class="nav">
