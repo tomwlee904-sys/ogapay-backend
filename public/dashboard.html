@@ -7,168 +7,209 @@
 <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'dark')}catch(e){document.documentElement.setAttribute('data-theme','dark')}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
-:root{--bg:#09090b;--bg2:#0f0f13;--card:#141418;--card2:#1a1a20;--border:#1e1e26;--border2:#2a2a34;--text:#f4f4f6;--text2:#9a9aa6;--text3:#6a6a78;--accent:#7C3AED;--accent2:#3B82F6;--green:#22c55e;--gold:#f59e0b;--brand:linear-gradient(135deg,#7C3AED,#6366F1,#3B82F6);--radius:12px;--nav-h:56px}
-[data-theme="light"]{--bg:#f2f3f7;--bg2:#ffffff;--card:#ffffff;--card2:#f7f8fc;--border:#e2e4ec;--border2:#d1d4de;--text:#0f1016;--text2:#5e6472;--text3:#8e94a2;--accent:#7C3AED;--accent2:#2563EB;--brand:linear-gradient(135deg,#7C3AED,#6366F1,#3B82F6)}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cursor:pointer}
+:root{--bg:#000;--card:#0a0a0a;--card2:#0e0e0e;--border:#141414;--border2:#1f1f1f;--text:#f5f5f5;--text2:#a1a1aa;--text3:#52525b;--accent:#7C3AED;--accent2:#3B82F6;--green:#22c55e;--gold:#eab308;--brand:linear-gradient(135deg,#7C3AED,#6366F1,#3B82F6);--radius:10px}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"Inter",system-ui,sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cursor:pointer}input:focus{outline:none;border-color:var(--accent2)}
 /* Nav */
-.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(9,9,11,.88);border-bottom:1px solid var(--border);backdrop-filter:blur(16px)}[data-theme="light"] .nav{background:rgba(255,255,255,.88)}
-.nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;width:min(960px,calc(100% - 28px));margin:0 auto}.brand{display:flex;align-items:center;gap:8px;font-family:"Outfit";font-weight:800;font-size:16px}.logo{width:28px;height:28px;border-radius:7px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:14px}.nav-links{display:flex;gap:2px}.nav-link{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:7px;color:var(--text3);font-size:12px;font-weight:600}.nav-link:hover{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;gap:6px}.icon-btn{width:32px;height:32px;border:1px solid var(--border);border-radius:7px;background:transparent;color:var(--text2);display:grid;place-items:center;font-size:16px}.icon-btn:hover{background:var(--bg2);color:var(--text)}
-/* Layout */
-.page-wrap{width:min(960px,calc(100% - 28px));margin:0 auto;padding:20px 0 80px}
-/* Profile */
-.profile{display:flex;align-items:center;gap:16px;padding:16px 0 18px}.profile-av{width:52px;height:52px;border-radius:50%;background:var(--brand);display:grid;place-items:center;color:#fff;font-family:"Outfit";font-size:22px;font-weight:800;flex-shrink:0}.profile-info{flex:1;min-width:0}.profile-info h1{margin:0;font-family:"Outfit";font-size:18px;font-weight:800}.profile-info .tags{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}.profile-info .tags span{display:inline-flex;align-items:center;gap:4px;color:var(--text2);font-size:12px}.profile-info .tags .tag{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;background:rgba(124,58,237,.12);color:var(--accent);font-size:11px;font-weight:700}
-/* Stats row */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}.stat-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}.stat-box .n{font-family:"Outfit";font-size:18px;font-weight:800;letter-spacing:-.2px}.stat-box .l{color:var(--text3);font-size:11px;font-weight:600;margin-top:2px}
-/* Section title */
-.sec{margin:18px 0 10px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);display:flex;align-items:center;gap:8px}.sec:after{content:'';flex:1;height:1px;background:var(--border)}
-/* Quick links grid */
-.links{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}.links a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 6px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);font-size:12px;font-weight:600;transition:.15s;text-align:center;line-height:1.2}.links a:hover{background:var(--card2);border-color:var(--border2);color:var(--text)}.links a i{font-size:18px;color:var(--accent2)}
-/* Card grid */
-.cg{display:grid;grid-template-columns:1fr 1fr;gap:10px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}.card h3{margin:0 0 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--text3)}
-/* Activity */
-.act{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}.act:last-child{border:0}.act i{width:26px;height:26px;border-radius:6px;background:var(--bg2);display:grid;place-items:center;color:var(--text2);font-size:13px;flex-shrink:0}.act-info{flex:1;min-width:0}.act-info .t{font-size:13px;font-weight:600}.act-info .m{color:var(--text3);font-size:11px;margin-top:1px}.act-amt{font-family:"Outfit";font-size:14px;font-weight:700}
-/* Referral */
-.inp-row{display:flex;gap:6px;margin:10px 0 14px}.inp-row input{flex:1;height:34px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--text);padding:0 10px;font-size:12px;outline:none}.btn{height:34px;border:1px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:0 12px;font-weight:600;font-size:12px;transition:.15s;text-decoration:none}.btn:hover{background:var(--card2);border-color:var(--border2)}.btn.p{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.d{background:rgba(239,68,68,.12);color:var(--red);border-color:transparent}.badge{display:inline-flex;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:700}.badge.g{background:rgba(34,197,94,.12);color:var(--green)}.badge.r{background:rgba(239,68,68,.12);color:#ef4444}.badge.y{background:rgba(245,158,11,.12);color:var(--gold)}
-/* Connected accounts */
-.cn{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}.cn:last-child{border:0}.cn .cn-i{width:28px;height:28px;border-radius:6px;background:var(--bg2);display:grid;place-items:center;font-size:15px}.cn .cn-n{flex:1;font-size:13px;font-weight:600}.cn .cn-s{font-size:11px;color:var(--green);display:flex;align-items:center;gap:3px}
-/* Stats grid */
-.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-top:14px}.sg .n{font-family:"Outfit";font-size:16px;font-weight:800}.sg .l{color:var(--text3);font-size:11px;margin-top:1px}
+.nav{position:sticky;top:0;z-index:100;height:52px;background:var(--bg);border-bottom:1px solid var(--border)}
+.nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;width:min(480px,calc(100% - 28px));margin:0 auto}
+.nav-brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;color:var(--text)}
+.nav-brand .mk{width:24px;height:24px;border-radius:6px;background:var(--brand);display:grid;place-items:center;color:#fff;font-size:12px;font-weight:900}
+.nav-actions{display:flex;gap:4px}
+.nav-btn{width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:var(--text2);display:grid;place-items:center;font-size:18px}
+.nav-btn:hover{background:var(--card);color:var(--text)}
+/* Content */
+.page{width:min(480px,calc(100% - 28px));margin:0 auto;padding:16px 0 90px}
+/* Profile row */
+.prof{display:flex;align-items:center;gap:12px;padding:12px 0 14px}
+.prof-av{width:48px;height:48px;border-radius:50%;background:var(--brand);display:grid;place-items:center;color:#fff;font-weight:800;font-size:18px;flex-shrink:0}
+.prof-i{flex:1;min-width:0}
+.prof-i h2{margin:0;font-size:17px;font-weight:700;color:var(--text)}
+.prof-i .p-meta{color:var(--text2);font-size:12px;margin-top:3px;display:flex;align-items:center;gap:8px}
+.prof-i .p-meta .p-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:99px;background:rgba(124,58,237,.12);color:var(--accent);font-size:10px;font-weight:700}
+/* Card stack */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px}
+.card-t{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:12px}
+/* Stat chips */
+.sc{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.sc-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+.sc-item .n{font-size:16px;font-weight:800;color:var(--text)}
+.sc-item .l{font-size:10px;color:var(--text3);margin-top:2px;font-weight:500}
+/* Link grid */
+.qg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.qg a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:12px 4px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);font-size:11px;font-weight:600;transition:.15s;text-align:center}
+.qg a:hover{background:var(--card2);border-color:var(--border2);color:var(--text)}
+.qg a i{font-size:18px}
 /* Row */
-.r{display:flex;align-items:center;gap:8px}.rw{display:flex;align-items:center;justify-content:space-between;gap:8px}
-@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}.links{grid-template-columns:repeat(2,1fr)}.cg{grid-template-columns:1fr}}
-/* Mobile nav */
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:99;background:var(--card);border-top:1px solid var(--border);padding:6px 12px 10px}.mobile-nav a{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text3);font-size:10px;font-weight:700;padding:4px 0}.mobile-nav a.active{color:var(--accent2)}.mobile-nav a svg{width:22px;height:22px}.mobile-nav .create svg{width:28px;height:28px;stroke-width:2}.dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);display:inline-block}
-@media(max-width:860px){.nav-links{display:none}.mobile-nav{display:flex;justify-content:space-around;align-items:flex-end}}
+.rw{display:flex;align-items:center;gap:8px}
+.rs{display:flex;align-items:center;justify-content:space-between;gap:8px}
+/* Activity row */
+.ar{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.ar:last-child{border:0}
+.ar-i{width:24px;height:24px;border-radius:6px;background:var(--border);display:grid;place-items:center;font-size:12px;flex-shrink:0;color:var(--text2)}
+.ar-info{flex:1;min-width:0}
+.ar-info .t{font-size:13px;font-weight:500;color:var(--text)}
+.ar-info .m{font-size:10px;color:var(--text3);margin-top:1px}
+.ar-amt{font-size:13px;font-weight:600;color:var(--text)}
+/* Status badges */
+.sb{display:inline-flex;padding:2px 6px;border-radius:99px;font-size:9px;font-weight:700}
+.sb-g{background:rgba(34,197,94,.1);color:var(--green)}
+.sb-r{background:rgba(239,68,68,.1);color:#ef4444}
+.sb-y{background:rgba(234,179,8,.1);color:var(--gold)}
+.sb-b{background:rgba(59,130,246,.1);color:var(--accent2)}
+/* Input group */
+.ig{display:flex;gap:6px;margin:8px 0}
+.ig input{flex:1;height:32px;border:1px solid var(--border2);border-radius:7px;background:var(--bg);color:var(--text);padding:0 10px;font-size:12px}
+.btn{height:32px;border:1px solid var(--border2);border-radius:7px;background:var(--card);color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0 10px;font-size:11px;font-weight:600;transition:.15s;text-decoration:none}
+.btn:hover{background:var(--card2)}
+.btn-p{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-p:hover{opacity:.9}
+/* Stat grid */
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;margin-top:10px}
+.sg .n{font-size:15px;font-weight:700;color:var(--text)}
+.sg .l{font-size:10px;color:var(--text3);margin-top:1px}
+/* Connected account row */
+.cr{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.cr:last-child{border:0}
+.cr-i{width:24px;height:24px;border-radius:6px;background:var(--border);display:grid;place-items:center;font-size:13px;flex-shrink:0}
+.cr-n{flex:1;font-size:13px;font-weight:500}
+.cr-s{font-size:10px;display:flex;align-items:center;gap:3px;font-weight:600}
+.cr-s.connected{color:var(--green)}
+/* Divider */
+.div{height:1px;background:var(--border);margin:10px 0}
+/* Info row */
+.ir{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+.ir:last-child{border:0}
+.ir-l{color:var(--text2)}
+.ir-v{font-weight:600}
+/* Badge row */
+.br{display:flex;flex-wrap:wrap;gap:5px}
+.br .ch{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;font-size:10px;font-weight:600}
+/* View all link */
+.va{display:block;text-align:center;margin-top:10px;color:var(--accent2);font-size:11px;font-weight:600}
+/* Bottom nav */
+.bot-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:99;background:var(--bg);border-top:1px solid var(--border);padding:6px 0 12px;justify-content:space-around}
+.bot-nav a{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--text3);font-size:9px;font-weight:600;padding:4px 0;min-width:60px}
+.bot-nav a.active{color:var(--text)}
+.bot-nav a svg{width:20px;height:20px}
+.bot-nav .create svg{width:24px;height:24px;stroke-width:2.2}
+.bot-nav .pd{width:5px;height:5px;border-radius:50%;background:var(--text);display:inline-block}
+@media(min-width:500px){.nav-inner,.page,.bot-nav{width:480px;left:auto;right:auto}}
 </style>
 </head>
-<body data-page="dashboard.html">
-<header class="nav"><div class="nav-inner"><a class="brand" href="index.html"><span class="logo">O</span>OgaPay</a><div class="nav-links"><a class="nav-link" href="tasks.html"><i class="ti ti-briefcase"></i>Tasks</a><a class="nav-link" href="store.html"><i class="ti ti-discount-2"></i>Deals</a><a class="nav-link" href="wallet.html"><i class="ti ti-wallet"></i>Wallet</a></div><div class="nav-actions"><button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="ti ti-sun"></i></button></div></div></header>
-<main class="page-wrap">
+<body>
+<header class="nav"><div class="nav-inner"><a class="nav-brand" href="index.html"><span class="mk">O</span>OgaPay</a><div class="nav-actions"><button class="nav-btn" id="themeToggle"><i class="ti ti-sun"></i></button></div></div></header>
+<main class="page">
   <!-- Profile -->
-  <div class="profile">
-    <div class="profile-av">AD</div>
-    <div class="profile-info">
-      <h1>Ada Danladi</h1>
-      <div class="tags">
-        <span><i class="ti ti-at"></i>@ada_earns</span>
-        <span class="tag"><i class="ti ti-badge"></i>Worker</span>
-        <span class="tag" style="background:rgba(59,130,246,.12);color:var(--accent2)"><i class="ti ti-shield-check"></i>KYC verified</span>
-        <span><i class="ti ti-calendar"></i>Joined May 2026</span>
+  <div class="prof">
+    <div class="prof-av">AD</div>
+    <div class="prof-i">
+      <h2>Ada Danladi</h2>
+      <div class="p-meta">
+        <span>@ada_earns</span>
+        <span class="p-badge">Worker</span>
+        <span>Joined May 2026</span>
       </div>
     </div>
-    <a class="btn" href="profile.html" style="flex-shrink:0"><i class="ti ti-edit"></i>Edit</a>
   </div>
   <!-- Stats -->
-  <div class="stats">
-    <div class="stat-box"><div class="n">₦42,850</div><div class="l">Available balance</div></div>
-    <div class="stat-box"><div class="n">₦18,200</div><div class="l">Pending review</div></div>
-    <div class="stat-box"><div class="n">8</div><div class="l">Active tasks</div></div>
-    <div class="stat-box"><div class="n">4.9</div><div class="l">Rating</div></div>
+  <div class="sc">
+    <div class="sc-item"><div class="n">₦42.9K</div><div class="l">Balance</div></div>
+    <div class="sc-item"><div class="n">₦18.2K</div><div class="l">Pending</div></div>
+    <div class="sc-item"><div class="n">8</div><div class="l">Active</div></div>
+    <div class="sc-item"><div class="n">4.9</div><div class="l">Rating</div></div>
   </div>
   <!-- Quick Links -->
-  <div class="sec">Quick links</div>
-  <div class="links">
-    <a href="tasks.html"><i class="ti ti-briefcase"></i>Browse Tasks</a>
-    <a href="my-tasks.html"><i class="ti ti-checklist"></i>My Tasks</a>
-    <a href="monitor.html"><i class="ti ti-eye"></i>Job Monitor</a>
-    <a href="post-task.html"><i class="ti ti-square-plus"></i>Post Task</a>
-    <a href="wallet.html"><i class="ti ti-wallet"></i>Wallet</a>
-    <a href="vault.html"><i class="ti ti-building-bank"></i>Rewards Vault</a>
-    <a href="communities.html"><i class="ti ti-users-group"></i>Communities</a>
-    <a href="referrals.html"><i class="ti ti-link"></i>Referrals</a>
-    <a href="leaderboard.html"><i class="ti ti-trophy"></i>Leaderboard</a>
-    <a href="messages.html"><i class="ti ti-message-2"></i>Messages</a>
-    <a href="kyc.html"><i class="ti ti-shield-check"></i>KYC</a>
-    <a href="analytics.html"><i class="ti ti-chart-line"></i>Analytics</a>
-  </div>
-  <!-- Cards -->
-  <div class="sec">Activity &amp; Growth</div>
-  <div class="cg">
-    <div class="card">
-      <h3>Recent activity</h3>
-      <div class="act"><i class="ti ti-check"></i><div class="act-info"><div class="t">X campaign proof accepted</div><div class="m">2 hours ago</div></div><div class="act-amt">₦1,500</div></div>
-      <div class="act"><i class="ti ti-coin"></i><div class="act-info"><div class="t">USDC payout queued</div><div class="m">5 hours ago</div></div><div class="act-amt">4 USDC</div></div>
-      <div class="act"><i class="ti ti-user-plus"></i><div class="act-info"><div class="t">New referral joined</div><div class="m">1 day ago</div></div><div class="act-amt">₦850</div></div>
-      <div class="act"><i class="ti ti-star"></i><div class="act-info"><div class="t">5-star rating received</div><div class="m">2 days ago</div></div></div>
-    </div>
-    <div class="card">
-      <h3>Your referral link</h3>
-      <p style="margin:0;color:var(--text2);font-size:12px;line-height:1.5">Invite earners and earn 3% commission on their first 30 days.</p>
-      <div class="inp-row"><input value="https://ogapay.ng/r/adadearn" readonly><button class="btn p" data-copy="https://ogapay.ng/r/adadearn"><i class="ti ti-copy"></i>Copy</button></div>
-      <div class="sg"><div><div class="n">184</div><div class="l">Users</div></div><div><div class="n">62</div><div class="l">Active</div></div><div><div class="n">₦34,850</div><div class="l">Commission</div></div></div>
+  <div class="card">
+    <div class="card-t">Quick links</div>
+    <div class="qg">
+      <a href="tasks.html"><i class="ti ti-briefcase"></i>Browse Tasks</a>
+      <a href="my-tasks.html"><i class="ti ti-checklist"></i>My Tasks</a>
+      <a href="monitor.html"><i class="ti ti-eye"></i>Job Monitor</a>
+      <a href="post-task.html"><i class="ti ti-square-plus"></i>Post Task</a>
+      <a href="wallet.html"><i class="ti ti-wallet"></i>Wallet</a>
+      <a href="vault.html"><i class="ti ti-building-bank"></i>Rewards Vault</a>
+      <a href="communities.html"><i class="ti ti-users-group"></i>Communities</a>
+      <a href="referrals.html"><i class="ti ti-link"></i>Referrals</a>
+      <a href="leaderboard.html"><i class="ti ti-trophy"></i>Leaderboard</a>
+      <a href="messages.html"><i class="ti ti-message-2"></i>Messages</a>
+      <a href="kyc.html"><i class="ti ti-shield-check"></i>KYC</a>
+      <a href="analytics.html"><i class="ti ti-chart-line"></i>Analytics</a>
     </div>
   </div>
-  <!-- Connected Accounts & Task History -->
-  <div class="sec">Connections &amp; History</div>
-  <div class="cg">
-    <div class="card">
-      <h3>Connected accounts</h3>
-      <div class="cn"><div class="cn-i"><i class="ti ti-brand-x" style="font-size:16px"></i></div><div class="cn-n">X / Twitter</div><span class="cn-s"><i class="ti ti-circle-filled" style="font-size:6px"></i>Connected</span></div>
-      <div class="cn"><div class="cn-i"><i class="ti ti-brand-telegram" style="font-size:16px"></i></div><div class="cn-n">Telegram</div><span class="cn-s"><i class="ti ti-circle-filled" style="font-size:6px"></i>Connected</span></div>
-      <div class="cn"><div class="cn-i"><i class="ti ti-brand-instagram" style="font-size:16px"></i></div><div class="cn-n">Instagram</div><span style="color:var(--text3);font-size:11px">Connect</span></div>
-      <div class="cn"><div class="cn-i"><i class="ti ti-brand-discord" style="font-size:16px"></i></div><div class="cn-n">Discord</div><span style="color:var(--text3);font-size:11px">Connect</span></div>
-    </div>
-    <div class="card">
-      <h3>Recent tasks</h3>
-      <div class="rw" style="padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:600">Like &amp; retweet campaign</div><div style="color:var(--text3);font-size:11px">X / Twitter</div></div><div style="text-align:right"><div style="font-family:Outfit;font-size:14px;font-weight:700">₦500</div><span class="badge g">Completed</span></div></div>
-      <div class="rw" style="padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:600">Telegram group join</div><div style="color:var(--text3);font-size:11px">Telegram</div></div><div style="text-align:right"><div style="font-family:Outfit;font-size:14px;font-weight:700">₦350</div><span class="badge y">Pending</span></div></div>
-      <div class="rw" style="padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:600">Instagram reel comment</div><div style="color:var(--text3);font-size:11px">Instagram</div></div><div style="text-align:right"><div style="font-family:Outfit;font-size:14px;font-weight:700">₦300</div><span class="badge r">Rejected</span></div></div>
-      <div class="rw" style="padding:7px 0"><div><div style="font-size:13px;font-weight:600">Survey: App feedback</div><div style="color:var(--text3);font-size:11px">Survey</div></div><div style="text-align:right"><div style="font-family:Outfit;font-size:14px;font-weight:700">₦800</div><span class="badge g">Completed</span></div></div>
-      <a href="my-tasks.html" style="display:block;text-align:center;margin-top:10px;color:var(--accent2);font-size:12px;font-weight:600">View all tasks →</a>
-    </div>
+  <!-- Activity & Referral -->
+  <div class="card">
+    <div class="card-t">Recent activity</div>
+    <div class="ar"><div class="ar-i"><i class="ti ti-check"></i></div><div class="ar-info"><div class="t">X campaign proof accepted</div><div class="m">2 hours ago</div></div><div class="ar-amt">₦1,500</div></div>
+    <div class="ar"><div class="ar-i"><i class="ti ti-coin"></i></div><div class="ar-info"><div class="t">USDC payout queued</div><div class="m">5 hours ago</div></div><div class="ar-amt">4 USDC</div></div>
+    <div class="ar"><div class="ar-i"><i class="ti ti-user-plus"></i></div><div class="ar-info"><div class="t">New referral joined</div><div class="m">1 day ago</div></div><div class="ar-amt">₦850</div></div>
+    <div class="ar"><div class="ar-i"><i class="ti ti-star"></i></div><div class="ar-info"><div class="t">5-star rating received</div><div class="m">2 days ago</div></div></div>
   </div>
-  <!-- Payout Info & Account -->
-  <div class="sec">Payout &amp; Account</div>
-  <div class="cg">
-    <div class="card">
-      <h3>Payout method</h3>
-      <div class="rw" style="padding:6px 0"><span style="font-size:13px">Bank transfer</span><span style="font-size:13px;font-weight:600">Opay ••• 6789</span></div>
-      <div class="rw" style="padding:6px 0;border-top:1px solid var(--border)"><span style="font-size:13px">USDC wallet</span><span style="font-size:13px;font-weight:600">7xQp...9mDa</span></div>
-      <div class="rw" style="padding:6px 0;border-top:1px solid var(--border)"><span style="font-size:13px">Total earned</span><span style="font-family:Outfit;font-size:15px;font-weight:700">₦284,500</span></div>
-      <div class="rw" style="padding:6px 0;border-top:1px solid var(--border)"><span style="font-size:13px">This month</span><span style="font-family:Outfit;font-size:15px;font-weight:700;color:var(--green)">₦52,300</span></div>
-      <a href="wallet.html" style="display:block;text-align:center;margin-top:10px;color:var(--accent2);font-size:12px;font-weight:600">Manage wallet →</a>
-    </div>
-    <div class="card">
-      <h3>Account</h3>
-      <div class="rw" style="padding:6px 0"><span style="font-size:13px">Email</span><span style="font-size:13px;color:var(--text2)">ada@ogapay.ng</span></div>
-      <div class="rw" style="padding:6px 0;border-top:1px solid var(--border)"><span style="font-size:13px">Phone</span><span style="font-size:13px;color:var(--text2)">+234 801 234 5678</span></div>
-      <div class="rw" style="padding:6px 0;border-top:1px solid var(--border)"><span style="font-size:13px">Notifications</span><span style="font-size:11px;color:var(--green)">Email + Push</span></div>
-      <div class="rw" style="padding:6px 0;border-top:1px solid var(--border)"><span style="font-size:13px">KYC level</span><span class="badge g">Verified</span></div>
-      <a href="settings.html" style="display:block;text-align:center;margin-top:10px;color:var(--accent2);font-size:12px;font-weight:600">Account settings →</a>
-    </div>
+  <!-- Referral -->
+  <div class="card">
+    <div class="card-t">Referral program</div>
+    <p style="margin:0 0 8px;font-size:12px;color:var(--text2);line-height:1.5">Invite earners and earn 3% commission on their first 30 days of rewards.</p>
+    <div class="ig"><input value="https://ogapay.ng/r/adadearn" readonly><button class="btn btn-p" data-copy="https://ogapay.ng/r/adadearn">Copy</button></div>
+    <div class="sg"><div><div class="n">184</div><div class="l">Users</div></div><div><div class="n">62</div><div class="l">Active</div></div><div><div class="n">₦34.9K</div><div class="l">Commission</div></div></div>
+  </div>
+  <!-- Connected Accounts -->
+  <div class="card">
+    <div class="card-t">Connected accounts</div>
+    <div class="cr"><div class="cr-i"><i class="ti ti-brand-x"></i></div><div class="cr-n">X / Twitter</div><span class="cr-s connected"><i class="ti ti-circle-filled" style="font-size:5px"></i>Connected</span></div>
+    <div class="cr"><div class="cr-i"><i class="ti ti-brand-telegram"></i></div><div class="cr-n">Telegram</div><span class="cr-s connected"><i class="ti ti-circle-filled" style="font-size:5px"></i>Connected</span></div>
+    <div class="cr"><div class="cr-i"><i class="ti ti-brand-instagram"></i></div><div class="cr-n">Instagram</div><span style="font-size:10px;color:var(--text3)">Connect</span></div>
+    <div class="cr"><div class="cr-i"><i class="ti ti-brand-discord"></i></div><div class="cr-n">Discord</div><span style="font-size:10px;color:var(--text3)">Connect</span></div>
+  </div>
+  <!-- Recent Tasks -->
+  <div class="card">
+    <div class="card-t">Recent tasks</div>
+    <div class="rs" style="padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:500">Like &amp; retweet campaign</div><div style="font-size:10px;color:var(--text3);margin-top:1px">X / Twitter</div></div><div style="text-align:right"><div style="font-size:13px;font-weight:600">₦500</div><span class="sb sb-g">Completed</span></div></div>
+    <div class="rs" style="padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:500">Telegram group join</div><div style="font-size:10px;color:var(--text3);margin-top:1px">Telegram</div></div><div style="text-align:right"><div style="font-size:13px;font-weight:600">₦350</div><span class="sb sb-y">Pending</span></div></div>
+    <div class="rs" style="padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:500">Instagram reel comment</div><div style="font-size:10px;color:var(--text3);margin-top:1px">Instagram</div></div><div style="text-align:right"><div style="font-size:13px;font-weight:600">₦300</div><span class="sb sb-r">Rejected</span></div></div>
+    <div class="rs" style="padding:7px 0"><div><div style="font-size:13px;font-weight:500">Survey: App feedback</div><div style="font-size:10px;color:var(--text3);margin-top:1px">Survey</div></div><div style="text-align:right"><div style="font-size:13px;font-weight:600">₦800</div><span class="sb sb-g">Completed</span></div></div>
+    <a href="my-tasks.html" class="va">View all tasks →</a>
+  </div>
+  <!-- Payout & Account -->
+  <div class="card">
+    <div class="card-t">Payout &amp; Account</div>
+    <div class="ir"><span class="ir-l">Bank transfer</span><span class="ir-v">Opay ••• 6789</span></div>
+    <div class="ir"><span class="ir-l">USDC wallet</span><span class="ir-v">7xQp...9mDa</span></div>
+    <div class="ir"><span class="ir-l">Total earned</span><span class="ir-v">₦284,500</span></div>
+    <div class="ir"><span class="ir-l">This month</span><span class="ir-v" style="color:var(--green)">₦52,300</span></div>
+    <div class="ir"><span class="ir-l">Email</span><span class="ir-v">ada@ogapay.ng</span></div>
+    <div class="ir"><span class="ir-l">Phone</span><span class="ir-v">+234 801 234 5678</span></div>
+    <div class="ir"><span class="ir-l">KYC</span><span class="sb sb-g">Verified</span></div>
+    <a href="profile.html" class="va">Edit profile →</a>
   </div>
   <!-- Achievements -->
-  <div class="sec">Achievements</div>
-  <div class="cg">
-    <div class="card">
-      <h3>Badges &amp; milestones</h3>
-      <div class="r" style="flex-wrap:wrap;gap:6px">
-        <span class="badge" style="background:rgba(124,58,237,.12);color:var(--accent);padding:4px 10px">🏆 Top 10% earner</span>
-        <span class="badge" style="background:rgba(245,158,11,.12);color:var(--gold);padding:4px 10px">⭐ 100 tasks completed</span>
-        <span class="badge" style="background:rgba(34,197,94,.12);color:var(--green);padding:4px 10px">🎯 50 referrals</span>
-        <span class="badge" style="background:rgba(59,130,246,.12);color:var(--accent2);padding:4px 10px">📱 Early adopter</span>
-      </div>
-    </div>
-    <div class="card">
-      <h3>Quick stats</h3>
-      <div class="sg"><div><div class="n">247</div><div class="l">Total tasks</div></div><div><div class="n">98%</div><div class="l">Completion</div></div><div><div class="n">₦284.5K</div><div class="l">All-time earnings</div></div></div>
+  <div class="card">
+    <div class="card-t">Achievements</div>
+    <div class="br">
+      <span class="ch" style="background:rgba(124,58,237,.1);color:var(--accent)">🏆 Top 10% earner</span>
+      <span class="ch" style="background:rgba(234,179,8,.1);color:var(--gold)">⭐ 100 tasks</span>
+      <span class="ch" style="background:rgba(34,197,94,.1);color:var(--green)">🎯 50 referrals</span>
+      <span class="ch" style="background:rgba(59,130,246,.1);color:var(--accent2)">📱 Early adopter</span>
     </div>
   </div>
+  <!-- Quick Stats -->
+  <div class="card">
+    <div class="card-t">Stats</div>
+    <div class="sg"><div><div class="n">247</div><div class="l">Total tasks</div></div><div><div class="n">98%</div><div class="l">Completion rate</div></div><div><div class="n">₦284.5K</div><div class="l">All-time earnings</div></div></div>
+  </div>
 </main>
-<div class="toast" id="toast" style="position:fixed;right:16px;bottom:80px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-weight:600;font-size:13px;opacity:0;transform:translateY(8px);transition:.2s;z-index:200">Done</div>
+<div class="toast" id="toast" style="position:fixed;right:16px;bottom:80px;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;font-weight:600;font-size:12px;opacity:0;transform:translateY(6px);transition:.2s;z-index:200">Copied</div>
 <script>
-(function(){const h=document.documentElement,t=document.getElementById('themeToggle'),o=document.getElementById('toast');function s(v){h.setAttribute('data-theme',v);try{localStorage.setItem('ogapay-theme',v)}catch(e){}if(t)t.innerHTML='<i class="ti '+(v==='dark'?'ti-sun':'ti-moon')+'"></i>'}s(h.getAttribute('data-theme')||'dark');t&&t.addEventListener('click',()=>s(h.getAttribute('data-theme')==='dark'?'light':'dark'));function say(text){if(!o)return;o.textContent=text;o.classList.add('show');o.style.opacity='1';o.style.transform='translateY(0)';setTimeout(()=>{o.style.opacity='0';o.style.transform='translateY(8px)'},1800)}document.querySelectorAll('[data-copy]').forEach(e=>e.addEventListener('click',()=>{navigator.clipboard&&navigator.clipboard.writeText(e.getAttribute('data-copy'));say('Copied')}));})();
+(function(){const h=document.documentElement,t=document.getElementById('themeToggle'),o=document.getElementById('toast');function s(v){h.setAttribute('data-theme',v);try{localStorage.setItem('ogapay-theme',v)}catch(e){}if(t)t.innerHTML='<i class="ti '+(v==='dark'?'ti-sun':'ti-moon')+'"></i>'}s(h.getAttribute('data-theme')||'dark');t&&t.addEventListener('click',()=>s(h.getAttribute('data-theme')==='dark'?'light':'dark'));document.querySelectorAll('[data-copy]').forEach(e=>e.addEventListener('click',()=>{navigator.clipboard&&navigator.clipboard.writeText(e.getAttribute('data-copy'));if(o){o.textContent='Copied';o.style.opacity='1';o.style.transform='translateY(0)';setTimeout(()=>{o.style.opacity='0';o.style.transform='translateY(6px)'},1600)}}));})();
 </script>
 <script src="assets/ogapay-live.js"></script>
-<nav class="mobile-nav">
+<nav class="bot-nav">
   <a href="tasks.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Jobs</span></a>
   <a href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Deals</span></a>
   <a href="post-task.html" class="create"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Create</span></a>
   <a href="notifications.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Alerts</span></a>
-  <a href="dashboard.html" class="active"><span class="dot"></span><span>Profile</span></a>
+  <a href="dashboard.html" class="active"><span class="pd"></span><span>Profile</span></a>
 </nav>
 </body>
 </html>
