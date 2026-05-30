@@ -1,0 +1,407 @@
+// ─────────────────────────────────────────────
+//  OgaPay — Prisma Schema
+//  PostgreSQL via Supabase
+// ─────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ── ENUMS ─────────────────────────────────────
+
+enum UserRole {
+  WORKER
+  POSTER
+  ADMIN
+}
+
+enum KycStatus {
+  PENDING
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum WalletCurrency {
+  NGN
+  USDC
+  USDT
+  ETH
+  MATIC
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TASK_PAYMENT
+  TASK_REFUND
+  PLATFORM_FEE
+  REFERRAL_BONUS
+  STORE_PURCHASE
+  TRANSFER
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum TaskCategory {
+  SOCIAL_MEDIA
+  DATA_ENTRY
+  CONTENT_WRITING
+  APP_TESTING
+  SURVEY
+  DESIGN
+  TRANSLATION
+  WEB_RESEARCH
+  VIDEO_REVIEW
+  OTHER
+}
+
+enum TaskStatus {
+  DRAFT
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  DISPUTED
+  CANCELLED
+  EXPIRED
+}
+
+enum TaskSubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DISPUTED
+}
+
+enum WorkerLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+  LEGEND
+}
+
+enum PaymentProvider {
+  PAYSTACK
+  FLUTTERWAVE
+  CRYPTO
+  INTERNAL
+}
+
+// ── MODELS ────────────────────────────────────
+
+model User {
+  id                String    @id @default(uuid())
+  supabaseId        String?   @unique @map("supabase_id")
+  email             String    @unique
+  passwordHash      String?   @map("password_hash")
+  phone             String?   @unique
+  firstName         String    @map("first_name")
+  lastName          String    @map("last_name")
+  username          String    @unique
+  avatarUrl         String?   @map("avatar_url")
+  role              UserRole  @default(WORKER)
+  isEmailVerified   Boolean   @default(false) @map("is_email_verified")
+  isPhoneVerified   Boolean   @default(false) @map("is_phone_verified")
+  isBanned          Boolean   @default(false) @map("is_banned")
+  referralCode      String    @unique @map("referral_code")
+  referredById      String?   @map("referred_by_id")
+  lastLoginAt       DateTime? @map("last_login_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  referredBy        User?             @relation("Referrals", fields: [referredById], references: [id])
+  referrals         User[]            @relation("Referrals")
+  kyc               KycVerification?
+  wallets           Wallet[]
+  workerProfile     WorkerProfile?
+  posterProfile     PosterProfile?
+  tasksCreated      Task[]            @relation("TaskPoster")
+  taskSubmissions   TaskSubmission[]
+  transactions      Transaction[]
+  notifications     Notification[]
+  refreshTokens     RefreshToken[]
+  storePurchases    StorePurchase[]
+  disputesAsWorker  Dispute[]         @relation("DisputeWorker")
+  disputesAsPoster  Dispute[]         @relation("DisputePoster")
+
+  @@map("users")
+}
+
+model KycVerification {
+  id                String    @id @default(uuid())
+  userId            String    @unique @map("user_id")
+  status            KycStatus @default(PENDING)
+  provider          String?   // "dojah" | "smile_identity"
+  providerRef       String?   @map("provider_ref")   // External KYC ID
+  idType            String?   @map("id_type")         // NIN, BVN, PASSPORT, etc.
+  idNumber          String?   @map("id_number")
+  idFrontUrl        String?   @map("id_front_url")
+  idBackUrl         String?   @map("id_back_url")
+  selfieUrl         String?   @map("selfie_url")
+  dateOfBirth       DateTime? @map("date_of_birth")
+  address           String?
+  city              String?
+  state             String?
+  country           String    @default("NG")
+  rejectionReason   String?   @map("rejection_reason")
+  verifiedAt        DateTime? @map("verified_at")
+  submittedAt       DateTime? @map("submitted_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("kyc_verifications")
+}
+
+model Wallet {
+  id              String         @id @default(uuid())
+  userId          String         @map("user_id")
+  currency        WalletCurrency
+  balance         Decimal        @default(0) @db.Decimal(20, 8)
+  lockedBalance   Decimal        @default(0) @db.Decimal(20, 8) @map("locked_balance")
+  walletAddress   String?        @map("wallet_address")   // For crypto wallets
+  isActive        Boolean        @default(true) @map("is_active")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions    Transaction[]
+
+  @@unique([userId, currency])
+  @@map("wallets")
+}
+
+model Transaction {
+  id              String            @id @default(uuid())
+  userId          String            @map("user_id")
+  walletId        String            @map("wallet_id")
+  type            TransactionType
+  status          TransactionStatus @default(PENDING)
+  amount          Decimal           @db.Decimal(20, 8)
+  fee             Decimal           @default(0) @db.Decimal(20, 8)
+  currency        WalletCurrency
+  reference       String            @unique
+  externalRef     String?           @map("external_ref")  // Paystack/Flutterwave ref
+  provider        PaymentProvider?
+  metadata        Json?
+  description     String?
+  balanceBefore   Decimal           @db.Decimal(20, 8) @map("balance_before")
+  balanceAfter    Decimal           @db.Decimal(20, 8) @map("balance_after")
+  taskId          String?           @map("task_id")
+  completedAt     DateTime?         @map("completed_at")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  user            User              @relation(fields: [userId], references: [id])
+  wallet          Wallet            @relation(fields: [walletId], references: [id])
+
+  @@index([userId])
+  @@index([reference])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+model WorkerProfile {
+  id              String      @id @default(uuid())
+  userId          String      @unique @map("user_id")
+  level           WorkerLevel @default(BEGINNER)
+  reputationScore Float       @default(0) @map("reputation_score")
+  totalEarned     Decimal     @default(0) @db.Decimal(20, 8) @map("total_earned")
+  tasksCompleted  Int         @default(0) @map("tasks_completed")
+  tasksRejected   Int         @default(0) @map("tasks_rejected")
+  successRate     Float       @default(0) @map("success_rate")
+  avgRating       Float       @default(0) @map("avg_rating")
+  totalRatings    Int         @default(0) @map("total_ratings")
+  skills          String[]
+  bio             String?
+  isAvailable     Boolean     @default(true) @map("is_available")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("worker_profiles")
+}
+
+model PosterProfile {
+  id              String    @id @default(uuid())
+  userId          String    @unique @map("user_id")
+  companyName     String?   @map("company_name")
+  website         String?
+  totalPosted     Int       @default(0) @map("total_posted")
+  totalSpent      Decimal   @default(0) @db.Decimal(20, 8) @map("total_spent")
+  avgRating       Float     @default(0) @map("avg_rating")
+  totalRatings    Int       @default(0) @map("total_ratings")
+  isVerified      Boolean   @default(false) @map("is_verified")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("poster_profiles")
+}
+
+model Task {
+  id              String        @id @default(uuid())
+  posterId        String        @map("poster_id")
+  title           String
+  description     String
+  category        TaskCategory
+  status          TaskStatus    @default(DRAFT)
+  reward          Decimal       @db.Decimal(20, 8)
+  currency        WalletCurrency @default(NGN)
+  maxWorkers      Int           @default(1) @map("max_workers")
+  currentWorkers  Int           @default(0) @map("current_workers")
+  deadline        DateTime?
+  instructions    String?
+  proofRequired   String?       @map("proof_required")
+  tags            String[]
+  attachments     Json?         // Array of file URLs
+  escrowed        Boolean       @default(false)
+  escrowTxId      String?       @map("escrow_tx_id")
+  platformFee     Decimal       @default(0) @db.Decimal(20, 8) @map("platform_fee")
+  views           Int           @default(0)
+  isRemote        Boolean       @default(true) @map("is_remote")
+  estimatedTime   Int?          @map("estimated_time") // minutes
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  expiresAt       DateTime?     @map("expires_at")
+
+  poster          User          @relation("TaskPoster", fields: [posterId], references: [id])
+  submissions     TaskSubmission[]
+  disputes        Dispute[]
+
+  @@index([status])
+  @@index([category])
+  @@index([posterId])
+  @@map("tasks")
+}
+
+model TaskSubmission {
+  id              String               @id @default(uuid())
+  taskId          String               @map("task_id")
+  workerId        String               @map("worker_id")
+  status          TaskSubmissionStatus @default(PENDING)
+  proof           String?              // Text proof / link
+  attachments     Json?                // Array of uploaded file URLs
+  workerNotes     String?              @map("worker_notes")
+  posterNotes     String?              @map("poster_notes")
+  rating          Int?                 // Poster rates worker 1-5
+  feedback        String?
+  paidAt          DateTime?            @map("paid_at")
+  startedAt       DateTime?            @map("started_at")
+  submittedAt     DateTime?            @map("submitted_at")
+  reviewedAt      DateTime?            @map("reviewed_at")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+
+  task            Task                 @relation(fields: [taskId], references: [id])
+  worker          User                 @relation(fields: [workerId], references: [id])
+  dispute         Dispute?
+
+  @@unique([taskId, workerId])
+  @@map("task_submissions")
+}
+
+model Dispute {
+  id              String    @id @default(uuid())
+  taskId          String    @map("task_id")
+  submissionId    String    @unique @map("submission_id")
+  workerId        String    @map("worker_id")
+  posterId        String    @map("poster_id")
+  reason          String
+  workerEvidence  String?   @map("worker_evidence")
+  posterEvidence  String?   @map("poster_evidence")
+  resolution      String?
+  resolvedById    String?   @map("resolved_by_id")
+  resolvedAt      DateTime? @map("resolved_at")
+  outcome         String?   // "WORKER_WON" | "POSTER_WON" | "SPLIT"
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  task            Task      @relation(fields: [taskId], references: [id])
+  submission      TaskSubmission @relation(fields: [submissionId], references: [id])
+  worker          User      @relation("DisputeWorker", fields: [workerId], references: [id])
+  poster          User      @relation("DisputePoster", fields: [posterId], references: [id])
+
+  @@map("disputes")
+}
+
+model StoreItem {
+  id              String    @id @default(uuid())
+  name            String
+  description     String
+  price           Decimal   @db.Decimal(20, 8)
+  currency        WalletCurrency @default(NGN)
+  imageUrl        String?   @map("image_url")
+  category        String
+  isActive        Boolean   @default(true) @map("is_active")
+  stock           Int?
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  purchases       StorePurchase[]
+
+  @@map("store_items")
+}
+
+model StorePurchase {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  itemId      String    @map("item_id")
+  quantity    Int       @default(1)
+  totalPrice  Decimal   @db.Decimal(20, 8) @map("total_price")
+  currency    WalletCurrency
+  status      String    @default("PENDING")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user        User      @relation(fields: [userId], references: [id])
+  item        StoreItem @relation(fields: [itemId], references: [id])
+
+  @@map("store_purchases")
+}
+
+model Notification {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  type        String
+  title       String
+  body        String
+  data        Json?
+  isRead      Boolean   @default(false) @map("is_read")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model RefreshToken {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  token       String    @unique
+  expiresAt   DateTime  @map("expires_at")
+  userAgent   String?   @map("user_agent")
+  ipAddress   String?   @map("ip_address")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
