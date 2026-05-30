@@ -1,0 +1,1544 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Post a Task | OgaPay</title>
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('ogapay-theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.dataset.theme = saved || (prefersDark ? 'dark' : 'light');
+      } catch (e) {
+        document.documentElement.dataset.theme = 'light';
+      }
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue: #033CE3;
+      --blue-2: #315BFF;
+      --green: #16A34A;
+      --amber: #D97706;
+      --red: #DC2626;
+      --navy: #07132D;
+      --ink: #111827;
+      --muted: #64748B;
+      --soft: #F4F7FB;
+      --card: #FFFFFF;
+      --line: #DDE5F0;
+      --shadow: 0 18px 55px rgba(15, 23, 42, .10);
+      --radius: 14px;
+      --nav-h: 76px;
+      color-scheme: light;
+    }
+
+    [data-theme="dark"] {
+      --ink: #EEF4FF;
+      --muted: #A8B3C7;
+      --soft: #0B1220;
+      --card: #111B2D;
+      --line: #243148;
+      --navy: #F8FAFC;
+      --shadow: 0 18px 55px rgba(0, 0, 0, .34);
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 10% -10%, rgba(3, 60, 227, .10), transparent 34rem),
+        linear-gradient(180deg, var(--soft), var(--card) 30rem);
+      color: var(--ink);
+    }
+    body.menu-open { overflow: hidden; }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      height: var(--nav-h);
+      border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+      background: color-mix(in srgb, var(--card) 86%, transparent);
+      backdrop-filter: blur(18px);
+    }
+    .nav-inner {
+      max-width: 1180px;
+      height: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: "Outfit", sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+    .logo-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: var(--blue);
+      color: white;
+      box-shadow: 0 12px 28px rgba(3, 60, 227, .24);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nav-link {
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--blue);
+      background: color-mix(in srgb, var(--blue) 9%, transparent);
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .balance-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-weight: 800;
+      background: var(--card);
+    }
+    .auth-only{display:none!important}.public-only{display:inline-flex!important}
+    body[data-auth="authed"] .auth-only{display:inline-flex!important}
+    body[data-auth="authed"] .public-only{display:none!important}
+    body[data-auth="authed"] .oga-drawer-foot.auth-only{display:block!important}
+    body[data-auth="public"] .oga-drawer-foot.auth-only{display:none!important}
+    .theme-btn, .hamburger, .icon-btn {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--ink);
+      background: var(--card);
+      display: inline-grid;
+      place-items: center;
+    }
+    .hamburger { display: none; }
+
+
+    .logo-mark{background:none;color:inherit;overflow:hidden;padding:0;box-shadow:0 8px 22px rgba(37,99,235,.12)}
+    .logo-mark svg{width:100%;height:100%;display:block;border-radius:10px}
+    .mobile-menu{position:fixed;inset:0;z-index:300;display:none}.mobile-menu.open{display:block}.mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(3px)}
+    .oga-drawer{position:absolute;right:0;top:0;bottom:0;width:min(360px,92vw);padding:0 0 18px;background:var(--card);color:var(--ink);border-left:1px solid var(--line);box-shadow:-16px 0 42px rgba(16,21,37,.12);display:flex;flex-direction:column}.oga-drawer-head{height:64px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--card) 86%,transparent)}.oga-drawer-brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:19px;font-weight:900;letter-spacing:0;color:inherit}.oga-drawer-logo.logo-mark{width:34px;height:34px;border-radius:9px}.oga-drawer-close{width:36px;height:36px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--muted);font-size:20px;line-height:1}.oga-drawer-nav{padding:10px 8px 12px;overflow-y:auto;flex:1}.oga-drawer-section{margin-bottom:6px}.oga-drawer-item{width:100%;min-height:56px;display:flex;align-items:center;gap:12px;padding:8px 10px;border:0;border-radius:10px;background:transparent;color:inherit;text-align:left;text-decoration:none;cursor:pointer;font:inherit}.oga-drawer-item:hover,.oga-drawer-group.open>.oga-drawer-group-toggle{background:var(--soft)}.oga-drawer-icon{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line);border-radius:9px;background:var(--soft);color:var(--muted);flex:0 0 auto;font-weight:800}.oga-drawer-icon.create-icon{background:color-mix(in srgb,var(--blue) 10%,var(--card));border-color:color-mix(in srgb,var(--blue) 26%,var(--line));color:var(--blue)}.oga-drawer-icon.mini{width:34px;height:34px;border-radius:8px}.oga-drawer-item strong,.oga-drawer-subnav strong{display:block;color:var(--ink);font-size:15px;line-height:1.15;font-weight:800}.oga-drawer-item small,.oga-drawer-subnav small{display:block;margin-top:3px;color:var(--muted);font-size:13px;line-height:1.2;font-weight:600}.oga-drawer-chevron{width:15px;height:15px;margin-left:auto;color:var(--muted);stroke-width:2.5;transition:transform .16s ease}.oga-drawer-group.open .oga-drawer-chevron{transform:rotate(180deg)}.oga-drawer-subnav{display:none;margin:4px 0 10px 18px;padding:6px 0 6px 22px;border-left:2px solid var(--line)}.oga-drawer-group.open .oga-drawer-subnav{display:grid;gap:4px}.oga-drawer-subnav a{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:9px;color:inherit}.oga-drawer-subnav a:hover{background:var(--soft)}.oga-drawer-foot{padding:8px 8px 0;border-top:1px solid var(--line);background:color-mix(in srgb,var(--card) 92%,transparent)}.oga-balance-card{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.oga-balance-card span{color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.oga-balance-card strong{font-family:"Outfit",sans-serif;font-size:20px;color:var(--blue)}.oga-profile-btn{width:100%;height:52px;margin-top:10px;border:1.5px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font-size:15px;font-weight:900}
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 44px 24px 96px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 28px;
+      align-items: start;
+    }
+    .main-flow { min-width: 0; }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--blue);
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: .08em;
+    }
+    h1 {
+      margin: 0;
+      font-family: "Outfit", sans-serif;
+      font-size: clamp(36px, 5vw, 64px);
+      line-height: .98;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      max-width: 680px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.65;
+      margin: 16px 0 0;
+    }
+
+    .draft-banner {
+      position: fixed;
+      left: 50%;
+      top: calc(var(--nav-h) + 14px);
+      z-index: 65;
+      width: min(720px, calc(100% - 32px));
+      transform: translate(-50%, -16px);
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      transition: .2s ease;
+    }
+    .draft-banner.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, 0);
+    }
+    .draft-banner p {
+      margin: 0;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .stepbar {
+      margin: 28px 0 28px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .step {
+      position: relative;
+      padding: 14px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--card);
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 13px;
+    }
+    .step::before {
+      content: attr(data-step);
+      width: 24px;
+      height: 24px;
+      margin-right: 8px;
+      border-radius: 50%;
+      display: inline-grid;
+      place-items: center;
+      background: color-mix(in srgb, var(--line) 65%, transparent);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .step.done, .step.active {
+      border-color: color-mix(in srgb, var(--blue) 40%, var(--line));
+      color: var(--blue);
+      background: color-mix(in srgb, var(--blue) 8%, var(--card));
+    }
+    .step.done::before, .step.active::before {
+      background: var(--blue);
+      color: white;
+    }
+
+    .template-row {
+      margin: 0 0 20px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--card);
+    }
+    .row-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .row-head strong, .section-title {
+      font-family: "Outfit", sans-serif;
+      font-size: 18px;
+    }
+    .row-head span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .chip, .quick {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 13px;
+      background: var(--soft);
+      color: var(--ink);
+      font-weight: 800;
+    }
+    .chip:hover, .chip.active, .quick:hover, .quick.active {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: color-mix(in srgb, var(--blue) 9%, var(--card));
+    }
+
+    .mode-grid, .option-grid, .platform-grid, .proof-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .mode-grid { grid-template-columns: repeat(3, 1fr); margin-bottom: 22px; }
+    .platform-grid { grid-template-columns: repeat(4, 1fr); }
+    .proof-grid { grid-template-columns: repeat(4, 1fr); }
+    .option-grid.two { grid-template-columns: repeat(2, 1fr); }
+    .select-card, .mode-card {
+      min-height: 94px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--card);
+      text-align: left;
+      color: var(--ink);
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    .select-card:hover, .mode-card:hover {
+      transform: translateY(-2px);
+      border-color: color-mix(in srgb, var(--blue) 40%, var(--line));
+      box-shadow: 0 12px 28px rgba(3, 60, 227, .10);
+    }
+    .select-card.active, .mode-card.active {
+      border-color: var(--blue);
+      background: color-mix(in srgb, var(--blue) 8%, var(--card));
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 14%, transparent);
+    }
+    .select-card b, .mode-card b { display: block; margin-bottom: 6px; }
+    .select-card span, .mode-card span { color: var(--muted); font-size: 13px; line-height: 1.45; }
+
+    form { display: grid; gap: 18px; }
+    .form-section {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--card);
+      padding: 22px;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, .04);
+      scroll-margin-top: 96px;
+    }
+    .form-section.pulse {
+      animation: sectionPulse 1.05s ease;
+    }
+    @keyframes sectionPulse {
+      0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--blue) 26%, transparent); }
+      100% { box-shadow: 0 0 0 18px transparent; }
+    }
+    .section-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .section-top p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    .field { display: grid; gap: 8px; }
+    .field.full { grid-column: 1 / -1; }
+    label {
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 900;
+    }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 13px 14px;
+      background: var(--soft);
+      color: var(--ink);
+      outline: none;
+      transition: border-color .16s ease, box-shadow .16s ease;
+    }
+    textarea { min-height: 134px; resize: vertical; line-height: 1.55; }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 15%, transparent);
+    }
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+    .counter {
+      justify-self: end;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .counter.warn { color: var(--amber); }
+    .counter.danger { color: var(--red); }
+    .error-msg {
+      min-height: 18px;
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .has-error input, .has-error select, .has-error textarea {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 12%, transparent);
+    }
+
+    .reward-wrap {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 14px;
+    }
+    .currency-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .amount-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .breakdown {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--soft);
+      padding: 16px;
+    }
+    .breakdown.danger {
+      border-color: color-mix(in srgb, var(--red) 50%, var(--line));
+      background: color-mix(in srgb, var(--red) 8%, var(--card));
+    }
+    .cost-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 9px 0;
+      color: var(--muted);
+      font-weight: 800;
+      border-bottom: 1px solid var(--line);
+    }
+    .cost-line:last-child {
+      border-bottom: 0;
+      color: var(--ink);
+      font-size: 18px;
+    }
+    .balance-line { color: var(--blue); }
+    .danger .balance-line, .danger .gate-note { color: var(--red); }
+    .gate-note {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .summary-item {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--soft);
+    }
+    .summary-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .summary-item b {
+      display: block;
+      margin-top: 6px;
+      line-height: 1.35;
+    }
+    .warning {
+      margin-top: 14px;
+      padding: 13px 14px;
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--amber) 12%, var(--card));
+      color: var(--amber);
+      font-weight: 900;
+    }
+    .warning.danger {
+      background: color-mix(in srgb, var(--red) 12%, var(--card));
+      color: var(--red);
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .btn {
+      min-height: 46px;
+      border: 0;
+      border-radius: 12px;
+      padding: 0 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 900;
+      transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn.primary {
+      background: var(--blue);
+      color: white;
+      box-shadow: 0 16px 32px rgba(3, 60, 227, .22);
+    }
+    .btn.dark { background: #07132D; color: white; }
+    .btn.secondary {
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--ink);
+    }
+    .btn.danger { background: var(--red); color: white; }
+    .btn[disabled] { opacity: .65; cursor: not-allowed; transform: none; }
+
+    .preview-rail {
+      position: sticky;
+      top: calc(var(--nav-h) + 22px);
+      display: grid;
+      gap: 16px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--card);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .preview-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .task-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: var(--soft);
+    }
+    .task-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: var(--blue);
+      color: white;
+      font-family: "Outfit", sans-serif;
+      font-weight: 800;
+    }
+    .task-title {
+      min-height: 48px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      font-family: "Outfit", sans-serif;
+      font-size: 19px;
+      line-height: 1.25;
+    }
+    .task-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 14px 0;
+    }
+    .badge {
+      border-radius: 999px;
+      padding: 8px 10px;
+      background: color-mix(in srgb, var(--blue) 12%, var(--card));
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .progress {
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: color-mix(in srgb, var(--line) 80%, transparent);
+      margin: 14px 0;
+    }
+    .progress span {
+      display: block;
+      width: 0%;
+      height: 100%;
+      background: var(--green);
+    }
+    .preview-start {
+      width: 100%;
+      margin-top: 10px;
+    }
+    .ai-box {
+      display: none;
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      background: var(--soft);
+    }
+    .ai-box.show { display: block; }
+    .ai-box h4 { margin: 0 0 8px; }
+    .ai-box p { margin: 0 0 10px; color: var(--muted); line-height: 1.5; }
+
+    .success-screen {
+      position: fixed;
+      inset: var(--nav-h) 0 0;
+      z-index: 40;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: color-mix(in srgb, var(--soft) 88%, transparent);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: .28s ease;
+    }
+    .success-screen.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    .success-card {
+      width: min(520px, 100%);
+      padding: 34px;
+      text-align: center;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+    .success-mark {
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 18px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--green);
+      color: white;
+      font-size: 34px;
+      font-weight: 900;
+    }
+
+    .mobile-bottom {
+      display: none;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 45;
+      height: 64px;
+      border-top: 1px solid var(--line);
+      background: var(--card);
+      grid-template-columns: repeat(5, 1fr);
+    }
+    .mobile-bottom a {
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .mobile-bottom a.active { color: var(--blue); }
+
+    @media (max-width: 980px) {
+      .page { grid-template-columns: 1fr; max-width: 960px; }
+      .preview-rail { position: static; }
+      .nav-links, .nav-actions .balance-pill { display: none; }
+      .hamburger { display: inline-grid; }
+    }
+    @media (max-width: 720px) {
+      .page { padding: 30px 16px 92px; }
+      .stepbar, .mode-grid, .field-grid, .reward-wrap, .summary { grid-template-columns: 1fr; }
+      .platform-grid, .proof-grid { grid-template-columns: repeat(2, 1fr); }
+      .form-section, .template-row { padding: 18px; }
+      .section-top, .row-head, .draft-banner { align-items: flex-start; flex-direction: column; }
+      .mobile-bottom { display: grid; }
+      h1 { font-size: 38px; }
+    }
+  
+    /* Compact form sizing */
+    .page{max-width:1080px;padding:32px 20px 84px;grid-template-columns:minmax(0,1fr) 312px;gap:22px}.brand{font-size:20px}.nav-link{font-size:13px;padding:9px 10px}.eyebrow{font-size:11px;margin-bottom:8px}h1{font-size:clamp(30px,3.7vw,46px);line-height:1.04}.subtitle{font-size:15.5px;line-height:1.55;margin-top:12px}.stepbar{margin:22px 0;gap:8px}.step{padding:11px 10px}.template-row{padding:15px}.mode-grid{gap:10px;margin-bottom:18px}.mode-card,.select-card{min-height:78px;padding:13px}.form-section{padding:18px}.section-top{margin-bottom:14px}.section-title{font-size:16px}.section-top p{font-size:13px}.field-grid{gap:12px}input,select,textarea{padding:11px 12px;border-radius:10px}textarea{min-height:112px}.btn{min-height:42px}.preview-rail{top:calc(var(--nav-h) + 16px)}.panel{padding:15px}.task-title{font-size:17px;min-height:43px}.reward-wrap{grid-template-columns:1fr}.platform-grid,.proof-grid{grid-template-columns:repeat(4,minmax(0,1fr))}@media(max-width:980px){.page{grid-template-columns:1fr}.platform-grid,.proof-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:720px){.page{padding:24px 14px 86px}.form-section,.template-row{padding:15px}h1{font-size:30px}.subtitle{font-size:14px}.mode-grid{grid-template-columns:1fr}.platform-grid,.proof-grid{grid-template-columns:1fr}.input-row{grid-template-columns:1fr}.btn{width:100%}}
+
+  </style>
+</head>
+<body>
+  <nav class="nav" aria-label="Primary navigation">
+    <div class="nav-inner">
+      <a class="brand" href="index.html" aria-label="OgaPay home">
+        <span class="logo-mark" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
+        OgaPay
+      </a>
+      <div class="nav-links" aria-label="Desktop navigation">
+        <a class="nav-link" href="tasks.html">Browse Tasks</a>
+        <a class="nav-link active" href="post-task.html">Create Job</a>
+        <a class="nav-link" href="store.html">Deals</a>
+        <a class="nav-link" href="communities.html">Communities</a>
+        <a class="nav-link" href="faq.html">FAQ</a>
+      </div>
+      <div class="nav-actions">
+        <span class="balance-pill auth-only">Balance <b id="navBalance">NGN 0.00</b></span>
+        <button class="btn secondary public-only nav-login" type="button" onclick="window.location.href='login.html'">Login</button>
+        <button class="theme-btn" type="button" id="themeBtn" aria-label="Toggle theme">◐</button>
+        <button class="hamburger" type="button" id="menuBtn" aria-label="Open menu">☰</button>
+      </div>
+    </div>
+  </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-overlay" data-close-menu></div>
+    <aside class="mobile-drawer oga-drawer" aria-label="OgaPay menu">
+      <div class="oga-drawer-head">
+        <a class="oga-drawer-brand" href="index.html" aria-label="OgaPay home"><span class="oga-drawer-logo logo-mark" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span><span>OgaPay</span></a>
+        <button class="oga-drawer-close" type="button" data-close-menu aria-label="Close menu">x</button>
+      </div>
+      <nav class="oga-drawer-nav" aria-label="Primary menu">
+        <div class="oga-drawer-section">
+          <a class="oga-drawer-item" href="index.html" data-close-menu><span class="oga-drawer-icon">H</span><span><strong>Home</strong><small>Back to homepage</small></span></a>
+          <a class="oga-drawer-item" href="tasks.html" data-close-menu><span class="oga-drawer-icon">T</span><span><strong>Tasks</strong><small>Browse micro-jobs</small></span></a>
+          <a class="oga-drawer-item" href="post-task.html" data-close-menu><span class="oga-drawer-icon create-icon">+</span><span><strong>Post Task</strong><small>Create a campaign</small></span></a>
+          <a class="oga-drawer-item" href="store.html" data-close-menu><span class="oga-drawer-icon">D</span><span><strong>Deals</strong><small>Cashback and offers</small></span></a>
+          <a class="oga-drawer-item" href="communities.html" data-close-menu><span class="oga-drawer-icon">C</span><span><strong>Communities</strong><small>Groups and earning feeds</small></span></a>
+          <a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon">?</span><span><strong>FAQ</strong><small>Common questions answered</small></span></a>
+        </div>
+        <section class="oga-drawer-group open">
+          <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="true"><span class="oga-drawer-icon">M</span><span><strong>Account</strong><small>Wallet and workspace</small></span><svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="oga-drawer-subnav">
+            <a href="dashboard.html" data-close-menu><span class="oga-drawer-icon mini">O</span><span><strong>Overview</strong><small>Workspace home</small></span></a>
+            <a href="wallet.html" data-close-menu><span class="oga-drawer-icon mini">W</span><span><strong>Wallet</strong><small>Naira and USDC</small></span></a>
+            <a href="notifications.html" data-close-menu><span class="oga-drawer-icon mini">N</span><span><strong>Notifications</strong><small>Task alerts</small></span></a>
+            <a href="profile.html" data-close-menu><span class="oga-drawer-icon mini">P</span><span><strong>Profile</strong><small>Identity and reputation</small></span></a>
+          </div>
+        </section>
+      </nav>
+      <div class="oga-drawer-foot auth-only"><div class="oga-balance-card"><span>Balance</span><strong id="drawerBalance">NGN 0.00</strong></div><button class="oga-profile-btn" type="button" onclick="window.location.href='profile.html'">My Profile</button></div>
+      <div class="oga-drawer-foot public-only"><button class="oga-profile-btn" type="button" onclick="window.location.href='login.html'">Login to continue</button></div>
+    </aside>
+  </div>
+
+  <div class="draft-banner" id="draftBanner">
+    <p>You have an unsaved draft. Restore it?</p>
+    <div class="actions" style="margin:0">
+      <button class="btn primary" type="button" id="restoreDraft">Restore</button>
+      <button class="btn secondary" type="button" id="discardDraft">Discard</button>
+    </div>
+  </div>
+
+  <main class="page" id="page">
+    <div class="main-flow">
+      <header>
+        <p class="eyebrow">Create a verified microjob</p>
+        <h1>Post a task workers can finish with confidence.</h1>
+        <p class="subtitle">Set the task, pick your proof, choose the reward, and preview exactly how workers will see it before launch.</p>
+      </header>
+
+      <div class="stepbar" id="stepbar" aria-label="Task setup progress">
+        <div class="step active" data-step="1">Type</div>
+        <div class="step" data-step="2">Details</div>
+        <div class="step" data-step="3">Reward</div>
+        <div class="step" data-step="4">Review</div>
+      </div>
+
+      <section class="template-row">
+        <div class="row-head">
+          <strong>Start from a template</strong>
+          <span>Quick presets you can edit</span>
+        </div>
+        <div class="chips" id="templateChips">
+          <button class="chip" type="button" data-template="x-repost">X Repost</button>
+          <button class="chip" type="button" data-template="telegram-join">Telegram Join</button>
+          <button class="chip" type="button" data-template="app-review">App Review</button>
+          <button class="chip" type="button" data-template="logo-design">Logo Design</button>
+          <button class="chip" type="button" data-template="survey">Survey</button>
+          <button class="chip" type="button" data-template="youtube-like">YouTube Like</button>
+        </div>
+      </section>
+
+      <section class="mode-grid" aria-label="Task type">
+        <button class="mode-card active" type="button" data-mode="Social"><b>Social Task</b><span>Drive follows, reposts, likes, joins, and comments.</span></button>
+        <button class="mode-card" type="button" data-mode="Survey"><b>Survey</b><span>Collect opinions, product feedback, and research data.</span></button>
+        <button class="mode-card" type="button" data-mode="Freelance"><b>Freelance</b><span>Request creative, design, writing, or research work.</span></button>
+      </section>
+
+      <form id="createForm" novalidate>
+        <section class="form-section" data-section="details">
+          <div class="section-top">
+            <div>
+              <h2 class="section-title">Task Details</h2>
+              <p>Explain the action clearly enough that workers can complete it without guessing.</p>
+            </div>
+          </div>
+          <div class="field-grid">
+            <div class="field full" id="field-title">
+              <label for="title">Task title</label>
+              <div class="input-row">
+                <input id="title" maxlength="120" placeholder="Example: Repost our launch tweet and follow our page">
+                <button class="btn secondary" type="button" id="aiBtn">Generate with AI</button>
+              </div>
+              <span class="counter" id="titleCount">0/120</span>
+              <span class="error-msg" id="titleError"></span>
+              <div class="ai-box" id="aiBox">
+                <h4 id="aiTitle">Suggested task</h4>
+                <p id="aiInstructions"></p>
+                <div class="actions" style="margin:0">
+                  <button class="btn primary" type="button" id="acceptAi">Accept</button>
+                  <button class="btn secondary" type="button" id="regenAi">Regenerate</button>
+                  <button class="btn secondary" type="button" id="closeAi">Ignore</button>
+                </div>
+              </div>
+            </div>
+            <div class="field full" id="field-desc">
+              <label for="desc">Instructions</label>
+              <textarea id="desc" maxlength="900" placeholder="List each step the worker must follow. Include links, hashtags, and what proof they must submit."></textarea>
+              <span class="counter" id="descCount">0/900</span>
+              <span class="error-msg" id="descError"></span>
+            </div>
+            <div class="field" id="field-category">
+              <label for="category">Category</label>
+              <select id="category">
+                <option value="">Select category</option>
+                <option>Social</option>
+                <option>Survey</option>
+                <option>App Review</option>
+                <option>Design</option>
+                <option>Writing</option>
+                <option>Research</option>
+              </select>
+              <span class="error-msg" id="categoryError"></span>
+            </div>
+            <div class="field">
+              <label for="time">Estimated time</label>
+              <select id="time">
+                <option>Under 2 minutes</option>
+                <option>3-5 minutes</option>
+                <option>6-10 minutes</option>
+                <option>15+ minutes</option>
+              </select>
+            </div>
+            <div class="field full" id="field-platforms">
+              <label>Platforms</label>
+              <div class="platform-grid">
+                <button class="select-card active" type="button" data-platform="X"><b>X</b><span>Posts, reposts, follows</span></button>
+                <button class="select-card" type="button" data-platform="Instagram"><b>Instagram</b><span>Likes, follows, reels</span></button>
+                <button class="select-card" type="button" data-platform="Telegram"><b>Telegram</b><span>Joins and group actions</span></button>
+                <button class="select-card" type="button" data-platform="YouTube"><b>YouTube</b><span>Likes and subscriptions</span></button>
+              </div>
+              <span class="error-msg" id="platformsError"></span>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section" data-section="proof">
+          <div class="section-top">
+            <div>
+              <h2 class="section-title">Proof of Completion</h2>
+              <p>Choose the proof workers must submit before you approve payout.</p>
+            </div>
+          </div>
+          <div class="proof-grid" id="proofGrid">
+            <button class="select-card active" type="button" data-proof="Screenshot"><b>Screenshot</b><span>Best for social and app tasks</span></button>
+            <button class="select-card" type="button" data-proof="Link"><b>Public link</b><span>Worker submits a URL</span></button>
+            <button class="select-card" type="button" data-proof="Text"><b>Text answer</b><span>Short response or code</span></button>
+            <button class="select-card" type="button" data-proof="File"><b>File upload</b><span>Design, writing, or report</span></button>
+          </div>
+          <div class="field" id="field-proofNote" style="margin-top:14px">
+            <label for="proofNote">Proof instructions</label>
+            <textarea id="proofNote" placeholder="Tell workers what the screenshot, link, or file must show."></textarea>
+            <span class="error-msg" id="proofNoteError"></span>
+          </div>
+        </section>
+
+        <section class="form-section" data-section="timeline">
+          <div class="section-top">
+            <div>
+              <h2 class="section-title">Slots & Timeline</h2>
+              <p>Control how many people can complete the task and when it closes.</p>
+            </div>
+          </div>
+          <div class="field-grid">
+            <div class="field" id="field-slots">
+              <label for="slots">Worker slots</label>
+              <input id="slots" type="number" min="1" max="10000" value="100">
+              <div class="amount-row">
+                <button class="quick" type="button" data-slots="50">50</button>
+                <button class="quick active" type="button" data-slots="100">100</button>
+                <button class="quick" type="button" data-slots="250">250</button>
+                <button class="quick" type="button" data-slots="500">500</button>
+              </div>
+              <span class="error-msg" id="slotsError"></span>
+            </div>
+            <div class="field">
+              <label for="deadline">Deadline</label>
+              <input id="deadline" type="date">
+            </div>
+            <div class="field">
+              <label for="reviewWindow">Review window</label>
+              <select id="reviewWindow">
+                <option>24 hours</option>
+                <option>48 hours</option>
+                <option>72 hours</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="visibility">Visibility</label>
+              <select id="visibility">
+                <option>Public marketplace</option>
+                <option>Invite-only</option>
+                <option>Community only</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section" data-section="audience">
+          <div class="section-top">
+            <div>
+              <h2 class="section-title">Audience & Requirements</h2>
+              <p>Target the right workers and optionally feature your task.</p>
+            </div>
+          </div>
+          <div class="field-grid">
+            <div class="field">
+              <label for="geo">Location</label>
+              <select id="geo">
+                <option>Nigeria</option>
+                <option>Lagos</option>
+                <option>Abuja</option>
+                <option>Kano</option>
+                <option>Global</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="followers">Minimum followers</label>
+              <input id="followers" type="number" min="0" value="0">
+            </div>
+            <div class="field">
+              <label for="reputation">Minimum reputation</label>
+              <select id="reputation">
+                <option>Any reputation</option>
+                <option>80% approval or higher</option>
+                <option>90% approval or higher</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="featured">Featured placement</label>
+              <select id="featured">
+                <option value="no">No</option>
+                <option value="yes">Yes, add 20%</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section" data-section="reward">
+          <div class="section-top">
+            <div>
+              <h2 class="section-title">Reward per Worker</h2>
+              <p>Set a fair payout. OgaPay adds a 10% service fee and optional featured boost.</p>
+            </div>
+          </div>
+          <div class="reward-wrap">
+            <div>
+              <div class="currency-grid">
+                <button class="select-card active" type="button" data-currency="NGN"><b>NGN</b><span>Pay workers in Naira</span></button>
+                <button class="select-card" type="button" data-currency="USDC"><b>USDC</b><span>Pay through Solana USDC</span></button>
+              </div>
+              <div class="field" id="field-reward" style="margin-top:14px">
+                <label for="reward">Reward amount</label>
+                <input id="reward" type="number" min="1" step="1" value="150">
+                <div class="amount-row">
+                  <button class="quick" type="button" data-reward="75">75</button>
+                  <button class="quick active" type="button" data-reward="150">150</button>
+                  <button class="quick" type="button" data-reward="300">300</button>
+                  <button class="quick" type="button" data-reward="500">500</button>
+                </div>
+                <span class="error-msg" id="rewardError"></span>
+              </div>
+            </div>
+            <div class="breakdown" id="breakdown">
+              <div class="cost-line"><span>Worker payouts</span><b id="payoutCost">NGN 15,000.00</b></div>
+              <div class="cost-line"><span>OgaPay fee</span><b id="feeCost">NGN 1,500.00</b></div>
+              <div class="cost-line"><span>Featured boost</span><b id="featureCost">NGN 0.00</b></div>
+              <div class="cost-line balance-line"><span>Your balance</span><b id="balanceCost">NGN 0.00</b></div>
+              <div class="cost-line"><span>Total due</span><b id="totalCost">NGN 16,500.00</b></div>
+              <p class="gate-note" id="gateNote">Add funds before launching if your balance is too low.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section" data-section="review">
+          <div class="section-top">
+            <div>
+              <h2 class="section-title">Review & Launch</h2>
+              <p>Confirm the public task card, cost, and proof requirement before publishing.</p>
+            </div>
+          </div>
+          <div class="summary">
+            <div class="summary-item"><span>Task</span><b id="sTitle">Untitled task</b></div>
+            <div class="summary-item"><span>Type</span><b id="sType">Social</b></div>
+            <div class="summary-item"><span>Slots</span><b id="sSlots">100 workers</b></div>
+            <div class="summary-item"><span>Reward</span><b id="sReward">NGN 150.00 each</b></div>
+            <div class="summary-item"><span>Platforms</span><b id="sPlatforms">X</b></div>
+            <div class="summary-item"><span>Total</span><b id="sTotal">NGN 16,500.00</b></div>
+          </div>
+          <div class="warning" id="launchWarning">Make sure your instructions and proof requirements are clear before launch.</div>
+          <div class="actions">
+            <button class="btn primary" type="submit" id="submitBtn">Launch Task</button>
+            <button class="btn secondary" type="button" id="draftBtn">Save Draft</button>
+          </div>
+        </section>
+      </form>
+    </div>
+
+    <aside class="preview-rail">
+      <section class="panel">
+        <div class="preview-label"><span>Worker preview</span><span id="previewPlatform">X</span></div>
+        <div class="task-card">
+          <div class="task-head">
+            <div class="avatar">OP</div>
+            <div>
+              <b>OgaPay Poster</b><br>
+              <span style="color:var(--muted);font-size:13px" id="previewMode">Social task</span>
+            </div>
+          </div>
+          <div class="task-title" id="previewTitle">Repost our launch tweet and follow our page</div>
+          <div class="task-meta">
+            <span class="badge" id="previewReward">NGN 150</span>
+            <span class="badge" id="previewCategory">Social</span>
+          </div>
+          <div class="progress"><span></span></div>
+          <button class="btn dark preview-start" type="button">Start -></button>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="preview-label"><span>Wallet gate</span><span id="walletState">Check</span></div>
+        <div class="cost-line"><span>Balance</span><b id="railBalance">NGN 0.00</b></div>
+        <div class="cost-line"><span>Total</span><b id="railTotal">NGN 16,500.00</b></div>
+        <p class="gate-note" id="railNote">Your launch button updates automatically.</p>
+      </section>
+    </aside>
+  </main>
+
+  <section class="success-screen" id="successScreen" aria-live="polite">
+    <div class="success-card">
+      <div class="success-mark">✓</div>
+      <h2>Task submitted for review</h2>
+      <p class="subtitle" style="margin:10px auto 22px">Your task is saved and ready for the marketplace once approved.</p>
+      <div class="actions" style="justify-content:center">
+        <a class="btn primary" href="tasks.html">View Tasks</a>
+        <button class="btn secondary" type="button" id="newTask">Create Another</button>
+      </div>
+    </div>
+  </section>
+
+  <nav class="mobile-bottom" aria-label="Mobile bottom navigation">
+    <a href="index.html">Home</a>
+    <a href="tasks.html">Tasks</a>
+    <a class="active" href="post-task.html">Post</a>
+    <a href="notifications.html">Alerts</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+
+  <script>
+    const NGN_RATE = 1620;
+    const draftKey = 'ogapay-post-task-draft';
+    const isAuthed = () => !!(localStorage.getItem('ogapay_access_token') || localStorage.getItem('ogapay-authenticated') === 'true');
+
+    const state = {
+      mode: 'Social',
+      platforms: ['X'],
+      proof: 'Screenshot',
+      currency: 'NGN',
+      total: 0,
+      balance: readBalance(),
+      lastCompletedStep: 1
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const money = (amount, currency = state.currency) => {
+      const value = Number(amount || 0);
+      if (currency === 'USDC') return 'USDC ' + value.toFixed(2);
+      return 'NGN ' + value.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
+    function readBalance() {
+      if (!isAuthed()) return 0;
+      const raw = localStorage.getItem('ogapay_balance');
+      if (raw === null) return 0.01;
+      const cleaned = String(raw).replace(/[^\d.]/g, '');
+      return Number(cleaned || 0);
+    }
+
+    function toggleTheme() {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem('ogapay-theme', next);
+    }
+
+    function openMenu(open) {
+      $('mobileMenu').classList.toggle('open', open);
+      document.body.classList.toggle('menu-open', open);
+    }
+
+    function getFormState() {
+      return {
+        mode: state.mode,
+        platforms: state.platforms,
+        proof: state.proof,
+        currency: state.currency,
+        title: $('title').value,
+        desc: $('desc').value,
+        category: $('category').value,
+        time: $('time').value,
+        proofNote: $('proofNote').value,
+        slots: $('slots').value,
+        deadline: $('deadline').value,
+        reviewWindow: $('reviewWindow').value,
+        visibility: $('visibility').value,
+        geo: $('geo').value,
+        followers: $('followers').value,
+        reputation: $('reputation').value,
+        featured: $('featured').value,
+        reward: $('reward').value,
+        savedAt: new Date().toISOString()
+      };
+    }
+
+    function applyFormState(data) {
+      if (!data) return;
+      state.mode = data.mode || 'Social';
+      state.platforms = Array.isArray(data.platforms) && data.platforms.length ? data.platforms : ['X'];
+      state.proof = data.proof || 'Screenshot';
+      state.currency = data.currency || 'NGN';
+      ['title','desc','category','time','proofNote','slots','deadline','reviewWindow','visibility','geo','followers','reputation','featured','reward'].forEach((id) => {
+        if (data[id] !== undefined && $(id)) $(id).value = data[id];
+      });
+      syncSelections();
+      updateAll();
+    }
+
+    function syncSelections() {
+      document.querySelectorAll('[data-mode]').forEach((btn) => btn.classList.toggle('active', btn.dataset.mode === state.mode));
+      document.querySelectorAll('[data-platform]').forEach((btn) => btn.classList.toggle('active', state.platforms.includes(btn.dataset.platform)));
+      document.querySelectorAll('[data-proof]').forEach((btn) => btn.classList.toggle('active', btn.dataset.proof === state.proof));
+      document.querySelectorAll('[data-currency]').forEach((btn) => btn.classList.toggle('active', btn.dataset.currency === state.currency));
+    }
+
+    function saveDraft(silent = true) {
+      localStorage.setItem(draftKey, JSON.stringify(getFormState()));
+      if (!silent) {
+        const btn = $('draftBtn');
+        const old = btn.textContent;
+        btn.textContent = 'Draft Saved';
+        setTimeout(() => { btn.textContent = old; }, 1800);
+      }
+    }
+
+    function loadDraftPrompt() {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        if (data && (data.title || data.desc || data.reward)) $('draftBanner').classList.add('show');
+      } catch (e) {
+        localStorage.removeItem(draftKey);
+      }
+    }
+
+    function updateChar(id, max) {
+      const input = $(id);
+      const counter = $(id + 'Count');
+      const count = input.value.length;
+      const pct = count / max;
+      counter.textContent = count + '/' + max;
+      counter.classList.toggle('warn', pct >= .85 && pct < .95);
+      counter.classList.toggle('danger', pct >= .95);
+    }
+
+    function recalcPayout() {
+      const slots = Math.max(0, Number($('slots').value || 0));
+      const reward = Math.max(0, Number($('reward').value || 0));
+      const base = slots * reward;
+      const fee = base * .10;
+      const featured = $('featured').value === 'yes' ? base * .20 : 0;
+      const total = base + fee + featured;
+      state.total = total;
+      state.balance = readBalance();
+      $('payoutCost').textContent = money(base);
+      $('feeCost').textContent = money(fee);
+      $('featureCost').textContent = money(featured);
+      $('balanceCost').textContent = money(state.balance);
+      $('totalCost').textContent = money(total);
+      $('railBalance').textContent = money(state.balance);
+      $('railTotal').textContent = money(total);
+      $('navBalance').textContent = money(state.balance);
+      const drawerBalance = $('drawerBalance');
+      if (drawerBalance) drawerBalance.textContent = money(state.balance);
+      balanceGate();
+    }
+
+    function balanceGate() {
+      const isShort = state.total > state.balance;
+      $('breakdown').classList.toggle('danger', isShort);
+      $('launchWarning').classList.toggle('danger', isShort);
+      $('walletState').textContent = isShort ? 'Top up' : 'Ready';
+      $('gateNote').textContent = isShort ? 'Your balance is too low to launch this task.' : 'Balance is enough for this task.';
+      $('railNote').textContent = isShort ? 'Top up your wallet before launch.' : 'You can launch this task.';
+      $('launchWarning').textContent = isShort
+        ? 'Insufficient balance. Total cost is higher than your wallet balance.'
+        : 'Make sure your instructions and proof requirements are clear before launch.';
+      $('submitBtn').textContent = isShort ? 'Top Up Wallet ->' : 'Launch Task';
+      $('submitBtn').classList.toggle('danger', isShort);
+      $('submitBtn').classList.toggle('primary', !isShort);
+    }
+
+    function updatePreview() {
+      const title = $('title').value.trim() || 'Repost our launch tweet and follow our page';
+      const category = $('category').value || state.mode;
+      const reward = Number($('reward').value || 0);
+      $('previewTitle').textContent = title;
+      $('previewMode').textContent = state.mode + ' task';
+      $('previewPlatform').textContent = state.platforms.join(' + ') || 'Platform';
+      $('previewReward').textContent = state.currency + ' ' + (state.currency === 'USDC' ? reward.toFixed(2) : reward.toLocaleString('en-NG'));
+      $('previewCategory').textContent = category || 'Category';
+      $('sTitle').textContent = title;
+      $('sType').textContent = state.mode + ' / ' + state.proof;
+      $('sSlots').textContent = Number($('slots').value || 0).toLocaleString('en-NG') + ' workers';
+      $('sReward').textContent = money(Number($('reward').value || 0)) + ' each';
+      $('sPlatforms').textContent = state.platforms.join(', ') || 'None selected';
+      $('sTotal').textContent = money(state.total);
+    }
+
+    function sectionComplete(sectionName) {
+      if (sectionName === 'details') return state.mode && $('title').value.trim() && $('desc').value.trim().length >= 20 && $('category').value && state.platforms.length;
+      if (sectionName === 'proof') return state.proof && $('proofNote').value.trim().length >= 8;
+      if (sectionName === 'reward') return Number($('reward').value) > 0 && Number($('slots').value) > 0;
+      return false;
+    }
+
+    function updateStep() {
+      const completeDetails = sectionComplete('details');
+      const completeProof = sectionComplete('proof');
+      const completeReward = sectionComplete('reward');
+      let active = 1;
+      if (completeDetails) active = 2;
+      if (completeDetails && completeProof) active = 3;
+      if (completeDetails && completeProof && completeReward) active = 4;
+      document.querySelectorAll('.step').forEach((step, index) => {
+        const n = index + 1;
+        step.classList.toggle('done', n < active);
+        step.classList.toggle('active', n === active);
+      });
+      if (active > state.lastCompletedStep) {
+        state.lastCompletedStep = active;
+        const next = active === 2 ? '[data-section="proof"]' : active === 3 ? '[data-section="reward"]' : '[data-section="review"]';
+        const el = document.querySelector(next);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          el.classList.add('pulse');
+          setTimeout(() => el.classList.remove('pulse'), 1100);
+        }
+      }
+    }
+
+    function showFieldError(id, msg) {
+      const field = $('field-' + id);
+      const err = $(id + 'Error');
+      if (field) field.classList.add('has-error');
+      if (err) err.textContent = msg;
+    }
+
+    function clearFieldError(id) {
+      const field = $('field-' + id);
+      const err = $(id + 'Error');
+      if (field) field.classList.remove('has-error');
+      if (err) err.textContent = '';
+    }
+
+    function validateForm() {
+      let ok = true;
+      ['title','desc','category','platforms','proofNote','slots','reward'].forEach(clearFieldError);
+      if (!$('title').value.trim()) { showFieldError('title', 'Title is required.'); ok = false; }
+      if ($('desc').value.trim().length < 20) { showFieldError('desc', 'Please write at least 20 characters.'); ok = false; }
+      if (!$('category').value) { showFieldError('category', 'Select a category.'); ok = false; }
+      if (!state.platforms.length) { showFieldError('platforms', 'Select at least one platform.'); ok = false; }
+      if ($('proofNote').value.trim().length < 8) { showFieldError('proofNote', 'Add proof instructions.'); ok = false; }
+      if (Number($('slots').value) <= 0) { showFieldError('slots', 'Enter at least 1 slot.'); ok = false; }
+      if (Number($('reward').value) <= 0) { showFieldError('reward', 'Enter a reward amount.'); ok = false; }
+      return ok;
+    }
+
+    async function submitTask(e) {
+      e.preventDefault();
+      recalcPayout();
+      if (state.total > state.balance) {
+        window.location.href = 'wallet.html';
+        return;
+      }
+      if (!validateForm()) {
+        const first = document.querySelector('.has-error');
+        if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      const btn = $('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Launching...';
+      saveDraft(true);
+      try {
+        if (!window.OgaPayLive) throw new Error('Live API client is still loading. Please try again.');
+        if (!localStorage.getItem('ogapay_access_token')) {
+          window.location.href = 'login.html?mode=login';
+          return;
+        }
+        const categoryMap = {
+          Social: 'SOCIAL_MEDIA',
+          Survey: 'SURVEY',
+          Design: 'DESIGN',
+          'App Review': 'APP_TESTING',
+          Freelance: 'OTHER',
+        };
+        await window.OgaPayLive.api('/tasks', {
+          method: 'POST',
+          body: JSON.stringify({
+            title: $('title').value.trim(),
+            description: $('desc').value.trim(),
+            category: categoryMap[$('category').value] || 'OTHER',
+            reward: Number($('reward').value),
+            currency: state.currency,
+            maxWorkers: Number($('slots').value),
+            deadline: new Date($('deadline').value + 'T23:59:59.000Z').toISOString(),
+            instructions: $('desc').value.trim(),
+            proofRequired: state.proof + ': ' + $('proofNote').value.trim(),
+            estimatedTime: 10,
+            tags: state.platforms.slice(0, 5).map((item) => item.toLowerCase()),
+          }),
+        });
+        localStorage.removeItem(draftKey);
+        $('page').style.pointerEvents = 'none';
+        $('page').style.filter = 'blur(2px)';
+        $('successScreen').classList.add('show');
+      } catch (err) {
+        alert(err.message || 'Could not create task.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Launch Task';
+      }
+    }
+
+    const templates = {
+      'x-repost': { mode: 'Social', platforms: ['X'], category: 'Social', title: 'Repost our launch post and follow our X page', proof: 'Screenshot', proofNote: 'Upload a screenshot showing the repost and follow button state.', reward: 150 },
+      'telegram-join': { mode: 'Social', platforms: ['Telegram'], category: 'Social', title: 'Join our Telegram community and read the pinned post', proof: 'Screenshot', proofNote: 'Upload a screenshot showing your Telegram username in the group.', reward: 120 },
+      'app-review': { mode: 'Social', platforms: ['YouTube'], category: 'App Review', title: 'Install our app and leave a short honest review', proof: 'Screenshot', proofNote: 'Upload a screenshot showing the published review.', reward: 300 },
+      'logo-design': { mode: 'Freelance', platforms: ['Instagram'], category: 'Design', title: 'Create a simple logo concept for our small brand', proof: 'File', proofNote: 'Upload a PNG or JPG preview of your logo concept.', reward: 500 },
+      'survey': { mode: 'Survey', platforms: ['X'], category: 'Survey', title: 'Answer a 5-minute product feedback survey', proof: 'Text', proofNote: 'Submit the completion code shown after the survey.', reward: 200 },
+      'youtube-like': { mode: 'Social', platforms: ['YouTube'], category: 'Social', title: 'Like our YouTube video and subscribe to the channel', proof: 'Screenshot', proofNote: 'Upload a screenshot showing the liked video and subscribed button.', reward: 100 }
+    };
+
+    function applyTemplate(key) {
+      const data = templates[key];
+      if (!data) return;
+      state.mode = data.mode;
+      state.platforms = data.platforms;
+      state.proof = data.proof;
+      $('category').value = data.category;
+      $('title').value = data.title;
+      $('proofNote').value = data.proofNote;
+      $('reward').value = data.reward;
+      syncSelections();
+      updateAll();
+    }
+
+    function buildAiFallback() {
+      const platform = state.platforms.join(' and ') || 'your selected platform';
+      const category = $('category').value || state.mode.toLowerCase();
+      return {
+        title: 'Complete a ' + category + ' task on ' + platform,
+        instructions: [
+          '1. Open the campaign link provided by the advertiser.',
+          '2. Complete the requested action on ' + platform + '.',
+          '3. Keep the action public until your proof is reviewed.',
+          '4. Submit a clear ' + state.proof.toLowerCase() + ' that shows your username and completion.'
+        ].join('\n')
+      };
+    }
+
+    async function generateWithAI() {
+      const btn = $('aiBtn');
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+      let suggestion = buildAiFallback();
+      const proxy = localStorage.getItem('ogapay_ai_proxy');
+      const apiKey = localStorage.getItem('ogapay_anthropic_key');
+      try {
+        if (window.OgaPayLive && localStorage.getItem('ogapay_access_token') && !proxy && !apiKey) {
+          const json = await window.OgaPayLive.api('/ai/task-copy', {
+            method: 'POST',
+            body: JSON.stringify({
+              mode: state.mode,
+              platform: state.platforms.join(', '),
+              category: $('category').value || 'General',
+            }),
+          });
+          const parsed = window.OgaPayLive.unwrap(json);
+          if (parsed.title && parsed.instructions) suggestion = parsed;
+        } else if (proxy || apiKey) {
+          const endpoint = proxy || 'https://api.anthropic.com/v1/messages';
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(apiKey ? { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' } : {})
+            },
+            body: JSON.stringify({
+              model: 'claude-3-5-sonnet-latest',
+              max_tokens: 350,
+              messages: [{ role: 'user', content: 'Create a concise OgaPay microjob title and numbered worker instructions. Context: mode=' + state.mode + ', platform=' + state.platforms.join(', ') + ', category=' + ($('category').value || 'General') + '. Return JSON with title and instructions.' }]
+            })
+          });
+          const json = await res.json();
+          const text = json.content && json.content[0] && json.content[0].text ? json.content[0].text : '';
+          const parsed = JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] || '{}');
+          if (parsed.title && parsed.instructions) suggestion = parsed;
+        }
+      } catch (e) {
+        suggestion = buildAiFallback();
+      }
+      $('aiTitle').textContent = suggestion.title;
+      $('aiInstructions').textContent = suggestion.instructions;
+      $('aiBox').dataset.title = suggestion.title;
+      $('aiBox').dataset.instructions = suggestion.instructions;
+      $('aiBox').classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Generate with AI';
+    }
+
+    function updateAll() {
+      updateChar('title', 120);
+      updateChar('desc', 900);
+      recalcPayout();
+      updatePreview();
+      updateStep();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.dataset.auth = isAuthed() ? 'authed' : 'public';
+      $('themeBtn').addEventListener('click', toggleTheme);
+      $('menuBtn').addEventListener('click', () => openMenu(true));
+      document.querySelectorAll('[data-close-menu]').forEach((el) => el.addEventListener('click', () => openMenu(false)));
+      document.querySelectorAll('.oga-drawer-group-toggle').forEach((button) => button.addEventListener('click', () => { const group = button.closest('.oga-drawer-group'); group.classList.toggle('open'); button.setAttribute('aria-expanded', group.classList.contains('open')); }));
+      $('createForm').addEventListener('submit', submitTask);
+      $('draftBtn').addEventListener('click', () => saveDraft(false));
+      $('restoreDraft').addEventListener('click', () => {
+        applyFormState(JSON.parse(localStorage.getItem(draftKey) || '{}'));
+        $('draftBanner').classList.remove('show');
+      });
+      $('discardDraft').addEventListener('click', () => {
+        localStorage.removeItem(draftKey);
+        $('draftBanner').classList.remove('show');
+      });
+      $('aiBtn').addEventListener('click', generateWithAI);
+      $('regenAi').addEventListener('click', generateWithAI);
+      $('closeAi').addEventListener('click', () => $('aiBox').classList.remove('show'));
+      $('acceptAi').addEventListener('click', () => {
+        $('title').value = $('aiBox').dataset.title || $('title').value;
+        $('desc').value = $('aiBox').dataset.instructions || $('desc').value;
+        $('aiBox').classList.remove('show');
+        updateAll();
+      });
+      $('newTask').addEventListener('click', () => window.location.reload());
+
+      document.querySelectorAll('[data-mode]').forEach((btn) => btn.addEventListener('click', () => {
+        state.mode = btn.dataset.mode;
+        syncSelections();
+        updateAll();
+      }));
+      document.querySelectorAll('[data-platform]').forEach((btn) => btn.addEventListener('click', () => {
+        const platform = btn.dataset.platform;
+        state.platforms = state.platforms.includes(platform)
+          ? state.platforms.filter((item) => item !== platform)
+          : state.platforms.concat(platform);
+        syncSelections();
+        updateAll();
+      }));
+      document.querySelectorAll('[data-proof]').forEach((btn) => btn.addEventListener('click', () => {
+        state.proof = btn.dataset.proof;
+        syncSelections();
+        updateAll();
+      }));
+      document.querySelectorAll('[data-currency]').forEach((btn) => btn.addEventListener('click', () => {
+        state.currency = btn.dataset.currency;
+        syncSelections();
+        updateAll();
+      }));
+      document.querySelectorAll('[data-slots]').forEach((btn) => btn.addEventListener('click', () => {
+        $('slots').value = btn.dataset.slots;
+        document.querySelectorAll('[data-slots]').forEach((b) => b.classList.toggle('active', b === btn));
+        updateAll();
+      }));
+      document.querySelectorAll('[data-reward]').forEach((btn) => btn.addEventListener('click', () => {
+        $('reward').value = btn.dataset.reward;
+        document.querySelectorAll('[data-reward]').forEach((b) => b.classList.toggle('active', b === btn));
+        updateAll();
+      }));
+      document.querySelectorAll('[data-template]').forEach((btn) => btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-template]').forEach((b) => b.classList.toggle('active', b === btn));
+        applyTemplate(btn.dataset.template);
+      }));
+
+      document.querySelectorAll('input, select, textarea').forEach((el) => {
+        el.addEventListener('input', updateAll);
+        el.addEventListener('change', updateAll);
+        el.addEventListener('focus', () => clearFieldError(el.id));
+      });
+
+      const tomorrow = new Date(Date.now() + 86400000);
+      $('deadline').value = tomorrow.toISOString().slice(0, 10);
+      loadDraftPrompt();
+      updateAll();
+      setInterval(() => saveDraft(true), 3000);
+    });
+  </script>
+<script src="assets/ogapay-live.js"></script></body>
+</html>
