@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signing in | OgaPay</title>
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f6f8fc;color:#101525}.card{width:min(420px,calc(100% - 32px));background:#fff;border:1px solid #e3e9f2;border-radius:14px;padding:24px;box-shadow:0 18px 50px rgba(16,21,37,.1)}h1{margin:0 0 8px;font-size:22px}p{margin:0;color:#66738a;line-height:1.5}.error{color:#dc2626;margin-top:14px;font-weight:700}.btn{margin-top:18px;display:inline-flex;height:42px;align-items:center;padding:0 14px;border-radius:10px;background:#101525;color:#fff;text-decoration:none;font-weight:800}
+</style>
+</head>
+<body>
+<main class="card">
+  <h1>Signing you in...</h1>
+  <p>Finishing Google authentication and opening your OgaPay workspace.</p>
+  <p class="error" id="error"></p>
+  <a class="btn" id="retry" href="login.html" hidden>Back to login</a>
+</main>
+<script>
+(async function(){
+  const API_BASE=(window.OGAPAY_API_BASE||localStorage.getItem('ogapay_api_base')||'https://ogapay-production.up.railway.app/api/v1').replace(/\/$/,'');
+  const params=new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
+  const accessToken=params.get('access_token');
+  const error=document.getElementById('error');
+  const retry=document.getElementById('retry');
+
+  function fail(message){
+    error.textContent=message;
+    retry.hidden=false;
+  }
+
+  function saveSession(json){
+    const payload=json.data||json;
+    const session=payload.tokens||payload.session||payload;
+    const access=session.accessToken||session.access_token||payload.accessToken||payload.token;
+    const refresh=session.refreshToken||session.refresh_token;
+    if(!access) throw new Error('No OgaPay token returned by the API.');
+    localStorage.setItem('ogapay_access_token',access);
+    if(refresh) localStorage.setItem('ogapay_refresh_token',refresh);
+    if(payload.user) localStorage.setItem('ogapay_user',JSON.stringify(payload.user));
+    localStorage.setItem('ogapay-authenticated','true');
+  }
+
+  if(!accessToken){
+    fail('Google did not return an access token. Please try again.');
+    return;
+  }
+
+  try{
+    const res=await fetch(API_BASE+'/auth/google/exchange',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({supabaseAccessToken:accessToken})
+    });
+    const json=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(json.message||'Google sign-in failed.');
+    saveSession(json);
+    location.replace('dashboard.html');
+  }catch(e){
+    fail(e.message);
+  }
+})();
+</script>
+</body>
+</html>

@@ -96,6 +96,102 @@ const register = async ({ firstName, lastName, email, password, username, role, 
   return { user: sanitizeUser(user), tokens };
 };
 
+const uniqueUsername = async (base) => {
+  const cleaned = String(base || 'ogapay_user').toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/^_+|_+$/g, '').slice(0, 24) || 'ogapay_user';
+  let candidate = cleaned;
+  let suffix = 1;
+
+  while (await prisma.user.findUnique({ where: { username: candidate } })) {
+    candidate = `${cleaned.slice(0, 24)}_${suffix}`;
+    suffix += 1;
+  }
+
+  return candidate;
+};
+
+const createUserDefaults = async (tx, userId, role) => {
+  await tx.wallet.createMany({
+    data: ['NGN', 'USDC', 'USDT'].map((currency) => ({
+      userId,
+      currency,
+      balance: 0,
+      lockedBalance: 0,
+    })),
+    skipDuplicates: true,
+  });
+
+  if (role === 'WORKER') {
+    await tx.workerProfile.upsert({ where: { userId }, update: {}, create: { userId } });
+  } else if (role === 'POSTER') {
+    await tx.posterProfile.upsert({ where: { userId }, update: {}, create: { userId } });
+  }
+
+  await tx.kycVerification.upsert({ where: { userId }, update: {}, create: { userId } });
+};
+
+const googleExchange = async ({ supabaseAccessToken, role = 'WORKER' }, ipAddress, userAgent) => {
+  const { supabaseAdmin } = require('../config/supabase');
+  const { data, error } = await supabaseAdmin.auth.getUser(supabaseAccessToken);
+
+  if (error || !data?.user?.email) {
+    throw ApiError.unauthorized('Invalid Google session. Please sign in again.');
+  }
+
+  const supabaseUser = data.user;
+  const email = supabaseUser.email.toLowerCase();
+  const metadata = supabaseUser.user_metadata || {};
+  const resolvedRole = String(role || 'WORKER').toUpperCase() === 'POSTER' ? 'POSTER' : 'WORKER';
+
+  const user = await prisma.$transaction(async (tx) => {
+    const existing = await tx.user.findFirst({
+      where: { OR: [{ email }, { supabaseId: supabaseUser.id }] },
+    });
+
+    if (existing) {
+      await createUserDefaults(tx, existing.id, existing.role);
+      return tx.user.update({
+        where: { id: existing.id },
+        data: {
+          supabaseId: existing.supabaseId || supabaseUser.id,
+          avatarUrl: existing.avatarUrl || metadata.avatar_url || metadata.picture,
+          isEmailVerified: true,
+          lastLoginAt: new Date(),
+        },
+      });
+    }
+
+    const fullName = String(metadata.full_name || metadata.name || '').trim();
+    const [firstFromName, ...rest] = fullName.split(/\s+/).filter(Boolean);
+    const firstName = metadata.given_name || firstFromName || 'OgaPay';
+    const lastName = metadata.family_name || rest.join(' ') || 'User';
+    const username = await uniqueUsername(metadata.preferred_username || email.split('@')[0]);
+
+    const created = await tx.user.create({
+      data: {
+        supabaseId: supabaseUser.id,
+        email,
+        firstName,
+        lastName,
+        username,
+        role: resolvedRole,
+        avatarUrl: metadata.avatar_url || metadata.picture,
+        isEmailVerified: true,
+        referralCode: generateReferralCode(),
+        lastLoginAt: new Date(),
+      },
+    });
+
+    await createUserDefaults(tx, created.id, resolvedRole);
+    return created;
+  });
+
+  const tokens = generateTokenPair(user);
+  await saveRefreshToken(user.id, tokens.refreshToken, ipAddress, userAgent);
+
+  logger.info(`Google user signed in: ${user.email}`);
+  return { user: sanitizeUser(user), tokens };
+};
+
 // ── Login ──────────────────────────────────────
 
 const login = async ({ email, password }, ipAddress, userAgent) => {
@@ -182,4 +278,4 @@ const sanitizeUser = (user) => ({
   createdAt: user.createdAt,
 });
 
-module.exports = { register, login, refreshTokens, logout };
+module.exports = { register, googleExchange, login, refreshTokens, logout };

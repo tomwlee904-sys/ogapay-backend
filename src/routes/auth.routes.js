@@ -32,6 +32,19 @@ router.post('/signup', normalizeRegisterBody, validate(registerSchema), async (r
   createdResponse(res, result, 'Account created successfully');
 });
 
+// POST /api/v1/auth/google/exchange
+router.post('/google/exchange', async (req, res) => {
+  const result = await authService.googleExchange(
+    {
+      supabaseAccessToken: req.body?.supabaseAccessToken || req.body?.access_token,
+      role: req.body?.role,
+    },
+    req.ip,
+    req.headers['user-agent'],
+  );
+  successResponse(res, result, 'Google sign-in successful');
+});
+
 // POST /api/v1/auth/login
 router.post('/login', validate(loginSchema), async (req, res) => {
   const result = await authService.login(

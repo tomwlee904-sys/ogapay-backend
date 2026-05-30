@@ -1084,7 +1084,7 @@
   <script>
     const NGN_RATE = 1620;
     const draftKey = 'ogapay-post-task-draft';
-    const isAuthed = () => !!(localStorage.getItem('ogapay_access_token') || localStorage.getItem('ogapay-authenticated') === 'true');
+    const isAuthed = () => !!localStorage.getItem('ogapay_access_token');
 
     const state = {
       mode: 'Social',
