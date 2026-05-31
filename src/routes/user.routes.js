@@ -5,6 +5,7 @@ const multer = require('multer');
 const { authenticate } = require('../middleware/auth.middleware');
 const userService = require('../services/user.service');
 const { successResponse, paginatedResponse, paginate } = require('../utils/apiResponse');
+const { prisma } = require('../config/database');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
@@ -55,8 +56,48 @@ router.get('/referrals/stats', authenticate, async (req, res) => {
   successResponse(res, data, 'Referral stats fetched');
 });
 
+// GET /api/v1/users/directory/list
+router.get('/directory/list', async (req, res) => {
+  const { search, role, sort, page = 1, limit = 24 } = req.query;
+  const skip = (page - 1) * limit;
+  
+  const where = {};
+  if (search) {
+    where.OR = [
+      { firstName: { contains: search, mode: 'insensitive' } },
+      { lastName: { contains: search, mode: 'insensitive' } },
+      { username: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+  if (role) where.role = role;
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        username: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        role: true,
+        createdAt: true,
+        workerProfile: {
+          select: { level: true, reputationScore: true, tasksCompleted: true, bio: true, isAvailable: true },
+        },
+      },
+      skip: parseInt(skip),
+      take: parseInt(limit),
+      orderBy: sort === 'newest' ? { createdAt: 'desc' } : { createdAt: 'desc' },
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  paginatedResponse(res, users, paginate(page, limit, total));
+});
+
 // GET /api/v1/users/:username
-router.get('/:username', async (req, res) => {
+router.get("/:username", async (req, res) => {
   const data = await userService.getWorkerPublicProfile(req.params.username);
   successResponse(res, data, 'Profile fetched');
 });

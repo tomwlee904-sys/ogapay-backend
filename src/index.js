@@ -111,6 +111,7 @@ function mountRoutes(base) {
   app.use(`${base}/leaderboard`, leaderboardRoutes);
   app.use(`${base}/store`, storeRoutes);
   app.use(`${base}/communities`, communityRoutes);
+  app.use(`${base}/communities`, communityV2Routes);
   app.use(`${base}/dashboard`, dashboardRoutes);
   app.use(`${base}/uploads`, uploadRoutes);
   app.use(`${base}/ai`, aiRoutes);

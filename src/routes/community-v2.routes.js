@@ -1,35 +1,494 @@
 'use strict';
+
 const express = require('express');
 const { prisma } = require('../config/database');
-const { authenticate, authorize } = require('../middleware/auth.middleware');
-const { successResponse, createdResponse, paginatedResponse, paginate, ApiError } = require('../utils/apiResponse');
+const { authenticate } = require('../middleware/auth.middleware');
+const { successResponse, createdResponse, ApiError } = require('../utils/apiResponse');
+const crypto = require('crypto');
+
 const router = express.Router();
 
-// Communities will be stored in DB or as static data for now
-// Extended version with member management
-const COMMUNITIES = [
-  { id: 'naija-devs', name: 'Naija Devs', description: 'Nigerian developers building the future.', members: 1247, tasks: 12, accent: '#7C3AED', icon: 'code' },
-  { id: 'crypto-ng', name: 'Crypto Nigeria', description: 'Crypto and web3 community for Nigerian earners.', members: 3560, tasks: 8, accent: '#2563EB', icon: 'coin' },
-  { id: 'creators-hub', name: 'Creators Hub', description: 'For designers, writers, and content creators.', members: 892, tasks: 5, accent: '#f5b301', icon: 'palette' },
-  { id: 'task-hunters', name: 'Task Hunters', description: 'Get notified about high-paying tasks first.', members: 2134, tasks: 24, accent: '#16a34a', icon: 'target' },
-  { id: 'social-earners', name: 'Social Earners', description: 'Social media engagement tasks and tips.', members: 4891, tasks: 16, accent: '#ec4899', icon: 'brand-x' },
-  { id: 'freelance-ng', name: 'Freelance NG', description: 'Freelancers across all niches.', members: 1578, tasks: 9, accent: '#6366f1', icon: 'briefcase' },
-];
-
+// ─── List Communities ──────────────────────────────────────────
 router.get('/', async (req, res) => {
-  successResponse(res, COMMUNITIES);
+  const { category, search, sort } = req.query;
+  const where = { isPublic: true };
+  if (category) where.category = category;
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { description: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  const communities = await prisma.community.findMany({
+    where,
+    include: {
+      _count: { select: { members: true, invites: true } },
+    },
+    orderBy: sort === 'newest' 
+      ? { createdAt: 'desc' }
+      : { members: { _count: 'desc' } },
+  });
+
+  successResponse(res, communities.map(c => ({
+    id: c.id,
+    slug: c.slug,
+    name: c.name,
+    description: c.description,
+    iconUrl: c.iconUrl,
+    accentColor: c.accentColor,
+    category: c.category,
+    memberCount: c._count.members,
+    taskCount: 0, // placeholder - join with tasks later
+    createdAt: c.createdAt,
+  })));
 });
 
+// ─── Get Single Community ─────────────────────────────────────
 router.get('/:id', async (req, res) => {
-  const community = COMMUNITIES.find(c => c.id === req.params.id);
+  const community = await prisma.community.findFirst({
+    where: {
+      OR: [
+        { id: req.params.id },
+        { slug: req.params.id },
+      ],
+    },
+    include: {
+      owner: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
+      _count: { select: { members: true, invites: true, requests: true } },
+      members: {
+        include: {
+          user: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
+        },
+        take: 20,
+        orderBy: { joinedAt: 'desc' },
+      },
+    },
+  });
+
   if (!community) throw ApiError.notFound('Community not found');
-  successResponse(res, community);
+
+  // Check if current user is a member
+  let userRole = null;
+  if (req.user) {
+    const membership = await prisma.communityMember.findUnique({
+      where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+    });
+    if (membership) userRole = membership.role;
+    
+    // Check pending request
+    const pendingRequest = await prisma.communityRequest.findUnique({
+      where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+    });
+  }
+
+  successResponse(res, {
+    id: community.id,
+    slug: community.slug,
+    name: community.name,
+    description: community.description,
+    iconUrl: community.iconUrl,
+    accentColor: community.accentColor,
+    category: community.category,
+    isPublic: community.isPublic,
+    owner: community.owner,
+    memberCount: community._count.members,
+    inviteCount: community._count.invites,
+    requestCount: community._count.requests,
+    recentMembers: community.members,
+    userRole,
+    createdAt: community.createdAt,
+  });
 });
 
-router.post('/:id/join', authenticate, async (req, res) => {
-  const community = COMMUNITIES.find(c => c.id === req.params.id);
+// ─── Create Community ─────────────────────────────────────────
+router.post('/', authenticate, async (req, res) => {
+  const { name, description, category, accentColor, isPublic } = req.body;
+  if (!name || name.trim().length < 2) throw ApiError.badRequest('Community name must be at least 2 characters');
+
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + crypto.randomBytes(3).toString('hex');
+
+  const community = await prisma.community.create({
+    data: {
+      name: name.trim(),
+      slug,
+      description: description?.trim(),
+      category,
+      accentColor: accentColor || '#7C3AED',
+      isPublic: isPublic !== false,
+      ownerId: req.user.id,
+    },
+  });
+
+  // Auto-join the creator as OWNER
+  await prisma.communityMember.create({
+    data: {
+      communityId: community.id,
+      userId: req.user.id,
+      role: 'OWNER',
+    },
+  });
+
+  createdResponse(res, community, 'Community created');
+});
+
+// ─── Update Community ─────────────────────────────────────────
+router.patch('/:id', authenticate, async (req, res) => {
+  const community = await prisma.community.findUnique({ where: { id: req.params.id } });
   if (!community) throw ApiError.notFound('Community not found');
-  successResponse(res, { communityId: community.id, userId: req.user.id });
+
+  const membership = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+    throw ApiError.forbidden('Only owners and admins can update the community');
+  }
+
+  const { name, description, category, accentColor, isPublic } = req.body;
+  const updated = await prisma.community.update({
+    where: { id: community.id },
+    data: {
+      ...(name && { name: name.trim() }),
+      ...(description !== undefined && { description: description?.trim() }),
+      ...(category && { category }),
+      ...(accentColor && { accentColor }),
+      ...(isPublic !== undefined && { isPublic }),
+    },
+  });
+
+  successResponse(res, updated, 'Community updated');
+});
+
+// ─── Delete Community ─────────────────────────────────────────
+router.delete('/:id', authenticate, async (req, res) => {
+  const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+  if (!community) throw ApiError.notFound('Community not found');
+  if (community.ownerId !== req.user.id) throw ApiError.forbidden('Only the owner can delete the community');
+
+  await prisma.community.delete({ where: { id: community.id } });
+  successResponse(res, null, 'Community deleted');
+});
+
+// ─── List Members ─────────────────────────────────────────────
+router.get('/:id/members', async (req, res) => {
+  const community = await prisma.community.findFirst({
+    where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
+  });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const members = await prisma.communityMember.findMany({
+    where: { communityId: community.id },
+    include: {
+      user: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
+    },
+    orderBy: [{ role: 'asc' }, { joinedAt: 'desc' }],
+  });
+
+  successResponse(res, members.map(m => ({
+    id: m.id,
+    userId: m.user.id,
+    username: m.user.username,
+    firstName: m.user.firstName,
+    lastName: m.user.lastName,
+    avatarUrl: m.user.avatarUrl,
+    role: m.role,
+    joinedAt: m.joinedAt,
+  })));
+});
+
+// ─── Update Member Role ───────────────────────────────────────
+router.patch('/:id/members/:memberId', authenticate, async (req, res) => {
+  const { role } = req.body;
+  if (!['ADMIN', 'MODERATOR', 'MEMBER'].includes(role)) {
+    throw ApiError.badRequest('Invalid role. Must be ADMIN, MODERATOR, or MEMBER');
+  }
+
+  const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const requester = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (!requester || !['OWNER', 'ADMIN'].includes(requester.role)) {
+    throw ApiError.forbidden('Only owners and admins can change roles');
+  }
+  if (requester.role !== 'OWNER' && role === 'ADMIN') {
+    throw ApiError.forbidden('Only the owner can assign admin role');
+  }
+
+  const updated = await prisma.communityMember.update({
+    where: { id: req.params.memberId },
+    data: { role },
+  });
+
+  successResponse(res, updated, 'Member role updated');
+});
+
+// ─── Remove Member ────────────────────────────────────────────
+router.delete('/:id/members/:memberId', authenticate, async (req, res) => {
+  const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const requester = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (!requester || !['OWNER', 'ADMIN'].includes(requester.role)) {
+    throw ApiError.forbidden('Only owners and admins can remove members');
+  }
+
+  const target = await prisma.communityMember.findUnique({ where: { id: req.params.memberId } });
+  if (!target) throw ApiError.notFound('Member not found');
+  if (target.role === 'OWNER') throw ApiError.forbidden('Cannot remove the owner');
+
+  await prisma.communityMember.delete({ where: { id: target.id } });
+  successResponse(res, null, 'Member removed');
+});
+
+// ─── Join Community ───────────────────────────────────────────
+router.post('/:id/join', authenticate, async (req, res) => {
+  const community = await prisma.community.findFirst({
+    where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
+  });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  // Check if already a member
+  const existing = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (existing) throw ApiError.conflict('Already a member');
+
+  // If public, join directly. If private, create a request.
+  if (community.isPublic) {
+    const member = await prisma.communityMember.create({
+      data: { communityId: community.id, userId: req.user.id, role: 'MEMBER' },
+    });
+    createdResponse(res, { communityId: community.id, role: member.role }, 'Joined community');
+  } else {
+    // Check for existing request
+    const existingRequest = await prisma.communityRequest.findUnique({
+      where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+    });
+    if (existingRequest) throw ApiError.conflict('Join request already exists');
+
+    const request = await prisma.communityRequest.create({
+      data: { communityId: community.id, userId: req.user.id },
+    });
+    createdResponse(res, { requestId: request.id }, 'Join request submitted');
+  }
+});
+
+// ─── Leave Community ──────────────────────────────────────────
+router.post('/:id/leave', authenticate, async (req, res) => {
+  const community = await prisma.community.findFirst({
+    where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
+  });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const membership = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (!membership) throw ApiError.notFound('Not a member');
+  if (membership.role === 'OWNER') throw ApiError.forbidden('Owner cannot leave. Transfer ownership first.');
+
+  await prisma.communityMember.delete({ where: { id: membership.id } });
+  successResponse(res, null, 'Left community');
+});
+
+// ─── User's Communities ───────────────────────────────────────
+router.get('/mine/list', authenticate, async (req, res) => {
+  const memberships = await prisma.communityMember.findMany({
+    where: { userId: req.user.id },
+    include: {
+      community: {
+        include: { _count: { select: { members: true } } },
+      },
+    },
+    orderBy: { joinedAt: 'desc' },
+  });
+
+  successResponse(res, memberships.map(m => ({
+    communityId: m.communityId,
+    slug: m.community.slug,
+    name: m.community.name,
+    description: m.community.description,
+    accentColor: m.community.accentColor,
+    iconUrl: m.community.iconUrl,
+    role: m.role,
+    memberCount: m.community._count.members,
+    joinedAt: m.joinedAt,
+  })));
+});
+
+// ─── Invite User ──────────────────────────────────────────────
+router.post('/:id/invite', authenticate, async (req, res) => {
+  const { inviteeId, email, message } = req.body;
+  if (!inviteeId && !email) throw ApiError.badRequest('Provide inviteeId or email');
+
+  const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const membership = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (!membership || !['OWNER', 'ADMIN', 'MODERATOR'].includes(membership.role)) {
+    throw ApiError.forbidden('Only community leaders can send invites');
+  }
+
+  // Check if invitee is already a member
+  if (inviteeId) {
+    const alreadyMember = await prisma.communityMember.findUnique({
+      where: { communityId_userId: { communityId: community.id, userId: inviteeId } },
+    });
+    if (alreadyMember) throw ApiError.conflict('User is already a member');
+  }
+
+  const token = crypto.randomBytes(24).toString('hex');
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+  const invite = await prisma.communityInvite.create({
+    data: {
+      communityId: community.id,
+      inviterId: req.user.id,
+      inviteeId: inviteeId || null,
+      email: email || null,
+      token,
+      message: message || null,
+      expiresAt,
+    },
+  });
+
+  createdResponse(res, {
+    id: invite.id,
+    token: invite.token,
+    expiresAt: invite.expiresAt,
+  }, 'Invite sent');
+});
+
+// ─── List Invites (for community) ─────────────────────────────
+router.get('/:id/invites', authenticate, async (req, res) => {
+  const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const membership = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+    throw ApiError.forbidden('Only owners and admins can view invites');
+  }
+
+  const invites = await prisma.communityInvite.findMany({
+    where: { communityId: community.id },
+    include: {
+      inviter: { select: { id: true, username: true } },
+      invitee: { select: { id: true, username: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  successResponse(res, invites);
+});
+
+// ─── Accept/Decline Invite ────────────────────────────────────
+router.patch('/invites/:inviteId', authenticate, async (req, res) => {
+  const { action } = req.body; // 'accept' | 'decline'
+  if (!['accept', 'decline'].includes(action)) throw ApiError.badRequest('Action must be accept or decline');
+
+  const invite = await prisma.communityInvite.findUnique({ where: { id: req.params.inviteId } });
+  if (!invite) throw ApiError.notFound('Invite not found');
+  if (invite.inviteeId !== req.user.id) throw ApiError.forbidden('This invite is not for you');
+  if (invite.status !== 'PENDING') throw ApiError.conflict('Invite already responded');
+  if (invite.expiresAt < new Date()) throw ApiError.conflict('Invite has expired');
+
+  if (action === 'accept') {
+    await prisma.communityMember.create({
+      data: { communityId: invite.communityId, userId: req.user.id, role: 'MEMBER' },
+    });
+    await prisma.communityInvite.update({
+      where: { id: invite.id },
+      data: { status: 'ACCEPTED', respondedAt: new Date() },
+    });
+    successResponse(res, { communityId: invite.communityId }, 'Invite accepted');
+  } else {
+    await prisma.communityInvite.update({
+      where: { id: invite.id },
+      data: { status: 'DECLINED', respondedAt: new Date() },
+    });
+    successResponse(res, null, 'Invite declined');
+  }
+});
+
+// ─── My Invites ───────────────────────────────────────────────
+router.get('/invites/mine', authenticate, async (req, res) => {
+  const invites = await prisma.communityInvite.findMany({
+    where: { inviteeId: req.user.id, status: 'PENDING' },
+    include: {
+      community: { select: { id: true, slug: true, name: true, description: true, accentColor: true, iconUrl: true } },
+      inviter: { select: { id: true, username: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  successResponse(res, invites);
+});
+
+// ─── Join Requests (for community) ────────────────────────────
+router.get('/:id/requests', authenticate, async (req, res) => {
+  const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const membership = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (!membership || !['OWNER', 'ADMIN', 'MODERATOR'].includes(membership.role)) {
+    throw ApiError.forbidden('Only community leaders can view requests');
+  }
+
+  const requests = await prisma.communityRequest.findMany({
+    where: { communityId: community.id, status: 'PENDING' },
+    include: {
+      user: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  successResponse(res, requests);
+});
+
+// ─── Approve/Reject Join Request ──────────────────────────────
+router.patch('/:id/requests/:requestId', authenticate, async (req, res) => {
+  const { action } = req.body;
+  if (!['accept', 'decline'].includes(action)) throw ApiError.badRequest('Action must be accept or decline');
+
+  const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const membership = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (!membership || !['OWNER', 'ADMIN', 'MODERATOR'].includes(membership.role)) {
+    throw ApiError.forbidden('Only community leaders can handle requests');
+  }
+
+  const request = await prisma.communityRequest.findUnique({ where: { id: req.params.requestId } });
+  if (!request) throw ApiError.notFound('Request not found');
+  if (request.status !== 'PENDING') throw ApiError.conflict('Request already handled');
+
+  if (action === 'accept') {
+    await prisma.communityMember.create({
+      data: { communityId: request.communityId, userId: request.userId, role: 'MEMBER' },
+    });
+    await prisma.communityRequest.update({
+      where: { id: request.id },
+      data: { status: 'ACCEPTED', respondedAt: new Date(), responderId: req.user.id },
+    });
+    successResponse(res, { userId: request.userId }, 'Request accepted');
+  } else {
+    await prisma.communityRequest.update({
+      where: { id: request.id },
+      data: { status: 'DECLINED', respondedAt: new Date(), responderId: req.user.id },
+    });
+    successResponse(res, null, 'Request declined');
+  }
 });
 
 module.exports = router;

@@ -148,6 +148,12 @@ model User {
   reports           Report[]
   reportReviews     Report[]            @relation("ReportReviewer")
   editRequests      EditRequest[]
+  communitiesOwned Community[]         @relation("CommunityOwner")
+  communityMembers CommunityMember[]
+  communityInvitesSent   CommunityInvite[] @relation("InviteSender")
+  communityInvitesReceived CommunityInvite[] @relation("InviteReceiver")
+  communityRequestsSent  CommunityRequest[] @relation("RequestSender")
+  communityRequestsReviewed CommunityRequest[] @relation("RequestResponder")
 
   @@map("users")
 }
@@ -557,4 +563,103 @@ model EditRequest {
   @@index([userId])
   @@index([status])
   @@map("edit_requests")
+}
+
+
+// ── Phase 1: Community Lifecycle ──────────────
+
+enum CommunityRole {
+  OWNER
+  ADMIN
+  MODERATOR
+  MEMBER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model Community {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  iconUrl     String?  @map("icon_url")
+  accentColor String   @default("#7C3AED") @map("accent_color")
+  category    String?
+  isPublic    Boolean  @default(true) @map("is_public")
+  ownerId     String   @map("owner_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  owner     User              @relation(fields: [ownerId], references: [id])
+  members   CommunityMember[]
+  invites   CommunityInvite[]
+  requests  CommunityRequest[]
+
+  @@index([slug])
+  @@index([ownerId])
+  @@map("communities")
+}
+
+model CommunityMember {
+  id          String        @id @default(uuid())
+  communityId String        @map("community_id")
+  userId      String        @map("user_id")
+  role        CommunityRole @default(MEMBER)
+  joinedAt    DateTime      @default(now()) @map("joined_at")
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([communityId, userId])
+  @@index([communityId])
+  @@index([userId])
+  @@map("community_members")
+}
+
+model CommunityInvite {
+  id          String       @id @default(uuid())
+  communityId String       @map("community_id")
+  inviterId   String       @map("inviter_id")
+  inviteeId   String?      @map("invitee_id")
+  email       String?
+  token       String       @unique
+  status      InviteStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime     @default(now()) @map("created_at")
+  expiresAt   DateTime     @map("expires_at")
+  respondedAt DateTime?    @map("responded_at")
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  inviter   User      @relation(fields: [inviterId], references: [id])
+  invitee   User?     @relation(fields: [inviteeId], references: [id])
+
+  @@index([communityId])
+  @@index([inviteeId])
+  @@index([token])
+  @@map("community_invites")
+}
+
+model CommunityRequest {
+  id          String        @id @default(uuid())
+  communityId String        @map("community_id")
+  userId      String        @map("user_id")
+  message     String?
+  status      InviteStatus  @default(PENDING)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  respondedAt DateTime?     @map("responded_at")
+  responderId String?       @map("responder_id")
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responder User?     @relation("RequestResponder", fields: [responderId], references: [id])
+
+  @@unique([communityId, userId])
+  @@index([communityId])
+  @@index([userId])
+  @@map("community_requests")
 }
