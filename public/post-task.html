@@ -1,1544 +1,775 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Post a Task | OgaPay</title>
-  <script>
-    (function () {
-      try {
-        var saved = localStorage.getItem('ogapay-theme');
-        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.dataset.theme = saved || (prefersDark ? 'dark' : 'light');
-      } catch (e) {
-        document.documentElement.dataset.theme = 'light';
-      }
-    })();
-  </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --blue: #033CE3;
-      --blue-2: #315BFF;
-      --green: #16A34A;
-      --amber: #D97706;
-      --red: #DC2626;
-      --navy: #07132D;
-      --ink: #111827;
-      --muted: #64748B;
-      --soft: #F4F7FB;
-      --card: #FFFFFF;
-      --line: #DDE5F0;
-      --shadow: 0 18px 55px rgba(15, 23, 42, .10);
-      --radius: 14px;
-      --nav-h: 76px;
-      color-scheme: light;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Task - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--gold:#f5b301;--soft-purple:#f4f6fa;--soft-blue:#eef6ff;--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--shadow-glow:0 0 30px rgba(124,58,237,.15);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--soft-purple:#111725;--soft-blue:#0d1d34;--shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);--shadow-soft:0 2px 8px rgba(0,0,0,.22);--shadow-glow:0 0 30px rgba(167,139,250,.12)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
 
-    [data-theme="dark"] {
-      --ink: #EEF4FF;
-      --muted: #A8B3C7;
-      --soft: #0B1220;
-      --card: #111B2D;
-      --line: #243148;
-      --navy: #F8FAFC;
-      --shadow: 0 18px 55px rgba(0, 0, 0, .34);
-      color-scheme: dark;
-    }
+/* === Page layout === */
+.app{display:flex;min-height:calc(100vh - var(--nav-h))}.main{flex:1;min-width:0;width:100%}
+.page{width:min(1120px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px}.eyebrow i{font-size:15px;color:var(--accent)}
+.lead{color:var(--text2);font-size:16px;line-height:1.7;margin:6px 0 0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft)}
+.btn{height:48px;padding:0 24px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--card);color:var(--text);font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.outline{background:transparent;border-color:var(--accent);color:var(--accent)}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);padding:12px 28px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:700;font-size:14px;z-index:999;opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:none}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.small{font-size:12px;color:var(--text3)}.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;font-size:13px;font-weight:800;color:var(--text2)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}.badge-accent{background:rgba(124,58,237,.12);color:var(--accent)}.badge-blue{background:rgba(37,99,235,.1);color:var(--accent2)}
 
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      font-family: "DM Sans", system-ui, sans-serif;
-      background:
-        radial-gradient(circle at 10% -10%, rgba(3, 60, 227, .10), transparent 34rem),
-        linear-gradient(180deg, var(--soft), var(--card) 30rem);
-      color: var(--ink);
-    }
-    body.menu-open { overflow: hidden; }
-    button, input, select, textarea { font: inherit; }
-    button { cursor: pointer; }
-    a { color: inherit; text-decoration: none; }
+/* === Shared Nav === */
+[data-theme="dark"] .nav{background:rgba(0,0,0,.92);border-bottom-color:var(--border)}
+[data-theme="light"] .nav{border-bottom-color:transparent}
+.nav{position:sticky;top:0;z-index:200;height:var(--nav-h);background:rgba(255,255,255,.94);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4)}
+.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:19px;font-weight:800;letter-spacing:-.4px;white-space:nowrap}
+.logo-mark{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;box-shadow:0 8px 22px rgba(37,99,235,.12)}
+.logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}
+.nav-links{display:flex;align-items:center;justify-content:center;gap:4px}
+.nav-link{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:600;line-height:1;transition:color .14s,background .14s}
+.nav-link svg{width:15px;height:15px;stroke-width:2.2;flex-shrink:0}
+.nav-link.active,.nav-link:hover{color:var(--text);background:var(--bg2)}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.wallet-btn{height:36px;padding:0 18px;display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--border2);border-radius:999px;background:var(--card);color:var(--text);font-size:13.5px;font-weight:700;cursor:pointer;transition:border-color .14s,background .14s;text-decoration:none}
+.wallet-btn:hover{border-color:var(--text);background:var(--bg2)}.wallet-btn svg{width:15px;height:15px}
+.icon-btn{width:36px;height:36px;display:grid;place-items:center;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);cursor:pointer;transition:color .14s,border-color .14s,background .14s}
+.icon-btn:hover{color:var(--text);border-color:var(--border2);background:var(--bg2)}.icon-btn svg{width:17px;height:17px;stroke-width:2.2}
 
-    .nav {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      height: var(--nav-h);
-      border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
-      background: color-mix(in srgb, var(--card) 86%, transparent);
-      backdrop-filter: blur(18px);
-    }
-    .nav-inner {
-      max-width: 1180px;
-      height: 100%;
-      margin: 0 auto;
-      padding: 0 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-    }
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      font-family: "Outfit", sans-serif;
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: 0;
-    }
-    .logo-mark {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
-      display: grid;
-      place-items: center;
-      background: var(--blue);
-      color: white;
-      box-shadow: 0 12px 28px rgba(3, 60, 227, .24);
-    }
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .nav-link {
-      padding: 10px 12px;
-      border-radius: 10px;
-      color: var(--muted);
-      font-weight: 700;
-      font-size: 14px;
-    }
-    .nav-link:hover, .nav-link.active {
-      color: var(--blue);
-      background: color-mix(in srgb, var(--blue) 9%, transparent);
-    }
-    .nav-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .balance-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      height: 38px;
-      padding: 0 12px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      color: var(--muted);
-      font-weight: 800;
-      background: var(--card);
-    }
-    .auth-only{display:none!important}.public-only{display:inline-flex!important}
-    body[data-auth="authed"] .auth-only{display:inline-flex!important}
-    body[data-auth="authed"] .public-only{display:none!important}
-    body[data-auth="authed"] .oga-drawer-foot.auth-only{display:block!important}
-    body[data-auth="public"] .oga-drawer-foot.auth-only{display:none!important}
-    .theme-btn, .hamburger, .icon-btn {
-      width: 40px;
-      height: 40px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      color: var(--ink);
-      background: var(--card);
-      display: inline-grid;
-      place-items: center;
-    }
-    .hamburger { display: none; }
+/* === Drawer === */
+.mobile-menu{position:fixed;inset:0;z-index:300;display:none;visibility:hidden;pointer-events:none}
+.mobile-menu.open{display:block;visibility:visible;pointer-events:auto}
+.mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(3px)}
+.oga-drawer{position:absolute;right:0;top:0;bottom:0;width:min(360px,92vw);padding:0 0 18px;background:#fbfbfc;color:var(--text);border-left:1px solid #e6e8ee;box-shadow:-16px 0 42px rgba(16,21,37,.12);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}
+[data-theme="dark"] .oga-drawer{background:#000000;color:#ffffff;border-left-color:#232323}
+.mobile-menu.open .oga-drawer{transform:translateX(0)}
+.oga-drawer-head{height:64px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e6e8ee;background:rgba(255,255,255,.72)}
+[data-theme="dark"] .oga-drawer-head{background:rgba(8,11,19,.72);border-bottom-color:#232323}
+.oga-drawer-brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:19px;font-weight:900;letter-spacing:-.4px;color:inherit;text-decoration:none}
+.oga-drawer-logo.logo-mark{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;overflow:hidden}
+.oga-drawer-close{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);font-size:20px;line-height:1;cursor:pointer;display:grid;place-items:center}
+[data-theme="dark"] .oga-drawer-close{background:#111111;border-color:#333333;color:#cbd5e1}
+.oga-drawer-nav{padding:10px 8px 12px;overflow-y:auto;flex:1}
+.oga-drawer-section{margin-bottom:6px}
+.oga-drawer-item{width:100%;min-height:56px;display:flex;align-items:center;gap:12px;padding:8px 10px;border:0;border-radius:10px;background:transparent;color:inherit;text-align:left;text-decoration:none;cursor:pointer;font:inherit}
+.oga-drawer-item:hover,.oga-drawer-group.open>.oga-drawer-group-toggle{background:#f2f2f4}
+[data-theme="dark"] .oga-drawer-item:hover,[data-theme="dark"] .oga-drawer-group.open>.oga-drawer-group-toggle{background:#111111}
+.oga-drawer-icon{width:36px;height:36px;display:grid;place-items:center;border:1px solid #e0e3e8;border-radius:9px;background:#f9fafb;color:#4f5665;flex:0 0 auto;font-size:18px}
+.oga-drawer-icon svg{width:18px;height:18px;stroke-width:2;fill:none;stroke:currentColor}
+.oga-drawer-icon.create-icon{background:#f5f0ff;border-color:#ede9fe;color:#7C3AED}
+.oga-drawer-icon.mini{width:34px;height:34px;border-radius:8px;background:var(--card)}
+[data-theme="dark"] .oga-drawer-icon{background:#050505;border-color:#333333;color:#b8c2d2}
+.oga-drawer-item strong{display:block;color:#171a22;font-size:15px;line-height:1.15;font-weight:800}
+.oga-drawer-item small{display:block;margin-top:3px;color:#9ca1ad;font-size:13px;line-height:1.2;font-weight:600}
+[data-theme="dark"] .oga-drawer-item strong{color:#ffffff}
+.oga-drawer-subnav strong{display:block;font-size:15px;color:#5b606c;font-weight:800}
+.oga-drawer-subnav small{display:block;font-size:13px;margin-top:3px}
+[data-theme="dark"] .oga-drawer-subnav strong{color:#d1d5db}
+.oga-drawer-chevron{width:15px;height:15px;margin-left:auto;color:#697082;stroke-width:2.5;transition:transform .16s ease;flex-shrink:0}
+.oga-drawer-group.open .oga-drawer-chevron{transform:rotate(180deg)}
+.oga-drawer-subnav{display:none;margin:4px 0 10px 18px;padding:6px 0 6px 22px;border-left:2px solid #e1e3e8}
+.oga-drawer-group.open .oga-drawer-subnav{display:grid;gap:4px}
+.oga-drawer-subnav a{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:9px;color:inherit;text-decoration:none}
+.oga-drawer-subnav a:hover{background:#f6f7f9}
+[data-theme="dark"] .oga-drawer-subnav a:hover{background:#111111}
+[data-theme="dark"] .oga-drawer-subnav{border-left-color:#333333}
+.oga-drawer-foot{padding:8px 8px 0;border-top:1px solid #e6e8ee;background:rgba(251,251,252,.92)}
+[data-theme="dark"] .oga-drawer-foot{background:rgba(8,11,19,.92);border-top-color:#232323}
+.oga-drawer-foot-label{font-size:11px;font-weight:800;color:#9ca1ad;letter-spacing:.08em;text-transform:uppercase;padding:8px 10px 4px}
+.oga-drawer-actions{height:52px;display:flex;align-items:center;justify-content:center;gap:14px;padding:0 14px;border-radius:999px;background:#11151f;color:#fff;box-shadow:0 12px 30px rgba(16,21,37,.18)}
+.oga-drawer-actions button{border:0;background:transparent;color:#fff;font-size:14px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.oga-drawer-actions svg{width:16px;height:16px;stroke-width:2.3}
+.logout-item strong{color:#dc2626!important}
+.logout-item .oga-drawer-icon{color:#dc2626;border-color:rgba(220,38,38,.2);background:rgba(220,38,38,.05)}
 
+/* === Auth visibility === */
+.authed-only{display:none!important}.public-only{display:flex!important}
+body[data-auth="authed"] .authed-only{display:flex!important}
+body[data-auth="authed"] .public-only{display:none!important}
+nav.oga-drawer-nav.authed-only{display:none!important}
+nav.oga-drawer-nav.public-only{display:block!important}
+body[data-auth="authed"] nav.oga-drawer-nav.authed-only{display:block!important}
+body[data-auth="authed"] nav.oga-drawer-nav.public-only{display:none!important}
+div.oga-drawer-foot.authed-only{display:none!important}
+div.oga-drawer-foot.public-only{display:block!important}
+body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important}
+body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 
-    .logo-mark{background:none;color:inherit;overflow:hidden;padding:0;box-shadow:0 8px 22px rgba(37,99,235,.12)}
-    .logo-mark svg{width:100%;height:100%;display:block;border-radius:10px}
-    .mobile-menu{position:fixed;inset:0;z-index:300;display:none}.mobile-menu.open{display:block}.mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(3px)}
-    .oga-drawer{position:absolute;right:0;top:0;bottom:0;width:min(360px,92vw);padding:0 0 18px;background:var(--card);color:var(--ink);border-left:1px solid var(--line);box-shadow:-16px 0 42px rgba(16,21,37,.12);display:flex;flex-direction:column}.oga-drawer-head{height:64px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--card) 86%,transparent)}.oga-drawer-brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:19px;font-weight:900;letter-spacing:0;color:inherit}.oga-drawer-logo.logo-mark{width:34px;height:34px;border-radius:9px}.oga-drawer-close{width:36px;height:36px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--muted);font-size:20px;line-height:1}.oga-drawer-nav{padding:10px 8px 12px;overflow-y:auto;flex:1}.oga-drawer-section{margin-bottom:6px}.oga-drawer-item{width:100%;min-height:56px;display:flex;align-items:center;gap:12px;padding:8px 10px;border:0;border-radius:10px;background:transparent;color:inherit;text-align:left;text-decoration:none;cursor:pointer;font:inherit}.oga-drawer-item:hover,.oga-drawer-group.open>.oga-drawer-group-toggle{background:var(--soft)}.oga-drawer-icon{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line);border-radius:9px;background:var(--soft);color:var(--muted);flex:0 0 auto;font-weight:800}.oga-drawer-icon.create-icon{background:color-mix(in srgb,var(--blue) 10%,var(--card));border-color:color-mix(in srgb,var(--blue) 26%,var(--line));color:var(--blue)}.oga-drawer-icon.mini{width:34px;height:34px;border-radius:8px}.oga-drawer-item strong,.oga-drawer-subnav strong{display:block;color:var(--ink);font-size:15px;line-height:1.15;font-weight:800}.oga-drawer-item small,.oga-drawer-subnav small{display:block;margin-top:3px;color:var(--muted);font-size:13px;line-height:1.2;font-weight:600}.oga-drawer-chevron{width:15px;height:15px;margin-left:auto;color:var(--muted);stroke-width:2.5;transition:transform .16s ease}.oga-drawer-group.open .oga-drawer-chevron{transform:rotate(180deg)}.oga-drawer-subnav{display:none;margin:4px 0 10px 18px;padding:6px 0 6px 22px;border-left:2px solid var(--line)}.oga-drawer-group.open .oga-drawer-subnav{display:grid;gap:4px}.oga-drawer-subnav a{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:9px;color:inherit}.oga-drawer-subnav a:hover{background:var(--soft)}.oga-drawer-foot{padding:8px 8px 0;border-top:1px solid var(--line);background:color-mix(in srgb,var(--card) 92%,transparent)}.oga-balance-card{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.oga-balance-card span{color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.oga-balance-card strong{font-family:"Outfit",sans-serif;font-size:20px;color:var(--blue)}.oga-profile-btn{width:100%;height:52px;margin-top:10px;border:1.5px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font-size:15px;font-weight:900}
+/* === Mobile bottom nav === */
+@media(max-width:768px){.mobile-bottom-nav{display:flex}}
+@media(min-width:769px){.mobile-bottom-nav{display:none!important}}
+.mobile-bottom-nav{position:fixed;bottom:0;left:0;right:0;height:68px;z-index:150;background:rgba(255,255,255,.96);border-top:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.25);display:none;justify-content:space-around;align-items:center;padding:0 8px}
+[data-theme="dark"] .mobile-bottom-nav{background:rgba(0,0,0,.96);border-top-color:#222b3c}
+[data-theme="light"] .mobile-bottom-nav{border-top-color:transparent}
+.mobile-bottom-nav a{min-width:0;display:grid;justify-items:center;gap:3px;color:var(--text3);font-size:11px;font-weight:800;text-decoration:none;transition:color .15s}
+.mobile-bottom-nav a i{font-size:22px}
+.mobile-bottom-nav a:hover,.mobile-bottom-nav a.active{color:var(--accent)}
+.mobile-bottom-nav a.create{transform:translateY(-10px)}
+.mobile-bottom-nav a.create i{width:50px;height:50px;border-radius:16px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:26px;box-shadow:0 6px 20px rgba(124,58,237,.3)}
 
-    .page {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 44px 24px 96px;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 340px;
-      gap: 28px;
-      align-items: start;
-    }
-    .main-flow { min-width: 0; }
-    .eyebrow {
-      margin: 0 0 10px;
-      color: var(--blue);
-      font-weight: 900;
-      text-transform: uppercase;
-      font-size: 12px;
-      letter-spacing: .08em;
-    }
-    h1 {
-      margin: 0;
-      font-family: "Outfit", sans-serif;
-      font-size: clamp(36px, 5vw, 64px);
-      line-height: .98;
-      letter-spacing: 0;
-    }
-    .subtitle {
-      max-width: 680px;
-      color: var(--muted);
-      font-size: 18px;
-      line-height: 1.65;
-      margin: 16px 0 0;
-    }
+@media(max-width:768px){.nav-links{display:none}.nav-inner{width:100%;padding:0 24px;gap:12px;grid-template-columns:1fr auto}}
+@media(max-width:1024px){.page{width:min(1120px,calc(100% - 32px));padding:24px 0 100px}}
+@media(max-width:768px){.app{flex-direction:column}.page{width:min(1120px,calc(100% - 20px));padding:16px 0 100px}.page-head{flex-direction:column}}
 
-    .draft-banner {
-      position: fixed;
-      left: 50%;
-      top: calc(var(--nav-h) + 14px);
-      z-index: 65;
-      width: min(720px, calc(100% - 32px));
-      transform: translate(-50%, -16px);
-      opacity: 0;
-      pointer-events: none;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      padding: 14px 16px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--card);
-      box-shadow: var(--shadow);
-      transition: .2s ease;
-    }
-    .draft-banner.show {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translate(-50%, 0);
-    }
-    .draft-banner p {
-      margin: 0;
-      color: var(--muted);
-      font-weight: 700;
-    }
+/* === Platform Grid === */
+.platform-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.platform-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px 16px;border:1.5px solid var(--border);border-radius:16px;background:var(--bg);cursor:pointer;font-size:13px;font-weight:700;transition:all .25s cubic-bezier(.4,0,.2,1);text-align:center;min-height:130px;position:relative;overflow:hidden}
+.platform-card::before{content:'';position:absolute;inset:0;opacity:0;background:linear-gradient(135deg,rgba(124,58,237,.04),rgba(99,102,241,.04));transition:opacity .25s}
+.platform-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(124,58,237,.12);border-color:rgba(124,58,237,.25)}
+.platform-card:hover::before{opacity:1}
+.platform-card .p-icon{width:52px;height:52px;border-radius:14px;background:var(--bg2);border:1px solid var(--border);display:grid;place-items:center;font-size:28px;color:var(--text);transition:all .25s;position:relative;z-index:1}
+.platform-card:hover .p-icon{background:var(--soft-purple);border-color:var(--accent);color:var(--accent);transform:scale(1.08)}
+.platform-card .p-name{position:relative;z-index:1}
+.platform-card.selected{border-color:var(--accent);background:var(--soft-purple);box-shadow:var(--shadow-glow)}
+.platform-card.selected .p-icon{background:rgba(124,58,237,.12);border-color:var(--accent);color:var(--accent)}
+@media(max-width:1024px){.platform-grid{grid-template-columns:repeat(3,1fr);gap:12px}.platform-card{min-height:110px;padding:18px 12px}.platform-card .p-icon{width:44px;height:44px;font-size:24px}}
+@media(max-width:768px){.platform-grid{grid-template-columns:repeat(3,1fr);gap:10px}.platform-card{min-height:100px;padding:14px 8px;border-radius:14px;gap:8px}.platform-card .p-icon{width:40px;height:40px;font-size:22px;border-radius:12px}.platform-card .p-name{font-size:11px}}
 
-    .stepbar {
-      margin: 28px 0 28px;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-    }
-    .step {
-      position: relative;
-      padding: 14px 12px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--card);
-      color: var(--muted);
-      font-weight: 800;
-      font-size: 13px;
-    }
-    .step::before {
-      content: attr(data-step);
-      width: 24px;
-      height: 24px;
-      margin-right: 8px;
-      border-radius: 50%;
-      display: inline-grid;
-      place-items: center;
-      background: color-mix(in srgb, var(--line) 65%, transparent);
-      color: var(--muted);
-      font-size: 12px;
-    }
-    .step.done, .step.active {
-      border-color: color-mix(in srgb, var(--blue) 40%, var(--line));
-      color: var(--blue);
-      background: color-mix(in srgb, var(--blue) 8%, var(--card));
-    }
-    .step.done::before, .step.active::before {
-      background: var(--blue);
-      color: white;
-    }
+/* === Currency Buttons === */
+.cur-btn{height:44px;padding:0 18px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text2);font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:8px;transition:all .2s;cursor:pointer}
+.cur-btn:hover{border-color:var(--border2);background:var(--bg2)}
+.cur-btn.active{background:var(--primary);color:var(--bg);border-color:var(--primary)}
 
-    .template-row {
-      margin: 0 0 20px;
-      padding: 18px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--card);
-    }
-    .row-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .row-head strong, .section-title {
-      font-family: "Outfit", sans-serif;
-      font-size: 18px;
-    }
-    .row-head span {
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 700;
-    }
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .chip, .quick {
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 10px 13px;
-      background: var(--soft);
-      color: var(--ink);
-      font-weight: 800;
-    }
-    .chip:hover, .chip.active, .quick:hover, .quick.active {
-      border-color: var(--blue);
-      color: var(--blue);
-      background: color-mix(in srgb, var(--blue) 9%, var(--card));
-    }
+/* === AI Chips === */
+.ai-chip{height:32px;padding:0 12px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--text2);font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:5px;transition:all .2s;cursor:pointer}
+.ai-chip:hover{border-color:var(--accent);color:var(--accent);background:var(--soft-purple)}
+.ai-chip.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ai-chip.primary:hover{box-shadow:0 4px 16px rgba(124,58,237,.25);transform:translateY(-1px)}
 
-    .mode-grid, .option-grid, .platform-grid, .proof-grid {
-      display: grid;
-      gap: 12px;
-    }
-    .mode-grid { grid-template-columns: repeat(3, 1fr); margin-bottom: 22px; }
-    .platform-grid { grid-template-columns: repeat(4, 1fr); }
-    .proof-grid { grid-template-columns: repeat(4, 1fr); }
-    .option-grid.two { grid-template-columns: repeat(2, 1fr); }
-    .select-card, .mode-card {
-      min-height: 94px;
-      padding: 16px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--card);
-      text-align: left;
-      color: var(--ink);
-      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
-    }
-    .select-card:hover, .mode-card:hover {
-      transform: translateY(-2px);
-      border-color: color-mix(in srgb, var(--blue) 40%, var(--line));
-      box-shadow: 0 12px 28px rgba(3, 60, 227, .10);
-    }
-    .select-card.active, .mode-card.active {
-      border-color: var(--blue);
-      background: color-mix(in srgb, var(--blue) 8%, var(--card));
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 14%, transparent);
-    }
-    .select-card b, .mode-card b { display: block; margin-bottom: 6px; }
-    .select-card span, .mode-card span { color: var(--muted); font-size: 13px; line-height: 1.45; }
-
-    form { display: grid; gap: 18px; }
-    .form-section {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--card);
-      padding: 22px;
-      box-shadow: 0 10px 28px rgba(15, 23, 42, .04);
-      scroll-margin-top: 96px;
-    }
-    .form-section.pulse {
-      animation: sectionPulse 1.05s ease;
-    }
-    @keyframes sectionPulse {
-      0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--blue) 26%, transparent); }
-      100% { box-shadow: 0 0 0 18px transparent; }
-    }
-    .section-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 18px;
-    }
-    .section-top p {
-      margin: 5px 0 0;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-    .field-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
-    }
-    .field { display: grid; gap: 8px; }
-    .field.full { grid-column: 1 / -1; }
-    label {
-      color: var(--ink);
-      font-size: 13px;
-      font-weight: 900;
-    }
-    input, select, textarea {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 13px 14px;
-      background: var(--soft);
-      color: var(--ink);
-      outline: none;
-      transition: border-color .16s ease, box-shadow .16s ease;
-    }
-    textarea { min-height: 134px; resize: vertical; line-height: 1.55; }
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 15%, transparent);
-    }
-    .input-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: end;
-    }
-    .counter {
-      justify-self: end;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 900;
-    }
-    .counter.warn { color: var(--amber); }
-    .counter.danger { color: var(--red); }
-    .error-msg {
-      min-height: 18px;
-      color: var(--red);
-      font-size: 12px;
-      font-weight: 800;
-    }
-    .has-error input, .has-error select, .has-error textarea {
-      border-color: var(--red);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 12%, transparent);
-    }
-
-    .reward-wrap {
-      display: grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap: 14px;
-    }
-    .currency-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .amount-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
-    .breakdown {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--soft);
-      padding: 16px;
-    }
-    .breakdown.danger {
-      border-color: color-mix(in srgb, var(--red) 50%, var(--line));
-      background: color-mix(in srgb, var(--red) 8%, var(--card));
-    }
-    .cost-line {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 9px 0;
-      color: var(--muted);
-      font-weight: 800;
-      border-bottom: 1px solid var(--line);
-    }
-    .cost-line:last-child {
-      border-bottom: 0;
-      color: var(--ink);
-      font-size: 18px;
-    }
-    .balance-line { color: var(--blue); }
-    .danger .balance-line, .danger .gate-note { color: var(--red); }
-    .gate-note {
-      margin: 10px 0 0;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    .summary-item {
-      padding: 14px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--soft);
-    }
-    .summary-item span {
-      display: block;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
-    .summary-item b {
-      display: block;
-      margin-top: 6px;
-      line-height: 1.35;
-    }
-    .warning {
-      margin-top: 14px;
-      padding: 13px 14px;
-      border-radius: 12px;
-      background: color-mix(in srgb, var(--amber) 12%, var(--card));
-      color: var(--amber);
-      font-weight: 900;
-    }
-    .warning.danger {
-      background: color-mix(in srgb, var(--red) 12%, var(--card));
-      color: var(--red);
-    }
-    .actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 16px;
-    }
-    .btn {
-      min-height: 46px;
-      border: 0;
-      border-radius: 12px;
-      padding: 0 18px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      font-weight: 900;
-      transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
-    }
-    .btn:hover { transform: translateY(-1px); }
-    .btn.primary {
-      background: var(--blue);
-      color: white;
-      box-shadow: 0 16px 32px rgba(3, 60, 227, .22);
-    }
-    .btn.dark { background: #07132D; color: white; }
-    .btn.secondary {
-      border: 1px solid var(--line);
-      background: var(--card);
-      color: var(--ink);
-    }
-    .btn.danger { background: var(--red); color: white; }
-    .btn[disabled] { opacity: .65; cursor: not-allowed; transform: none; }
-
-    .preview-rail {
-      position: sticky;
-      top: calc(var(--nav-h) + 22px);
-      display: grid;
-      gap: 16px;
-    }
-    .panel {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--card);
-      padding: 18px;
-      box-shadow: var(--shadow);
-    }
-    .preview-label {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-    .task-card {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 16px;
-      background: var(--soft);
-    }
-    .task-head {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .avatar {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      display: grid;
-      place-items: center;
-      background: var(--blue);
-      color: white;
-      font-family: "Outfit", sans-serif;
-      font-weight: 800;
-    }
-    .task-title {
-      min-height: 48px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      font-family: "Outfit", sans-serif;
-      font-size: 19px;
-      line-height: 1.25;
-    }
-    .task-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin: 14px 0;
-    }
-    .badge {
-      border-radius: 999px;
-      padding: 8px 10px;
-      background: color-mix(in srgb, var(--blue) 12%, var(--card));
-      color: var(--blue);
-      font-size: 12px;
-      font-weight: 900;
-    }
-    .progress {
-      height: 8px;
-      border-radius: 999px;
-      overflow: hidden;
-      background: color-mix(in srgb, var(--line) 80%, transparent);
-      margin: 14px 0;
-    }
-    .progress span {
-      display: block;
-      width: 0%;
-      height: 100%;
-      background: var(--green);
-    }
-    .preview-start {
-      width: 100%;
-      margin-top: 10px;
-    }
-    .ai-box {
-      display: none;
-      margin-top: 12px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 14px;
-      background: var(--soft);
-    }
-    .ai-box.show { display: block; }
-    .ai-box h4 { margin: 0 0 8px; }
-    .ai-box p { margin: 0 0 10px; color: var(--muted); line-height: 1.5; }
-
-    .success-screen {
-      position: fixed;
-      inset: var(--nav-h) 0 0;
-      z-index: 40;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-      background: color-mix(in srgb, var(--soft) 88%, transparent);
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(12px);
-      transition: .28s ease;
-    }
-    .success-screen.show {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateY(0);
-    }
-    .success-card {
-      width: min(520px, 100%);
-      padding: 34px;
-      text-align: center;
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      background: var(--card);
-      box-shadow: var(--shadow);
-    }
-    .success-mark {
-      width: 70px;
-      height: 70px;
-      margin: 0 auto 18px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: var(--green);
-      color: white;
-      font-size: 34px;
-      font-weight: 900;
-    }
-
-    .mobile-bottom {
-      display: none;
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 45;
-      height: 64px;
-      border-top: 1px solid var(--line);
-      background: var(--card);
-      grid-template-columns: repeat(5, 1fr);
-    }
-    .mobile-bottom a {
-      display: grid;
-      place-items: center;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 900;
-    }
-    .mobile-bottom a.active { color: var(--blue); }
-
-    @media (max-width: 980px) {
-      .page { grid-template-columns: 1fr; max-width: 960px; }
-      .preview-rail { position: static; }
-      .nav-links, .nav-actions .balance-pill { display: none; }
-      .hamburger { display: inline-grid; }
-    }
-    @media (max-width: 720px) {
-      .page { padding: 30px 16px 92px; }
-      .stepbar, .mode-grid, .field-grid, .reward-wrap, .summary { grid-template-columns: 1fr; }
-      .platform-grid, .proof-grid { grid-template-columns: repeat(2, 1fr); }
-      .form-section, .template-row { padding: 18px; }
-      .section-top, .row-head, .draft-banner { align-items: flex-start; flex-direction: column; }
-      .mobile-bottom { display: grid; }
-      h1 { font-size: 38px; }
-    }
-  
-    /* Compact form sizing */
-    .page{max-width:1080px;padding:32px 20px 84px;grid-template-columns:minmax(0,1fr) 312px;gap:22px}.brand{font-size:20px}.nav-link{font-size:13px;padding:9px 10px}.eyebrow{font-size:11px;margin-bottom:8px}h1{font-size:clamp(30px,3.7vw,46px);line-height:1.04}.subtitle{font-size:15.5px;line-height:1.55;margin-top:12px}.stepbar{margin:22px 0;gap:8px}.step{padding:11px 10px}.template-row{padding:15px}.mode-grid{gap:10px;margin-bottom:18px}.mode-card,.select-card{min-height:78px;padding:13px}.form-section{padding:18px}.section-top{margin-bottom:14px}.section-title{font-size:16px}.section-top p{font-size:13px}.field-grid{gap:12px}input,select,textarea{padding:11px 12px;border-radius:10px}textarea{min-height:112px}.btn{min-height:42px}.preview-rail{top:calc(var(--nav-h) + 16px)}.panel{padding:15px}.task-title{font-size:17px;min-height:43px}.reward-wrap{grid-template-columns:1fr}.platform-grid,.proof-grid{grid-template-columns:repeat(4,minmax(0,1fr))}@media(max-width:980px){.page{grid-template-columns:1fr}.platform-grid,.proof-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:720px){.page{padding:24px 14px 86px}.form-section,.template-row{padding:15px}h1{font-size:30px}.subtitle{font-size:14px}.mode-grid{grid-template-columns:1fr}.platform-grid,.proof-grid{grid-template-columns:1fr}.input-row{grid-template-columns:1fr}.btn{width:100%}}
-
-  </style>
+/* === AI Modal === */
+.ai-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;visibility:hidden;opacity:0;transition:all .3s cubic-bezier(.4,0,.2,1)}
+.ai-modal.open{visibility:visible;opacity:1}
+.ai-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
+.ai-panel{position:relative;width:min(580px,calc(100% - 32px));max-height:85vh;overflow-y:auto;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transform:translateY(20px) scale(.96);transition:all .3s cubic-bezier(.4,0,.2,1)}
+.ai-modal.open .ai-panel{transform:translateY(0) scale(1)}
+.ai-panel-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+.ai-close{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text2);display:grid;place-items:center;font-size:18px;cursor:pointer;transition:all .2s}
+.ai-close:hover{background:var(--bg2);color:var(--text)}
+.ai-modes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.ai-mode{padding:12px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);cursor:pointer;text-align:left;transition:all .2s}
+.ai-mode:hover{border-color:var(--border2)}.ai-mode.active{border-color:var(--accent);background:var(--soft-purple)}
+.m-title{font-weight:800;font-size:13px;display:flex;align-items:center;gap:6px;color:var(--text);margin-bottom:3px}.m-desc{font-size:11px;color:var(--text3)}
+.ai-input-area{margin-bottom:12px}
+.ai-input-area textarea{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;line-height:1.6;outline:none;resize:vertical;transition:border-color .2s}
+.ai-input-area textarea:focus{border-color:var(--accent)}
+.ai-generate-btn{width:100%;height:48px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .2s}
+.ai-generate-btn:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}
+.ai-generate-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.ai-result{margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);display:none}
+.ai-result.show{display:block;animation:fadeSlideIn .3s ease}
+.r-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.r-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.r-text{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:14px;white-space:pre-wrap;max-height:280px;overflow-y:auto}
+.r-actions{display:flex;gap:8px}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:768px){.ai-modes{grid-template-columns:1fr 1fr;gap:6px}.ai-mode{padding:10px}}
+</style>
 </head>
-<body>
-  <nav class="nav" aria-label="Primary navigation">
-    <div class="nav-inner">
-      <a class="brand" href="index.html" aria-label="OgaPay home">
-        <span class="logo-mark" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
-        OgaPay
+<body style="padding-bottom:64px">
+
+<!-- ═══ SHARED NAVBAR ═══ -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html" aria-label="OgaPay home">
+      <span class="logo-mark">
+        <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg>
+      </span>
+      <span>Oga<span>Pay</span></span>
+    </a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a class="nav-link" href="index.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>Home</a>
+      <a class="nav-link" href="tasks.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tasks</a>
+      <a class="nav-link" href="store.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Deals</a>
+      <a class="nav-link" href="communities.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Communities</a>
+      <a class="nav-link" href="faq.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.6 1-1.9 1.4-2.5 2.3-.3.4-.4.8-.4 1.2M12 17h.01"/></svg>FAQ</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="wallet-btn public-only" href="login.html"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg><span>Login</span></a>
+      <a class="wallet-btn public-only" href="login.html?mode=signup"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg><span>Get Started</span></a>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><svg id="moonIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
+      <button class="icon-btn" id="menuBtn" aria-label="Open menu"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ SHARED DRAWER SIDEBAR ═══ -->
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-overlay" data-close-menu></div>
+  <aside class="mobile-drawer oga-drawer" aria-label="OgaPay menu">
+    <div class="oga-drawer-head">
+      <a class="oga-drawer-brand" href="index.html" aria-label="OgaPay home">
+        <span class="oga-drawer-logo logo-mark" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
+        <span>OgaPay</span>
       </a>
-      <div class="nav-links" aria-label="Desktop navigation">
-        <a class="nav-link" href="tasks.html">Browse Tasks</a>
-        <a class="nav-link active" href="post-task.html">Create Job</a>
-        <a class="nav-link" href="store.html">Deals</a>
-        <a class="nav-link" href="communities.html">Communities</a>
-        <a class="nav-link" href="faq.html">FAQ</a>
-      </div>
-      <div class="nav-actions">
-        <span class="balance-pill auth-only">Balance <b id="navBalance">NGN 0.00</b></span>
-        <button class="btn secondary public-only nav-login" type="button" onclick="window.location.href='login.html'">Login</button>
-        <button class="theme-btn" type="button" id="themeBtn" aria-label="Toggle theme">◐</button>
-        <button class="hamburger" type="button" id="menuBtn" aria-label="Open menu">☰</button>
-      </div>
+      <button class="oga-drawer-close" data-close-menu aria-label="Close menu">&#x2715;</button>
     </div>
-  </nav>
 
-    <div class="mobile-menu" id="mobileMenu">
-    <div class="mobile-overlay" data-close-menu></div>
-    <aside class="mobile-drawer oga-drawer" aria-label="OgaPay menu">
-      <div class="oga-drawer-head">
-        <a class="oga-drawer-brand" href="index.html" aria-label="OgaPay home"><span class="oga-drawer-logo logo-mark" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span><span>OgaPay</span></a>
-        <button class="oga-drawer-close" type="button" data-close-menu aria-label="Close menu">x</button>
-      </div>
-      <nav class="oga-drawer-nav" aria-label="Primary menu">
-        <div class="oga-drawer-section">
-          <a class="oga-drawer-item" href="index.html" data-close-menu><span class="oga-drawer-icon">H</span><span><strong>Home</strong><small>Back to homepage</small></span></a>
-          <a class="oga-drawer-item" href="tasks.html" data-close-menu><span class="oga-drawer-icon">T</span><span><strong>Tasks</strong><small>Browse micro-jobs</small></span></a>
-          <a class="oga-drawer-item" href="post-task.html" data-close-menu><span class="oga-drawer-icon create-icon">+</span><span><strong>Post Task</strong><small>Create a campaign</small></span></a>
-          <a class="oga-drawer-item" href="store.html" data-close-menu><span class="oga-drawer-icon">D</span><span><strong>Deals</strong><small>Cashback and offers</small></span></a>
-          <a class="oga-drawer-item" href="communities.html" data-close-menu><span class="oga-drawer-icon">C</span><span><strong>Communities</strong><small>Groups and earning feeds</small></span></a>
-          <a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon">?</span><span><strong>FAQ</strong><small>Common questions answered</small></span></a>
-        </div>
-        <section class="oga-drawer-group open">
-          <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="true"><span class="oga-drawer-icon">M</span><span><strong>Account</strong><small>Wallet and workspace</small></span><svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+    <!-- PUBLIC sidebar (non-logged in) -->
+    <nav class="oga-drawer-nav public-only" aria-label="Primary menu">
+      <div class="oga-drawer-section">
+        <section class="oga-drawer-group">
+          <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
+            <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+            <span><strong>Tasks</strong><small>Browse and track tasks</small></span>
+            <svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
           <div class="oga-drawer-subnav">
-            <a href="dashboard.html" data-close-menu><span class="oga-drawer-icon mini">O</span><span><strong>Overview</strong><small>Workspace home</small></span></a>
-            <a href="wallet.html" data-close-menu><span class="oga-drawer-icon mini">W</span><span><strong>Wallet</strong><small>Naira and USDC</small></span></a>
-            <a href="notifications.html" data-close-menu><span class="oga-drawer-icon mini">N</span><span><strong>Notifications</strong><small>Task alerts</small></span></a>
-            <a href="profile.html" data-close-menu><span class="oga-drawer-icon mini">P</span><span><strong>Profile</strong><small>Identity and reputation</small></span></a>
+            <a href="tasks.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+              <span><strong>All Tasks</strong><small>Browse all tasks</small></span>
+            </a>
+            <a href="monitor.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+              <span><strong>Job Monitor</strong><small>Track new tasks</small></span>
+            </a>
           </div>
         </section>
-      </nav>
-      <div class="oga-drawer-foot auth-only"><div class="oga-balance-card"><span>Balance</span><strong id="drawerBalance">NGN 0.00</strong></div><button class="oga-profile-btn" type="button" onclick="window.location.href='profile.html'">My Profile</button></div>
-      <div class="oga-drawer-foot public-only"><button class="oga-profile-btn" type="button" onclick="window.location.href='login.html'">Login to continue</button></div>
-    </aside>
-  </div>
-
-  <div class="draft-banner" id="draftBanner">
-    <p>You have an unsaved draft. Restore it?</p>
-    <div class="actions" style="margin:0">
-      <button class="btn primary" type="button" id="restoreDraft">Restore</button>
-      <button class="btn secondary" type="button" id="discardDraft">Discard</button>
-    </div>
-  </div>
-
-  <main class="page" id="page">
-    <div class="main-flow">
-      <header>
-        <p class="eyebrow">Create a verified microjob</p>
-        <h1>Post a task workers can finish with confidence.</h1>
-        <p class="subtitle">Set the task, pick your proof, choose the reward, and preview exactly how workers will see it before launch.</p>
-      </header>
-
-      <div class="stepbar" id="stepbar" aria-label="Task setup progress">
-        <div class="step active" data-step="1">Type</div>
-        <div class="step" data-step="2">Details</div>
-        <div class="step" data-step="3">Reward</div>
-        <div class="step" data-step="4">Review</div>
+        <a class="oga-drawer-item" href="store.html" data-close-menu>
+          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></span>
+          <span><strong>Deals</strong><small>Worker tools and inbox</small></span>
+        </a>
+        <a class="oga-drawer-item" href="blog.html" data-close-menu>
+          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span>
+          <span><strong>Blog</strong><small>Read articles and updates</small></span>
+        </a>
+        <a class="oga-drawer-item" href="vault.html" data-close-menu>
+          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+          <span><strong>Vault</strong><small>Reward pool</small></span>
+        </a>
+        <a class="oga-drawer-item" href="faq.html" data-close-menu>
+          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.6 1-1.9 1.4-2.5 2.3-.3.4-.4.8-.4 1.2M12 17h.01"/></svg></span>
+          <span><strong>FAQ</strong><small>Answers and guides</small></span>
+        </a>
+        <a class="oga-drawer-item" href="support.html" data-close-menu>
+          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+          <span><strong>Support</strong><small>Get help</small></span>
+        </a>
       </div>
-
-      <section class="template-row">
-        <div class="row-head">
-          <strong>Start from a template</strong>
-          <span>Quick presets you can edit</span>
-        </div>
-        <div class="chips" id="templateChips">
-          <button class="chip" type="button" data-template="x-repost">X Repost</button>
-          <button class="chip" type="button" data-template="telegram-join">Telegram Join</button>
-          <button class="chip" type="button" data-template="app-review">App Review</button>
-          <button class="chip" type="button" data-template="logo-design">Logo Design</button>
-          <button class="chip" type="button" data-template="survey">Survey</button>
-          <button class="chip" type="button" data-template="youtube-like">YouTube Like</button>
-        </div>
-      </section>
-
-      <section class="mode-grid" aria-label="Task type">
-        <button class="mode-card active" type="button" data-mode="Social"><b>Social Task</b><span>Drive follows, reposts, likes, joins, and comments.</span></button>
-        <button class="mode-card" type="button" data-mode="Survey"><b>Survey</b><span>Collect opinions, product feedback, and research data.</span></button>
-        <button class="mode-card" type="button" data-mode="Freelance"><b>Freelance</b><span>Request creative, design, writing, or research work.</span></button>
-      </section>
-
-      <form id="createForm" novalidate>
-        <section class="form-section" data-section="details">
-          <div class="section-top">
-            <div>
-              <h2 class="section-title">Task Details</h2>
-              <p>Explain the action clearly enough that workers can complete it without guessing.</p>
-            </div>
-          </div>
-          <div class="field-grid">
-            <div class="field full" id="field-title">
-              <label for="title">Task title</label>
-              <div class="input-row">
-                <input id="title" maxlength="120" placeholder="Example: Repost our launch tweet and follow our page">
-                <button class="btn secondary" type="button" id="aiBtn">Generate with AI</button>
-              </div>
-              <span class="counter" id="titleCount">0/120</span>
-              <span class="error-msg" id="titleError"></span>
-              <div class="ai-box" id="aiBox">
-                <h4 id="aiTitle">Suggested task</h4>
-                <p id="aiInstructions"></p>
-                <div class="actions" style="margin:0">
-                  <button class="btn primary" type="button" id="acceptAi">Accept</button>
-                  <button class="btn secondary" type="button" id="regenAi">Regenerate</button>
-                  <button class="btn secondary" type="button" id="closeAi">Ignore</button>
-                </div>
-              </div>
-            </div>
-            <div class="field full" id="field-desc">
-              <label for="desc">Instructions</label>
-              <textarea id="desc" maxlength="900" placeholder="List each step the worker must follow. Include links, hashtags, and what proof they must submit."></textarea>
-              <span class="counter" id="descCount">0/900</span>
-              <span class="error-msg" id="descError"></span>
-            </div>
-            <div class="field" id="field-category">
-              <label for="category">Category</label>
-              <select id="category">
-                <option value="">Select category</option>
-                <option>Social</option>
-                <option>Survey</option>
-                <option>App Review</option>
-                <option>Design</option>
-                <option>Writing</option>
-                <option>Research</option>
-              </select>
-              <span class="error-msg" id="categoryError"></span>
-            </div>
-            <div class="field">
-              <label for="time">Estimated time</label>
-              <select id="time">
-                <option>Under 2 minutes</option>
-                <option>3-5 minutes</option>
-                <option>6-10 minutes</option>
-                <option>15+ minutes</option>
-              </select>
-            </div>
-            <div class="field full" id="field-platforms">
-              <label>Platforms</label>
-              <div class="platform-grid">
-                <button class="select-card active" type="button" data-platform="X"><b>X</b><span>Posts, reposts, follows</span></button>
-                <button class="select-card" type="button" data-platform="Instagram"><b>Instagram</b><span>Likes, follows, reels</span></button>
-                <button class="select-card" type="button" data-platform="Telegram"><b>Telegram</b><span>Joins and group actions</span></button>
-                <button class="select-card" type="button" data-platform="YouTube"><b>YouTube</b><span>Likes and subscriptions</span></button>
-              </div>
-              <span class="error-msg" id="platformsError"></span>
-            </div>
-          </div>
-        </section>
-
-        <section class="form-section" data-section="proof">
-          <div class="section-top">
-            <div>
-              <h2 class="section-title">Proof of Completion</h2>
-              <p>Choose the proof workers must submit before you approve payout.</p>
-            </div>
-          </div>
-          <div class="proof-grid" id="proofGrid">
-            <button class="select-card active" type="button" data-proof="Screenshot"><b>Screenshot</b><span>Best for social and app tasks</span></button>
-            <button class="select-card" type="button" data-proof="Link"><b>Public link</b><span>Worker submits a URL</span></button>
-            <button class="select-card" type="button" data-proof="Text"><b>Text answer</b><span>Short response or code</span></button>
-            <button class="select-card" type="button" data-proof="File"><b>File upload</b><span>Design, writing, or report</span></button>
-          </div>
-          <div class="field" id="field-proofNote" style="margin-top:14px">
-            <label for="proofNote">Proof instructions</label>
-            <textarea id="proofNote" placeholder="Tell workers what the screenshot, link, or file must show."></textarea>
-            <span class="error-msg" id="proofNoteError"></span>
-          </div>
-        </section>
-
-        <section class="form-section" data-section="timeline">
-          <div class="section-top">
-            <div>
-              <h2 class="section-title">Slots & Timeline</h2>
-              <p>Control how many people can complete the task and when it closes.</p>
-            </div>
-          </div>
-          <div class="field-grid">
-            <div class="field" id="field-slots">
-              <label for="slots">Worker slots</label>
-              <input id="slots" type="number" min="1" max="10000" value="100">
-              <div class="amount-row">
-                <button class="quick" type="button" data-slots="50">50</button>
-                <button class="quick active" type="button" data-slots="100">100</button>
-                <button class="quick" type="button" data-slots="250">250</button>
-                <button class="quick" type="button" data-slots="500">500</button>
-              </div>
-              <span class="error-msg" id="slotsError"></span>
-            </div>
-            <div class="field">
-              <label for="deadline">Deadline</label>
-              <input id="deadline" type="date">
-            </div>
-            <div class="field">
-              <label for="reviewWindow">Review window</label>
-              <select id="reviewWindow">
-                <option>24 hours</option>
-                <option>48 hours</option>
-                <option>72 hours</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="visibility">Visibility</label>
-              <select id="visibility">
-                <option>Public marketplace</option>
-                <option>Invite-only</option>
-                <option>Community only</option>
-              </select>
-            </div>
-          </div>
-        </section>
-
-        <section class="form-section" data-section="audience">
-          <div class="section-top">
-            <div>
-              <h2 class="section-title">Audience & Requirements</h2>
-              <p>Target the right workers and optionally feature your task.</p>
-            </div>
-          </div>
-          <div class="field-grid">
-            <div class="field">
-              <label for="geo">Location</label>
-              <select id="geo">
-                <option>Nigeria</option>
-                <option>Lagos</option>
-                <option>Abuja</option>
-                <option>Kano</option>
-                <option>Global</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="followers">Minimum followers</label>
-              <input id="followers" type="number" min="0" value="0">
-            </div>
-            <div class="field">
-              <label for="reputation">Minimum reputation</label>
-              <select id="reputation">
-                <option>Any reputation</option>
-                <option>80% approval or higher</option>
-                <option>90% approval or higher</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="featured">Featured placement</label>
-              <select id="featured">
-                <option value="no">No</option>
-                <option value="yes">Yes, add 20%</option>
-              </select>
-            </div>
-          </div>
-        </section>
-
-        <section class="form-section" data-section="reward">
-          <div class="section-top">
-            <div>
-              <h2 class="section-title">Reward per Worker</h2>
-              <p>Set a fair payout. OgaPay adds a 10% service fee and optional featured boost.</p>
-            </div>
-          </div>
-          <div class="reward-wrap">
-            <div>
-              <div class="currency-grid">
-                <button class="select-card active" type="button" data-currency="NGN"><b>NGN</b><span>Pay workers in Naira</span></button>
-                <button class="select-card" type="button" data-currency="USDC"><b>USDC</b><span>Pay through Solana USDC</span></button>
-              </div>
-              <div class="field" id="field-reward" style="margin-top:14px">
-                <label for="reward">Reward amount</label>
-                <input id="reward" type="number" min="1" step="1" value="150">
-                <div class="amount-row">
-                  <button class="quick" type="button" data-reward="75">75</button>
-                  <button class="quick active" type="button" data-reward="150">150</button>
-                  <button class="quick" type="button" data-reward="300">300</button>
-                  <button class="quick" type="button" data-reward="500">500</button>
-                </div>
-                <span class="error-msg" id="rewardError"></span>
-              </div>
-            </div>
-            <div class="breakdown" id="breakdown">
-              <div class="cost-line"><span>Worker payouts</span><b id="payoutCost">NGN 15,000.00</b></div>
-              <div class="cost-line"><span>OgaPay fee</span><b id="feeCost">NGN 1,500.00</b></div>
-              <div class="cost-line"><span>Featured boost</span><b id="featureCost">NGN 0.00</b></div>
-              <div class="cost-line balance-line"><span>Your balance</span><b id="balanceCost">NGN 0.00</b></div>
-              <div class="cost-line"><span>Total due</span><b id="totalCost">NGN 16,500.00</b></div>
-              <p class="gate-note" id="gateNote">Add funds before launching if your balance is too low.</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="form-section" data-section="review">
-          <div class="section-top">
-            <div>
-              <h2 class="section-title">Review & Launch</h2>
-              <p>Confirm the public task card, cost, and proof requirement before publishing.</p>
-            </div>
-          </div>
-          <div class="summary">
-            <div class="summary-item"><span>Task</span><b id="sTitle">Untitled task</b></div>
-            <div class="summary-item"><span>Type</span><b id="sType">Social</b></div>
-            <div class="summary-item"><span>Slots</span><b id="sSlots">100 workers</b></div>
-            <div class="summary-item"><span>Reward</span><b id="sReward">NGN 150.00 each</b></div>
-            <div class="summary-item"><span>Platforms</span><b id="sPlatforms">X</b></div>
-            <div class="summary-item"><span>Total</span><b id="sTotal">NGN 16,500.00</b></div>
-          </div>
-          <div class="warning" id="launchWarning">Make sure your instructions and proof requirements are clear before launch.</div>
-          <div class="actions">
-            <button class="btn primary" type="submit" id="submitBtn">Launch Task</button>
-            <button class="btn secondary" type="button" id="draftBtn">Save Draft</button>
-          </div>
-        </section>
-      </form>
-    </div>
-
-    <aside class="preview-rail">
-      <section class="panel">
-        <div class="preview-label"><span>Worker preview</span><span id="previewPlatform">X</span></div>
-        <div class="task-card">
-          <div class="task-head">
-            <div class="avatar">OP</div>
-            <div>
-              <b>OgaPay Poster</b><br>
-              <span style="color:var(--muted);font-size:13px" id="previewMode">Social task</span>
-            </div>
-          </div>
-          <div class="task-title" id="previewTitle">Repost our launch tweet and follow our page</div>
-          <div class="task-meta">
-            <span class="badge" id="previewReward">NGN 150</span>
-            <span class="badge" id="previewCategory">Social</span>
-          </div>
-          <div class="progress"><span></span></div>
-          <button class="btn dark preview-start" type="button">Start -></button>
-        </div>
-      </section>
-      <section class="panel">
-        <div class="preview-label"><span>Wallet gate</span><span id="walletState">Check</span></div>
-        <div class="cost-line"><span>Balance</span><b id="railBalance">NGN 0.00</b></div>
-        <div class="cost-line"><span>Total</span><b id="railTotal">NGN 16,500.00</b></div>
-        <p class="gate-note" id="railNote">Your launch button updates automatically.</p>
-      </section>
-    </aside>
-  </main>
-
-  <section class="success-screen" id="successScreen" aria-live="polite">
-    <div class="success-card">
-      <div class="success-mark">✓</div>
-      <h2>Task submitted for review</h2>
-      <p class="subtitle" style="margin:10px auto 22px">Your task is saved and ready for the marketplace once approved.</p>
-      <div class="actions" style="justify-content:center">
-        <a class="btn primary" href="tasks.html">View Tasks</a>
-        <button class="btn secondary" type="button" id="newTask">Create Another</button>
+    </nav>
+    <div class="oga-drawer-foot public-only">
+      <div class="oga-drawer-actions">
+        <button type="button" onclick="window.location.href='login.html'">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg>Login
+        </button>
       </div>
     </div>
-  </section>
 
-  <nav class="mobile-bottom" aria-label="Mobile bottom navigation">
-    <a href="index.html">Home</a>
-    <a href="tasks.html">Tasks</a>
-    <a class="active" href="post-task.html">Post</a>
-    <a href="notifications.html">Alerts</a>
-    <a href="profile.html">Profile</a>
-  </nav>
+    <!-- AUTHED sidebar (logged-in users) -->
+    <nav class="oga-drawer-nav authed-only" aria-label="Authenticated menu" style="display:none">
+      <div class="oga-drawer-section">
+        <a class="oga-drawer-item" href="post-task.html" data-close-menu>
+          <span class="oga-drawer-icon create-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg></span>
+          <span><strong>Create Job</strong><small>Post a new task</small></span>
+        </a>
+        <section class="oga-drawer-group">
+          <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
+            <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+            <span><strong>Jobs</strong><small>Browse and track jobs</small></span>
+            <svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="oga-drawer-subnav">
+            <a href="tasks.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+              <span><strong>All Jobs</strong><small>Browse all jobs</small></span>
+            </a>
+            <a href="monitor.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+              <span><strong>Job Monitor</strong><small>Track new jobs</small></span>
+            </a>
+          </div>
+        </section>
+        <section class="oga-drawer-group">
+          <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
+            <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></span>
+            <span><strong>Store</strong><small>Wurker tools and inbox</small></span>
+            <svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="oga-drawer-subnav">
+            <a href="store.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></span>
+              <span><strong>Wurker Store</strong><small>Browse the store</small></span>
+            </a>
+            <a href="my-store.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+              <span><strong>My Store</strong><small>Manage your listings</small></span>
+            </a>
+            <a href="my-tasks.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
+              <span><strong>My Wurk</strong><small>View your work</small></span>
+            </a>
+            <a href="messages.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+              <span><strong>Messages</strong><small>Open your inbox</small></span>
+            </a>
+            <a href="worker.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+              <span><strong>Wurker Portal</strong><small>Open the portal</small></span>
+            </a>
+          </div>
+        </section>
+        <a class="oga-drawer-item" href="communities.html" data-close-menu>
+          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span>
+          <span><strong>Communities</strong><small>Open your communities</small></span>
+        </a>
+        <a class="oga-drawer-item" href="blog.html" data-close-menu>
+          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span>
+          <span><strong>Blog</strong><small>Read articles and updates</small></span>
+        </a>
+        <a class="oga-drawer-item" href="vault.html" data-close-menu>
+          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+          <span><strong>Vault</strong><small>Reward pool</small></span>
+        </a>
+        <a class="oga-drawer-item" href="notifications.html" data-close-menu>
+          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+          <span><strong>Notifications</strong><small>See updates</small></span>
+        </a>
+        <a class="oga-drawer-item" href="faq.html" data-close-menu>
+          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.6 1-1.9 1.4-2.5 2.3-.3.4-.4.8-.4 1.2M12 17h.01"/></svg></span>
+          <span><strong>FAQ</strong><small>Answers and guides</small></span>
+        </a>
+        <a class="oga-drawer-item" href="support.html" data-close-menu>
+          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+          <span><strong>Support</strong><small>Get help</small></span>
+        </a>
+      </div>
+    </nav>
+    <!-- Authed footer -->
+    <div class="oga-drawer-foot authed-only" style="display:none">
+      <div class="oga-drawer-foot-label">ACCOUNT</div>
+      <a class="oga-drawer-item" href="profile.html" data-close-menu>
+        <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+        <span><strong>My Profile</strong></span>
+      </a>
+      <a class="oga-drawer-item logout-item" href="login.html" data-close-menu>
+        <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+        <span><strong>Logout</strong></span>
+      </a>
+    </div>
+  </aside>
+</div>
 
-  <script>
-    const NGN_RATE = 1620;
-    const draftKey = 'ogapay-post-task-draft';
-    const isAuthed = () => !!localStorage.getItem('ogapay_access_token');
+<!-- ═══ PAGE CONTENT ═══ -->
+<div class="app">
+<main class="main">
 
-    const state = {
-      mode: 'Social',
-      platforms: ['X'],
-      proof: 'Screenshot',
-      currency: 'NGN',
-      total: 0,
-      balance: readBalance(),
-      lastCompletedStep: 1
+<section class="page">
+<div class="page-head">
+  <div>
+    <span class="eyebrow"><i class="ti ti-sparkles"></i>AI-Powered Task Creation</span>
+    <h1 style="font-size:clamp(28px,3.6vw,44px)">Create a Task</h1>
+    <p class="lead" style="max-width:560px">Set your budget in Naira or Crypto, target any platform, and let AI craft the perfect task description.</p>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+
+  <!-- === MAIN FORM === -->
+  <div style="display:grid;gap:16px">
+
+    <!-- Card: Basic Details -->
+    <div class="card" style="padding:24px">
+      <div class="card-head"><i class="ti ti-info-circle" style="font-size:16px;color:var(--accent)"></i> Basic Details</div>
+      <div style="display:grid;gap:18px">
+        <div>
+          <label style="font-size:13px;font-weight:800;color:var(--text2);display:block;margin-bottom:6px">Task title</label>
+          <input type="text" id="taskTitle" placeholder="e.g. Like & retweet our pinned launch post" oninput="updatePreview()" style="width:100%;height:50px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:15px;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:800;color:var(--text2);display:block;margin-bottom:6px">Category</label>
+          <select id="taskCategory" onchange="updatePreview()" style="width:100%;height:50px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:15px;outline:none;appearance:none;cursor:pointer;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            <option>Social Media</option>
+            <option>Data Entry</option>
+            <option>Content Writing</option>
+            <option>App Testing</option>
+            <option>Survey</option>
+            <option>Design</option>
+            <option>Translation</option>
+            <option>Web Research</option>
+            <option>Video Review</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card: Description + AI -->
+    <div class="card" style="padding:24px">
+      <div class="card-head" style="margin-bottom:12px">
+        <span><i class="ti ti-article" style="font-size:16px;color:var(--accent)"></i> Description</span>
+        <span class="badge badge-accent"><i class="ti ti-sparkles"></i> AI Ready</span>
+      </div>
+      <div>
+        <textarea id="taskDesc" rows="5" oninput="updatePreview()" placeholder="Describe what workers need to do, how to submit proof, and any special requirements." style="width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:14px;line-height:1.7;outline:none;resize:vertical;font-family:inherit;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+        <button class="ai-chip" onclick="quickAIAction('generate')"><i class="ti ti-sparkles" style="color:var(--accent);font-size:14px"></i> Generate</button>
+        <button class="ai-chip" onclick="quickAIAction('improve')"><i class="ti ti-edit-circle" style="color:var(--accent2);font-size:14px"></i> Improve</button>
+        <button class="ai-chip" onclick="quickAIAction('professional')"><i class="ti ti-briefcase" style="color:var(--accent2);font-size:14px"></i> Professional</button>
+        <button class="ai-chip" onclick="quickAIAction('shorten')"><i class="ti ti-text-decrease" style="color:var(--accent2);font-size:14px"></i> Shorten</button>
+        <button class="ai-chip" onclick="quickAIAction('expand')"><i class="ti ti-text-increase" style="color:var(--accent2);font-size:14px"></i> Expand</button>
+        <button class="ai-chip" onclick="quickAIAction('friendly')"><i class="ti ti-mood-smile" style="color:var(--accent2);font-size:14px"></i> Friendly</button>
+        <button class="ai-chip primary" onclick="openAI()"><i class="ti ti-wand" style="font-size:14px"></i> Open AI Studio</button>
+      </div>
+    </div>
+
+    <!-- Card: Platform Selection -->
+    <div class="card" style="padding:24px">
+      <div class="card-head" style="margin-bottom:14px"><i class="ti ti-devices" style="font-size:16px;color:var(--accent)"></i> Target Platform</div>
+      <div class="platform-grid">
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-brand-x"></i></div><span class="p-name">X / Twitter</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-brand-telegram"></i></div><span class="p-name">Telegram</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-brand-instagram"></i></div><span class="p-name">Instagram</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-brand-discord"></i></div><span class="p-name">Discord</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-video"></i></div><span class="p-name">TikTok</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-brand-youtube"></i></div><span class="p-name">YouTube</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-brand-whatsapp"></i></div><span class="p-name">WhatsApp</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-world"></i></div><span class="p-name">Web / Other</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-brand-facebook"></i></div><span class="p-name">Facebook</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Card: Budget & Rewards -->
+    <div class="card" style="padding:24px">
+      <div class="card-head"><i class="ti ti-coin" style="font-size:16px;color:var(--accent)"></i> Budget & Rewards</div>
+      <div style="display:grid;gap:16px">
+        <div>
+          <label style="font-size:13px;font-weight:800;color:var(--text2);display:block;margin-bottom:10px">Currency</label>
+          <div style="display:flex;gap:8px">
+            <button class="cur-btn active" data-cur="NGN" onclick="setCurrency('NGN',this)"><i class="ti ti-currency-naira"></i> NGN</button>
+            <button class="cur-btn" data-cur="USDC" onclick="setCurrency('USDC',this)"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%232775C9'/%3E%3Cpath fill='%23FFF' d='M20.5 16c0 2.5-2 4.5-4.5 4.5s-4.5-2-4.5-4.5 2-4.5 4.5-4.5 4.5 2 4.5 4.5zm-4.5-7c-1.7 0-3.2.7-4.3 1.7l1.4 1.4c.8-.8 1.8-1.2 2.9-1.2 2.2 0 4 1.8 4 4s-1.8 4-4 4c-1.1 0-2.1-.4-2.9-1.2l-1.4 1.4c1.1 1.1 2.6 1.7 4.3 1.7 3.3 0 6-2.7 6-6s-2.7-6-6-6z'/%3E%3C/svg%3E" style="width:18px;height:18px"> USDC</button>
+            <button class="cur-btn" data-cur="USDT" onclick="setCurrency('USDT',this)"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%2326A17B'/%3E%3Cpath fill='%23FFF' d='M16 4C9.4 4 4 9.4 4 16s5.4 12 12 12 12-5.4 12-12S22.6 4 16 4zm0 5.3c3.5 0 6.4 2.8 6.4 6.4s-2.8 6.4-6.4 6.4-6.4-2.8-6.4-6.4 2.9-6.4 6.4-6.4zm3.2 8.6v1.4c0 .3-.2.5-.5.5h-5.4c-.3 0-.5-.2-.5-.5v-1.4c0-.3.2-.5.5-.5h.9v-1.4h-.9c-.3 0-.5-.2-.5-.5s.2-.5.5-.5h.1v-.2c0-.3.2-.5.5-.5h.9v-1.4h.9v1.4h.9c.3 0 .5.2.5.5v.2h.1c.3 0 .5.2.5.5s-.2.5-.5.5h-.9v1.4h.9c.3 0 .5.2.5.5z'/%3E%3C/svg%3E" style="width:18px;height:18px"> USDT</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Reward per worker</label>
+            <input type="number" id="rewardInput" placeholder="e.g. 500" min="0" oninput="calcBudget()" style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Total slots</label>
+            <input type="number" id="slotsInput" placeholder="e.g. 50" min="1" oninput="calcBudget()" style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Total budget</label>
+            <div id="totalBudget" style="width:100%;height:48px;padding:0 14px;border:1.5px dashed var(--border2);border-radius:10px;background:var(--bg2);color:var(--text3);font-size:15px;font-weight:700;display:flex;align-items:center">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card: Requirements -->
+    <div class="card" style="padding:24px">
+      <div class="card-head"><i class="ti ti-checklist" style="font-size:16px;color:var(--accent)"></i> Requirements</div>
+      <div style="display:grid;gap:16px">
+        <div>
+          <label style="font-size:13px;font-weight:800;color:var(--text2);display:block;margin-bottom:6px">Proof requirement</label>
+          <input type="text" placeholder="e.g. Screenshot URL, username, transaction ID" style="width:100%;height:50px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:15px;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Deadline (optional)</label>
+            <input type="date" style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Visibility</label>
+            <select style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none;appearance:none;cursor:pointer;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+              <option>Public - all workers</option>
+              <option>Community only</option>
+              <option>Private - invite only</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit Buttons -->
+    <div style="display:flex;gap:12px;padding-top:4px">
+      <button class="btn primary" style="flex:1;height:54px;font-size:16px;border-radius:12px"><i class="ti ti-send"></i> Post Task</button>
+      <button class="btn" style="height:54px;border-radius:12px;padding:0 28px"><i class="ti ti-device-floppy"></i> Save Draft</button>
+    </div>
+  </div>
+
+  <!-- === RIGHT: STICKY PREVIEW + AI === -->
+  <div style="position:sticky;top:calc(var(--nav-h) + 24px);display:grid;gap:14px">
+
+    <!-- Preview Card -->
+    <div class="card" style="padding:20px">
+      <div class="card-head" style="margin-bottom:14px"><i class="ti ti-eye" style="color:var(--text3)"></i> Task Preview</div>
+      <div id="previewTitle" style="font-family:Outfit;font-size:18px;font-weight:800;margin-bottom:4px;color:var(--text3)">Untitled Task</div>
+      <div id="previewMeta" style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.5">No category selected</div>
+      <div id="previewDesc" style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden">Your task description will appear here.</div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;display:grid;gap:8px">
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">Reward</span><span id="previewReward" style="font-weight:700;color:var(--text3)">—</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">Slots</span><span id="previewSlots" style="font-weight:700;color:var(--text3)">—</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">Total budget</span><span id="previewTotal" style="font-weight:700;color:var(--text3)">—</span></div>
+      </div>
+    </div>
+
+    <!-- AI Assist Card -->
+    <div class="card" style="padding:16px;background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(99,102,241,.06));border:1px solid rgba(124,58,237,.15)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#7C3AED,#6366F1);display:grid;place-items:center;color:#fff;font-weight:900;font-size:18px"><i class="ti ti-sparkles" style="font-size:18px"></i></div>
+        <div style="font-size:12px;line-height:1.5;color:var(--text2)"><strong style="color:var(--text)">AI Assistant</strong><br />Generate, improve, or expand your task description.</div>
+      </div>
+      <button onclick="openAI()" class="btn primary" style="width:100%;margin-top:12px;height:40px;font-size:13px;border-radius:10px"><i class="ti ti-wand"></i> Open AI Studio</button>
+    </div>
+
+    <!-- Tips Card -->
+    <div class="card" style="padding:16px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px"><i class="ti ti-bulb" style="color:var(--gold)"></i> Pro Tips</div>
+      <ul style="margin:0;padding:0 0 0 16px;font-size:12px;color:var(--text2);line-height:1.8">
+        <li>Clear descriptions get 3x more submissions</li>
+        <li>Higher rewards attract quality workers</li>
+        <li>Use AI to generate professional descriptions</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+</section>
+
+<div class="toast" id="toast">Done</div>
+
+<!-- === AI STUDIO MODAL === -->
+<div class="ai-modal" id="aiModal">
+  <div class="ai-overlay" onclick="closeAI()"></div>
+  <div class="ai-panel">
+    <div class="ai-panel-head">
+      <div>
+        <h3 style="margin:0;display:flex;align-items:center;gap:8px;font-family:Outfit;font-size:18px"><i class="ti ti-sparkles" style="color:var(--accent)"></i> AI Studio</h3>
+        <p style="margin:4px 0 0;font-size:13px;color:var(--text2)">Choose a mode and let AI craft the perfect task content.</p>
+      </div>
+      <button class="ai-close" onclick="closeAI()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="ai-modes">
+      <button class="ai-mode active" data-mode="generate" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-sparkles" style="color:var(--accent)"></i> Generate</div>
+        <div class="m-desc">Create from scratch</div>
+      </button>
+      <button class="ai-mode" data-mode="improve" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-edit-circle" style="color:var(--accent2)"></i> Improve</div>
+        <div class="m-desc">Polish your draft</div>
+      </button>
+      <button class="ai-mode" data-mode="professional" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-briefcase" style="color:var(--accent2)"></i> Professional</div>
+        <div class="m-desc">Formal business tone</div>
+      </button>
+      <button class="ai-mode" data-mode="shorten" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-text-decrease" style="color:var(--accent2)"></i> Shorten</div>
+        <div class="m-desc">Concise version</div>
+      </button>
+      <button class="ai-mode" data-mode="expand" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-text-increase" style="color:var(--accent2)"></i> Expand</div>
+        <div class="m-desc">Add more detail</div>
+      </button>
+      <button class="ai-mode" data-mode="friendly" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-mood-smile" style="color:var(--accent2)"></i> Friendly</div>
+        <div class="m-desc">Warm & approachable</div>
+      </button>
+    </div>
+    <div class="ai-input-area">
+      <textarea id="aiInput" placeholder="Describe your task briefly, or leave blank to generate from scratch..." rows="2"></textarea>
+    </div>
+    <button class="ai-generate-btn" id="aiGenerateBtn" onclick="runAI()"><i class="ti ti-sparkles"></i> Generate</button>
+    <div class="ai-result" id="aiResult">
+      <div class="r-label">Generated result</div>
+      <div class="r-text" id="aiResultText"></div>
+      <div class="r-actions">
+        <button onclick="applyAIResult()" class="btn primary" style="flex:1;height:40px;font-size:13px"><i class="ti ti-check"></i> Apply to task</button>
+        <button onclick="regenerateAI()" class="btn" style="height:40px;font-size:13px"><i class="ti ti-refresh"></i> Regenerate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- ═══ SHARED NAV JS ═══ -->
+<script>
+(function(){
+  const h=document.documentElement;
+  h.setAttribute('data-theme',h.getAttribute('data-theme')||'light');
+  const d=document.getElementById('ti');
+  if(d)d.className=h.getAttribute('data-theme')==='dark'?'ti ti-sun':'ti ti-moon';
+  document.querySelectorAll('[data-close-menu]').forEach(e=>e.addEventListener('click',()=>{
+    document.querySelector('.oga-drawer')?.classList.remove('open');
+  }));
+})();
+</script>
+<script>
+(function(){
+  try{var th=localStorage.getItem('ogapay-theme')||'light';document.documentElement.setAttribute('data-theme',th);}catch(e){}
+  var authed=false;
+  try{authed=localStorage.getItem('ogapay-authenticated')==='true';}catch(e){}
+  document.body.setAttribute('data-auth',authed?'authed':'public');
+  var themeBtn=document.getElementById('themeToggle');
+  if(themeBtn){themeBtn.addEventListener('click',function(){var html=document.documentElement;var next=html.getAttribute('data-theme')==='dark'?'light':'dark';html.setAttribute('data-theme',next);try{localStorage.setItem('ogapay-theme',next);}catch(e){}});}
+  var menuBtn=document.getElementById('menuBtn');
+  var mobileMenu=document.getElementById('mobileMenu');
+  if(menuBtn&&mobileMenu){menuBtn.addEventListener('click',function(){mobileMenu.classList.add('open');});mobileMenu.querySelectorAll('[data-close-menu]').forEach(function(el){el.addEventListener('click',function(){mobileMenu.classList.remove('open');});});}
+  document.addEventListener('click',function(e){var toggle=e.target.closest('.oga-drawer-group-toggle');if(toggle){var group=toggle.closest('.oga-drawer-group');var open=!group.classList.contains('open');group.classList.toggle('open',open);toggle.setAttribute('aria-expanded',String(open));}});
+  var path=window.location.pathname.split('/').pop()||'index.html';
+  document.querySelectorAll('[data-navlink]').forEach(function(a){if(a.getAttribute('href')===path)a.classList.add('active');});
+})();
+</script>
+
+<!-- ═══ PAGE JS ═══ -->
+<script>
+let currentAIMode = 'generate';
+
+function openAI() {
+  document.getElementById('aiModal').classList.add('open');
+  document.getElementById('aiInput').value = document.getElementById('taskDesc').value;
+}
+function closeAI() {
+  document.getElementById('aiModal').classList.remove('open');
+  document.getElementById('aiResult').classList.remove('show');
+}
+function selectAIMode(el) {
+  document.querySelectorAll('.ai-mode').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentAIMode = el.dataset.mode;
+}
+function quickAIAction(mode) {
+  currentAIMode = mode;
+  document.querySelectorAll('.ai-mode').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  runAIInline();
+  const toast = document.getElementById('toast');
+  if (toast) { toast.textContent = 'AI ' + mode + ' complete!'; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1800); }
+}
+function runAIInline() {
+  const btn = document.getElementById('aiGenerateBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> Thinking...'; }
+  setTimeout(() => {
+    let result = '';
+    const modes = {
+      generate: ['We are looking for motivated workers to help promote our brand across social media platforms. Simply follow our official page, like the pinned post, and leave a thoughtful comment. Submit a screenshot of your engagement as proof of completion. This task takes less than 5 minutes and pays instantly upon verification.','Join our growing Telegram community and participate in the daily discussions. Must remain an active member for at least 24 hours after joining. Submit your Telegram username and a screenshot showing your membership. Bonuses available for the most active members each week.','Help us test our new mobile application and provide detailed feedback on your experience. Navigate through the onboarding flow, complete at least 3 core actions, and report any bugs or UX issues you encounter. Include screenshots for each bug found. Bonus rewards for critical issue discoveries.','Create a 30-60 second authentic video review of our platform and share it on your TikTok or Instagram Reels. Must show genuine reactions and mention at least 3 features you like. Share the public link as proof. Extra bonus if your video gets over 1,000 views within 48 hours.'],
+      improve: ['We need dependable workers to complete social media engagement tasks for our brand. Your responsibilities include following our page, engaging with posted content by liking and sharing, and leaving meaningful comments. To receive payment, please provide clear screenshots documenting each completed action. Payments are processed within 24 hours of verification.','We are seeking detail-oriented individuals to join and participate in our community platform. Selected candidates must maintain active engagement for a minimum of 24 hours after joining. Submission requirements include your community username along with a timestamped screenshot confirming your active membership status.'],
+      professional: ['OgaPay is seeking qualified independent contractors to perform social media engagement services. Scope of work includes: account follow, content interaction (likes/reposts), and constructive comment submission. Deliverables: timestamped screenshots for each action item. Compensation: disbursed within 24 hours of quality assurance review. Duration: estimated 5 minutes per assignment.','Contract position: Community Participation Specialist. The selected candidate will join our official Telegram community and maintain active participation for no less than 24 hours. Performance metrics include engagement quality and membership verification. Deliverables: platform username and dated membership confirmation screenshot.'],
+      shorten: ['Like, follow, and comment on our pinned post. Submit a screenshot. Pays instantly. Takes 2 minutes.','Join our Telegram group, stay active 24h, and submit your username + membership screenshot. Quick payment upon verification.','Test our mobile app: complete onboarding + 3 core actions. Report any bugs with screenshots. Bonus for critical findings.','Create a 30s video review of OgaPay and post on TikTok/IG. Share the link. Bonus for 1K+ views within 48h.'],
+      expand: ['We are looking for enthusiastic and reliable workers to help grow our social media presence through authentic engagement. Here is everything you need to know:\n\n1. Follow our official page on the specified platform\n2. Like and share the pinned post with your network\n3. Write a genuine, thoughtful comment (minimum 10 words)\n4. Take a clear screenshot showing all completed actions\n5. Submit the screenshot through the task submission form\n\nRequirements:\n- Your account must be at least 30 days old\n- Must have a public profile (not private)\n- Comment must be relevant and constructive\n\nPayment: Rewards are processed automatically within 2 hours of approval.'],
+      friendly: ['Hey there! We are looking for awesome people to help us out with a quick and easy task!\n\nHere is what you need to do:\n- Follow our page\n- Like our pinned post\n- Drop a friendly comment\n- Take a screenshot\n\nThat\'s it! Super simple, right? The whole thing takes about 2 minutes and you get paid right after we verify. Ready to earn? Let\'s go!']
     };
-
-    const $ = (id) => document.getElementById(id);
-    const money = (amount, currency = state.currency) => {
-      const value = Number(amount || 0);
-      if (currency === 'USDC') return 'USDC ' + value.toFixed(2);
-      return 'NGN ' + value.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const modeResults = modes[currentAIMode] || modes.generate;
+    result = modeResults[Math.floor(Math.random() * modeResults.length)];
+    document.getElementById('taskDesc').value = result;
+    updatePreview();
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-sparkles"></i> Generate'; }
+  }, 600);
+}
+function runAI() {
+  const btn = document.getElementById('aiGenerateBtn');
+  const resultEl = document.getElementById('aiResult');
+  const textEl = document.getElementById('aiResultText');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> Thinking...';
+  resultEl.classList.remove('show');
+  setTimeout(() => {
+    const modes = {
+      generate: ['We are looking for motivated workers to help promote our brand across social media platforms. Simply follow our official page, like the pinned post, and leave a thoughtful comment. Submit a screenshot of your engagement as proof of completion. This task takes less than 5 minutes and pays instantly upon verification.','Join our growing Telegram community and participate in the daily discussions. Must remain an active member for at least 24 hours after joining. Submit your Telegram username and a screenshot showing your membership. Bonuses available for the most active members each week.','Help us test our new mobile application and provide detailed feedback on your experience. Navigate through the onboarding flow, complete at least 3 core actions, and report any bugs or UX issues you encounter. Include screenshots for each bug found. Bonus rewards for critical issue discoveries.'],
+      improve: ['We need dependable workers to complete social media engagement tasks for our brand. Your responsibilities include following our page, engaging with posted content by liking and sharing, and leaving meaningful comments. To receive payment, please provide clear screenshots documenting each completed action. Payments are processed within 24 hours of verification.'],
+      professional: ['OgaPay is seeking qualified independent contractors to perform social media engagement services. Scope of work includes: account follow, content interaction (likes/reposts), and constructive comment submission. Deliverables: timestamped screenshots for each action item. Compensation: disbursed within 24 hours of quality assurance review.'],
+      shorten: ['Like, follow, and comment on our pinned post. Submit a screenshot. Pays instantly. Takes 2 minutes.','Join our Telegram group, stay active 24h, and submit your username + membership screenshot. Quick payment upon verification.'],
+      expand: ['We are looking for enthusiastic and reliable workers to help grow our social media presence through authentic engagement. Here is everything you need to know:\n\n1. Follow our official page on the specified platform\n2. Like and share the pinned post with your network\n3. Write a genuine, thoughtful comment (minimum 10 words)\n4. Take a clear screenshot showing all completed actions\n5. Submit the screenshot through the task submission form\n\nRequirements:\n- Your account must be at least 30 days old\n- Must have a public profile (not private)\n- Comment must be relevant and constructive\n\nPayment: Rewards are processed automatically within 2 hours of approval.'],
+      friendly: ['Hey there! We are looking for awesome people to help us out with a quick and easy task!\n\nHere is what you need to do:\n- Follow our page\n- Like our pinned post\n- Drop a friendly comment\n- Take a screenshot\n\nThat\'s it! Super simple, right? The whole thing takes about 2 minutes and you get paid right after we verify.']
     };
-
-    function readBalance() {
-      if (!isAuthed()) return 0;
-      const raw = localStorage.getItem('ogapay_balance');
-      if (raw === null) return 0.01;
-      const cleaned = String(raw).replace(/[^\d.]/g, '');
-      return Number(cleaned || 0);
+    const modeResults = modes[currentAIMode] || modes.generate;
+    const result = modeResults[Math.floor(Math.random() * modeResults.length)];
+    textEl.textContent = '';
+    resultEl.classList.add('show');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-sparkles"></i> Generate';
+    let i = 0;
+    function typeWriter() {
+      if (i < result.length) { textEl.textContent += result.charAt(i); i++; setTimeout(typeWriter, 12); }
     }
+    typeWriter();
+  }, 800);
+}
+function regenerateAI() {
+  document.getElementById('aiResult').classList.remove('show');
+  runAI();
+}
+function applyAIResult() {
+  const text = document.getElementById('aiResultText').textContent;
+  document.getElementById('taskDesc').value = text;
+  updatePreview();
+  closeAI();
+  const toast = document.getElementById('toast');
+  if (toast) { toast.textContent = 'AI content applied!'; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1800); }
+}
+function selectPlatform(el) {
+  document.querySelectorAll('.platform-card').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function setCurrency(cur, btn) {
+  document.querySelectorAll('.cur-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  calcBudget();
+}
+function calcBudget() {
+  const reward = parseFloat(document.getElementById('rewardInput').value) || 0;
+  const slots = parseInt(document.getElementById('slotsInput').value) || 0;
+  const active = document.querySelector('.cur-btn.active');
+  const cur = active ? active.dataset.cur : 'NGN';
+  const el = document.getElementById('totalBudget');
+  const pReward = document.getElementById('previewReward');
+  const pSlots = document.getElementById('previewSlots');
+  const pTotal = document.getElementById('previewTotal');
+  pReward.textContent = reward ? cur + ' ' + reward.toLocaleString() : '---';
+  pSlots.textContent = slots || '---';
+  if (reward && slots) {
+    const total = reward * slots;
+    el.textContent = cur + ' ' + total.toLocaleString();
+    el.style.color = 'var(--text)';
+    pTotal.textContent = cur + ' ' + total.toLocaleString();
+  } else {
+    el.textContent = '---';
+    el.style.color = 'var(--text3)';
+    pTotal.textContent = '---';
+  }
+}
+function updatePreview() {
+  const title = document.getElementById('taskTitle').value || 'Untitled Task';
+  const cat = document.getElementById('taskCategory').value;
+  const desc = document.getElementById('taskDesc').value || 'Your task description will appear here.';
+  document.getElementById('previewTitle').textContent = title;
+  document.getElementById('previewMeta').textContent = cat;
+  document.getElementById('previewDesc').textContent = desc;
+}
+</script>
 
-    function toggleTheme() {
-      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-      document.documentElement.dataset.theme = next;
-      localStorage.setItem('ogapay-theme', next);
-    }
-
-    function openMenu(open) {
-      $('mobileMenu').classList.toggle('open', open);
-      document.body.classList.toggle('menu-open', open);
-    }
-
-    function getFormState() {
-      return {
-        mode: state.mode,
-        platforms: state.platforms,
-        proof: state.proof,
-        currency: state.currency,
-        title: $('title').value,
-        desc: $('desc').value,
-        category: $('category').value,
-        time: $('time').value,
-        proofNote: $('proofNote').value,
-        slots: $('slots').value,
-        deadline: $('deadline').value,
-        reviewWindow: $('reviewWindow').value,
-        visibility: $('visibility').value,
-        geo: $('geo').value,
-        followers: $('followers').value,
-        reputation: $('reputation').value,
-        featured: $('featured').value,
-        reward: $('reward').value,
-        savedAt: new Date().toISOString()
-      };
-    }
-
-    function applyFormState(data) {
-      if (!data) return;
-      state.mode = data.mode || 'Social';
-      state.platforms = Array.isArray(data.platforms) && data.platforms.length ? data.platforms : ['X'];
-      state.proof = data.proof || 'Screenshot';
-      state.currency = data.currency || 'NGN';
-      ['title','desc','category','time','proofNote','slots','deadline','reviewWindow','visibility','geo','followers','reputation','featured','reward'].forEach((id) => {
-        if (data[id] !== undefined && $(id)) $(id).value = data[id];
-      });
-      syncSelections();
-      updateAll();
-    }
-
-    function syncSelections() {
-      document.querySelectorAll('[data-mode]').forEach((btn) => btn.classList.toggle('active', btn.dataset.mode === state.mode));
-      document.querySelectorAll('[data-platform]').forEach((btn) => btn.classList.toggle('active', state.platforms.includes(btn.dataset.platform)));
-      document.querySelectorAll('[data-proof]').forEach((btn) => btn.classList.toggle('active', btn.dataset.proof === state.proof));
-      document.querySelectorAll('[data-currency]').forEach((btn) => btn.classList.toggle('active', btn.dataset.currency === state.currency));
-    }
-
-    function saveDraft(silent = true) {
-      localStorage.setItem(draftKey, JSON.stringify(getFormState()));
-      if (!silent) {
-        const btn = $('draftBtn');
-        const old = btn.textContent;
-        btn.textContent = 'Draft Saved';
-        setTimeout(() => { btn.textContent = old; }, 1800);
-      }
-    }
-
-    function loadDraftPrompt() {
-      const raw = localStorage.getItem(draftKey);
-      if (!raw) return;
-      try {
-        const data = JSON.parse(raw);
-        if (data && (data.title || data.desc || data.reward)) $('draftBanner').classList.add('show');
-      } catch (e) {
-        localStorage.removeItem(draftKey);
-      }
-    }
-
-    function updateChar(id, max) {
-      const input = $(id);
-      const counter = $(id + 'Count');
-      const count = input.value.length;
-      const pct = count / max;
-      counter.textContent = count + '/' + max;
-      counter.classList.toggle('warn', pct >= .85 && pct < .95);
-      counter.classList.toggle('danger', pct >= .95);
-    }
-
-    function recalcPayout() {
-      const slots = Math.max(0, Number($('slots').value || 0));
-      const reward = Math.max(0, Number($('reward').value || 0));
-      const base = slots * reward;
-      const fee = base * .10;
-      const featured = $('featured').value === 'yes' ? base * .20 : 0;
-      const total = base + fee + featured;
-      state.total = total;
-      state.balance = readBalance();
-      $('payoutCost').textContent = money(base);
-      $('feeCost').textContent = money(fee);
-      $('featureCost').textContent = money(featured);
-      $('balanceCost').textContent = money(state.balance);
-      $('totalCost').textContent = money(total);
-      $('railBalance').textContent = money(state.balance);
-      $('railTotal').textContent = money(total);
-      $('navBalance').textContent = money(state.balance);
-      const drawerBalance = $('drawerBalance');
-      if (drawerBalance) drawerBalance.textContent = money(state.balance);
-      balanceGate();
-    }
-
-    function balanceGate() {
-      const isShort = state.total > state.balance;
-      $('breakdown').classList.toggle('danger', isShort);
-      $('launchWarning').classList.toggle('danger', isShort);
-      $('walletState').textContent = isShort ? 'Top up' : 'Ready';
-      $('gateNote').textContent = isShort ? 'Your balance is too low to launch this task.' : 'Balance is enough for this task.';
-      $('railNote').textContent = isShort ? 'Top up your wallet before launch.' : 'You can launch this task.';
-      $('launchWarning').textContent = isShort
-        ? 'Insufficient balance. Total cost is higher than your wallet balance.'
-        : 'Make sure your instructions and proof requirements are clear before launch.';
-      $('submitBtn').textContent = isShort ? 'Top Up Wallet ->' : 'Launch Task';
-      $('submitBtn').classList.toggle('danger', isShort);
-      $('submitBtn').classList.toggle('primary', !isShort);
-    }
-
-    function updatePreview() {
-      const title = $('title').value.trim() || 'Repost our launch tweet and follow our page';
-      const category = $('category').value || state.mode;
-      const reward = Number($('reward').value || 0);
-      $('previewTitle').textContent = title;
-      $('previewMode').textContent = state.mode + ' task';
-      $('previewPlatform').textContent = state.platforms.join(' + ') || 'Platform';
-      $('previewReward').textContent = state.currency + ' ' + (state.currency === 'USDC' ? reward.toFixed(2) : reward.toLocaleString('en-NG'));
-      $('previewCategory').textContent = category || 'Category';
-      $('sTitle').textContent = title;
-      $('sType').textContent = state.mode + ' / ' + state.proof;
-      $('sSlots').textContent = Number($('slots').value || 0).toLocaleString('en-NG') + ' workers';
-      $('sReward').textContent = money(Number($('reward').value || 0)) + ' each';
-      $('sPlatforms').textContent = state.platforms.join(', ') || 'None selected';
-      $('sTotal').textContent = money(state.total);
-    }
-
-    function sectionComplete(sectionName) {
-      if (sectionName === 'details') return state.mode && $('title').value.trim() && $('desc').value.trim().length >= 20 && $('category').value && state.platforms.length;
-      if (sectionName === 'proof') return state.proof && $('proofNote').value.trim().length >= 8;
-      if (sectionName === 'reward') return Number($('reward').value) > 0 && Number($('slots').value) > 0;
-      return false;
-    }
-
-    function updateStep() {
-      const completeDetails = sectionComplete('details');
-      const completeProof = sectionComplete('proof');
-      const completeReward = sectionComplete('reward');
-      let active = 1;
-      if (completeDetails) active = 2;
-      if (completeDetails && completeProof) active = 3;
-      if (completeDetails && completeProof && completeReward) active = 4;
-      document.querySelectorAll('.step').forEach((step, index) => {
-        const n = index + 1;
-        step.classList.toggle('done', n < active);
-        step.classList.toggle('active', n === active);
-      });
-      if (active > state.lastCompletedStep) {
-        state.lastCompletedStep = active;
-        const next = active === 2 ? '[data-section="proof"]' : active === 3 ? '[data-section="reward"]' : '[data-section="review"]';
-        const el = document.querySelector(next);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          el.classList.add('pulse');
-          setTimeout(() => el.classList.remove('pulse'), 1100);
-        }
-      }
-    }
-
-    function showFieldError(id, msg) {
-      const field = $('field-' + id);
-      const err = $(id + 'Error');
-      if (field) field.classList.add('has-error');
-      if (err) err.textContent = msg;
-    }
-
-    function clearFieldError(id) {
-      const field = $('field-' + id);
-      const err = $(id + 'Error');
-      if (field) field.classList.remove('has-error');
-      if (err) err.textContent = '';
-    }
-
-    function validateForm() {
-      let ok = true;
-      ['title','desc','category','platforms','proofNote','slots','reward'].forEach(clearFieldError);
-      if (!$('title').value.trim()) { showFieldError('title', 'Title is required.'); ok = false; }
-      if ($('desc').value.trim().length < 20) { showFieldError('desc', 'Please write at least 20 characters.'); ok = false; }
-      if (!$('category').value) { showFieldError('category', 'Select a category.'); ok = false; }
-      if (!state.platforms.length) { showFieldError('platforms', 'Select at least one platform.'); ok = false; }
-      if ($('proofNote').value.trim().length < 8) { showFieldError('proofNote', 'Add proof instructions.'); ok = false; }
-      if (Number($('slots').value) <= 0) { showFieldError('slots', 'Enter at least 1 slot.'); ok = false; }
-      if (Number($('reward').value) <= 0) { showFieldError('reward', 'Enter a reward amount.'); ok = false; }
-      return ok;
-    }
-
-    async function submitTask(e) {
-      e.preventDefault();
-      recalcPayout();
-      if (state.total > state.balance) {
-        window.location.href = 'wallet.html';
-        return;
-      }
-      if (!validateForm()) {
-        const first = document.querySelector('.has-error');
-        if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
-      }
-      const btn = $('submitBtn');
-      btn.disabled = true;
-      btn.textContent = 'Launching...';
-      saveDraft(true);
-      try {
-        if (!window.OgaPayLive) throw new Error('Live API client is still loading. Please try again.');
-        if (!localStorage.getItem('ogapay_access_token')) {
-          window.location.href = 'login.html?mode=login';
-          return;
-        }
-        const categoryMap = {
-          Social: 'SOCIAL_MEDIA',
-          Survey: 'SURVEY',
-          Design: 'DESIGN',
-          'App Review': 'APP_TESTING',
-          Freelance: 'OTHER',
-        };
-        await window.OgaPayLive.api('/tasks', {
-          method: 'POST',
-          body: JSON.stringify({
-            title: $('title').value.trim(),
-            description: $('desc').value.trim(),
-            category: categoryMap[$('category').value] || 'OTHER',
-            reward: Number($('reward').value),
-            currency: state.currency,
-            maxWorkers: Number($('slots').value),
-            deadline: new Date($('deadline').value + 'T23:59:59.000Z').toISOString(),
-            instructions: $('desc').value.trim(),
-            proofRequired: state.proof + ': ' + $('proofNote').value.trim(),
-            estimatedTime: 10,
-            tags: state.platforms.slice(0, 5).map((item) => item.toLowerCase()),
-          }),
-        });
-        localStorage.removeItem(draftKey);
-        $('page').style.pointerEvents = 'none';
-        $('page').style.filter = 'blur(2px)';
-        $('successScreen').classList.add('show');
-      } catch (err) {
-        alert(err.message || 'Could not create task.');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Launch Task';
-      }
-    }
-
-    const templates = {
-      'x-repost': { mode: 'Social', platforms: ['X'], category: 'Social', title: 'Repost our launch post and follow our X page', proof: 'Screenshot', proofNote: 'Upload a screenshot showing the repost and follow button state.', reward: 150 },
-      'telegram-join': { mode: 'Social', platforms: ['Telegram'], category: 'Social', title: 'Join our Telegram community and read the pinned post', proof: 'Screenshot', proofNote: 'Upload a screenshot showing your Telegram username in the group.', reward: 120 },
-      'app-review': { mode: 'Social', platforms: ['YouTube'], category: 'App Review', title: 'Install our app and leave a short honest review', proof: 'Screenshot', proofNote: 'Upload a screenshot showing the published review.', reward: 300 },
-      'logo-design': { mode: 'Freelance', platforms: ['Instagram'], category: 'Design', title: 'Create a simple logo concept for our small brand', proof: 'File', proofNote: 'Upload a PNG or JPG preview of your logo concept.', reward: 500 },
-      'survey': { mode: 'Survey', platforms: ['X'], category: 'Survey', title: 'Answer a 5-minute product feedback survey', proof: 'Text', proofNote: 'Submit the completion code shown after the survey.', reward: 200 },
-      'youtube-like': { mode: 'Social', platforms: ['YouTube'], category: 'Social', title: 'Like our YouTube video and subscribe to the channel', proof: 'Screenshot', proofNote: 'Upload a screenshot showing the liked video and subscribed button.', reward: 100 }
-    };
-
-    function applyTemplate(key) {
-      const data = templates[key];
-      if (!data) return;
-      state.mode = data.mode;
-      state.platforms = data.platforms;
-      state.proof = data.proof;
-      $('category').value = data.category;
-      $('title').value = data.title;
-      $('proofNote').value = data.proofNote;
-      $('reward').value = data.reward;
-      syncSelections();
-      updateAll();
-    }
-
-    function buildAiFallback() {
-      const platform = state.platforms.join(' and ') || 'your selected platform';
-      const category = $('category').value || state.mode.toLowerCase();
-      return {
-        title: 'Complete a ' + category + ' task on ' + platform,
-        instructions: [
-          '1. Open the campaign link provided by the advertiser.',
-          '2. Complete the requested action on ' + platform + '.',
-          '3. Keep the action public until your proof is reviewed.',
-          '4. Submit a clear ' + state.proof.toLowerCase() + ' that shows your username and completion.'
-        ].join('\n')
-      };
-    }
-
-    async function generateWithAI() {
-      const btn = $('aiBtn');
-      btn.disabled = true;
-      btn.textContent = 'Generating...';
-      let suggestion = buildAiFallback();
-      const proxy = localStorage.getItem('ogapay_ai_proxy');
-      const apiKey = localStorage.getItem('ogapay_anthropic_key');
-      try {
-        if (window.OgaPayLive && localStorage.getItem('ogapay_access_token') && !proxy && !apiKey) {
-          const json = await window.OgaPayLive.api('/ai/task-copy', {
-            method: 'POST',
-            body: JSON.stringify({
-              mode: state.mode,
-              platform: state.platforms.join(', '),
-              category: $('category').value || 'General',
-            }),
-          });
-          const parsed = window.OgaPayLive.unwrap(json);
-          if (parsed.title && parsed.instructions) suggestion = parsed;
-        } else if (proxy || apiKey) {
-          const endpoint = proxy || 'https://api.anthropic.com/v1/messages';
-          const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(apiKey ? { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' } : {})
-            },
-            body: JSON.stringify({
-              model: 'claude-3-5-sonnet-latest',
-              max_tokens: 350,
-              messages: [{ role: 'user', content: 'Create a concise OgaPay microjob title and numbered worker instructions. Context: mode=' + state.mode + ', platform=' + state.platforms.join(', ') + ', category=' + ($('category').value || 'General') + '. Return JSON with title and instructions.' }]
-            })
-          });
-          const json = await res.json();
-          const text = json.content && json.content[0] && json.content[0].text ? json.content[0].text : '';
-          const parsed = JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] || '{}');
-          if (parsed.title && parsed.instructions) suggestion = parsed;
-        }
-      } catch (e) {
-        suggestion = buildAiFallback();
-      }
-      $('aiTitle').textContent = suggestion.title;
-      $('aiInstructions').textContent = suggestion.instructions;
-      $('aiBox').dataset.title = suggestion.title;
-      $('aiBox').dataset.instructions = suggestion.instructions;
-      $('aiBox').classList.add('show');
-      btn.disabled = false;
-      btn.textContent = 'Generate with AI';
-    }
-
-    function updateAll() {
-      updateChar('title', 120);
-      updateChar('desc', 900);
-      recalcPayout();
-      updatePreview();
-      updateStep();
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      document.body.dataset.auth = isAuthed() ? 'authed' : 'public';
-      $('themeBtn').addEventListener('click', toggleTheme);
-      $('menuBtn').addEventListener('click', () => openMenu(true));
-      document.querySelectorAll('[data-close-menu]').forEach((el) => el.addEventListener('click', () => openMenu(false)));
-      document.querySelectorAll('.oga-drawer-group-toggle').forEach((button) => button.addEventListener('click', () => { const group = button.closest('.oga-drawer-group'); group.classList.toggle('open'); button.setAttribute('aria-expanded', group.classList.contains('open')); }));
-      $('createForm').addEventListener('submit', submitTask);
-      $('draftBtn').addEventListener('click', () => saveDraft(false));
-      $('restoreDraft').addEventListener('click', () => {
-        applyFormState(JSON.parse(localStorage.getItem(draftKey) || '{}'));
-        $('draftBanner').classList.remove('show');
-      });
-      $('discardDraft').addEventListener('click', () => {
-        localStorage.removeItem(draftKey);
-        $('draftBanner').classList.remove('show');
-      });
-      $('aiBtn').addEventListener('click', generateWithAI);
-      $('regenAi').addEventListener('click', generateWithAI);
-      $('closeAi').addEventListener('click', () => $('aiBox').classList.remove('show'));
-      $('acceptAi').addEventListener('click', () => {
-        $('title').value = $('aiBox').dataset.title || $('title').value;
-        $('desc').value = $('aiBox').dataset.instructions || $('desc').value;
-        $('aiBox').classList.remove('show');
-        updateAll();
-      });
-      $('newTask').addEventListener('click', () => window.location.reload());
-
-      document.querySelectorAll('[data-mode]').forEach((btn) => btn.addEventListener('click', () => {
-        state.mode = btn.dataset.mode;
-        syncSelections();
-        updateAll();
-      }));
-      document.querySelectorAll('[data-platform]').forEach((btn) => btn.addEventListener('click', () => {
-        const platform = btn.dataset.platform;
-        state.platforms = state.platforms.includes(platform)
-          ? state.platforms.filter((item) => item !== platform)
-          : state.platforms.concat(platform);
-        syncSelections();
-        updateAll();
-      }));
-      document.querySelectorAll('[data-proof]').forEach((btn) => btn.addEventListener('click', () => {
-        state.proof = btn.dataset.proof;
-        syncSelections();
-        updateAll();
-      }));
-      document.querySelectorAll('[data-currency]').forEach((btn) => btn.addEventListener('click', () => {
-        state.currency = btn.dataset.currency;
-        syncSelections();
-        updateAll();
-      }));
-      document.querySelectorAll('[data-slots]').forEach((btn) => btn.addEventListener('click', () => {
-        $('slots').value = btn.dataset.slots;
-        document.querySelectorAll('[data-slots]').forEach((b) => b.classList.toggle('active', b === btn));
-        updateAll();
-      }));
-      document.querySelectorAll('[data-reward]').forEach((btn) => btn.addEventListener('click', () => {
-        $('reward').value = btn.dataset.reward;
-        document.querySelectorAll('[data-reward]').forEach((b) => b.classList.toggle('active', b === btn));
-        updateAll();
-      }));
-      document.querySelectorAll('[data-template]').forEach((btn) => btn.addEventListener('click', () => {
-        document.querySelectorAll('[data-template]').forEach((b) => b.classList.toggle('active', b === btn));
-        applyTemplate(btn.dataset.template);
-      }));
-
-      document.querySelectorAll('input, select, textarea').forEach((el) => {
-        el.addEventListener('input', updateAll);
-        el.addEventListener('change', updateAll);
-        el.addEventListener('focus', () => clearFieldError(el.id));
-      });
-
-      const tomorrow = new Date(Date.now() + 86400000);
-      $('deadline').value = tomorrow.toISOString().slice(0, 10);
-      loadDraftPrompt();
-      updateAll();
-      setInterval(() => saveDraft(true), 3000);
-    });
-  </script>
-<script src="assets/ogapay-live.js"></script></body>
+</body>
 </html>
