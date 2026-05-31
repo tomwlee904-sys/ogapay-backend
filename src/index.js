@@ -28,6 +28,15 @@ const communityRoutes = require('./routes/community.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const aiRoutes = require('./routes/ai.routes');
+// Phase 5+6 routes
+const apikeyRoutes = require('./routes/apikey.routes');
+const campaignRoutes = require('./routes/campaign.routes');
+const serviceRoutes = require('./routes/service.routes');
+const wurkerRoutes = require('./routes/wurker.routes');
+const bookmarkRoutes = require('./routes/bookmark.routes');
+const reportRoutes = require('./routes/report.routes');
+const editrequestRoutes = require('./routes/editrequest.routes');
+const communityV2Routes = require('./routes/community-v2.routes');
 
 const app = express();
 const API = `/api/${process.env.API_VERSION || 'v1'}`;

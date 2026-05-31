@@ -138,6 +138,17 @@ model User {
   disputesAsWorker  Dispute[]         @relation("DisputeWorker")
   disputesAsPoster  Dispute[]         @relation("DisputePoster")
 
+  // Phase 5+6 relations
+  apiKeys           ApiKey[]
+  campaigns         Campaign[]
+  serviceOrders     SocialServiceOrder[]
+  wurkerApplication WurkerApplication?
+  applicationReviews WurkerApplication[] @relation("ApplicationReviewer")
+  bookmarks         Bookmark[]
+  reports           Report[]
+  reportReviews     Report[]            @relation("ReportReviewer")
+  editRequests      EditRequest[]
+
   @@map("users")
 }
 
@@ -404,4 +415,146 @@ model RefreshToken {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
+}
+
+// ── NEW MODELS (Phase 5+6) ────────────────────
+
+model ApiKey {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  name        String
+  key         String    @unique
+  prefix      String    // First 8 chars for identification
+  permissions String    @default("full") // full, readonly, tasks
+  monthlyLimit Float?   @map("monthly_limit")
+  rateLimit   Int       @default(100) @map("rate_limit")
+  usage       Int       @default(0)
+  isActive    Boolean   @default(true) @map("is_active")
+  lastUsedAt  DateTime? @map("last_used_at")
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  revokedAt   DateTime? @map("revoked_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([key])
+  @@map("api_keys")
+}
+
+model Campaign {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  name        String
+  description String?
+  platforms   Json      // ["x", "telegram", "instagram", ...]
+  budget      Float
+  currency    String    @default("NGN")
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  status      String    @default("draft") // draft, active, paused, completed
+  reach       Int       @default(0)
+  spent       Float     @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("campaigns")
+}
+
+model SocialServiceOrder {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  platform    String    // x, instagram, youtube, telegram, discord
+  service     String    // likes, followers, reposts, comments, etc
+  quantity    Int
+  unitPrice   Float     @map("unit_price")
+  totalPrice  Float     @map("total_price")
+  currency    String    @default("NGN")
+  targetUrl   String?   @map("target_url")
+  status      String    @default("pending") // pending, processing, completed, failed
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("social_service_orders")
+}
+
+model WurkerApplication {
+  id          String    @id @default(uuid())
+  userId      String    @unique @map("user_id")
+  storeName   String    @map("store_name")
+  category    String
+  bio         String?
+  status      String    @default("pending") // pending, approved, rejected
+  reviewedBy  String?   @map("reviewed_by")
+  reviewedAt  DateTime? @map("reviewed_at")
+  rejectionReason String? @map("rejection_reason")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewer    User?     @relation("ApplicationReviewer", fields: [reviewedBy], references: [id])
+
+  @@map("wurker_applications")
+}
+
+model Bookmark {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  type        String    // task, product, community, store
+  targetId    String    @map("target_id")
+  metadata    Json?
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, targetId])
+  @@index([userId])
+  @@map("bookmarks")
+}
+
+model Report {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  category    String    // suspicious_user, inappropriate, scam, payment, harassment, other
+  description String
+  targetType  String?   @map("target_type") // user, task, product, community
+  targetId    String?   @map("target_id")
+  email       String?
+  status      String    @default("open") // open, under_review, resolved, dismissed
+  reviewedBy  String?   @map("reviewed_by")
+  adminNotes  String?   @map("admin_notes")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  resolvedAt  DateTime? @map("resolved_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewer    User?     @relation("ReportReviewer", fields: [reviewedBy], references: [id])
+
+  @@index([status])
+  @@index([category])
+  @@map("reports")
+}
+
+model EditRequest {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  targetType  String    // submission, task, product
+  targetId    String?   @map("target_id")
+  requestType String    @map("request_type") // resubmit, correct, update, other
+  description String
+  status      String    @default("open") // open, approved, rejected
+  createdAt   DateTime  @default(now()) @map("created_at")
+  resolvedAt  DateTime? @map("resolved_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("edit_requests")
 }
