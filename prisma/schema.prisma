@@ -149,7 +149,7 @@ model User {
   reportReviews     Report[]            @relation("ReportReviewer")
   editRequests      EditRequest[]
   communitiesOwned Community[]         @relation("CommunityOwner")
-  communityMembers CommunityMember[]
+  communityMembers CommunityMember[] @relation("CommunityMember")
   communityInvitesSent   CommunityInvite[] @relation("InviteSender")
   communityInvitesReceived CommunityInvite[] @relation("InviteReceiver")
   communityRequestsSent  CommunityRequest[] @relation("RequestSender")
@@ -595,7 +595,7 @@ model Community {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  owner     User              @relation(fields: [ownerId], references: [id])
+  owner     User              @relation("CommunityOwner", fields: [ownerId], references: [id])
   members   CommunityMember[]
   invites   CommunityInvite[]
   requests  CommunityRequest[]
@@ -613,7 +613,7 @@ model CommunityMember {
   joinedAt    DateTime      @default(now()) @map("joined_at")
 
   community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation("CommunityMember", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([communityId, userId])
   @@index([communityId])
@@ -635,8 +635,8 @@ model CommunityInvite {
   respondedAt DateTime?    @map("responded_at")
 
   community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  inviter   User      @relation(fields: [inviterId], references: [id])
-  invitee   User?     @relation(fields: [inviteeId], references: [id])
+  inviter   User      @relation("InviteSender", fields: [inviterId], references: [id])
+  invitee   User?     @relation("InviteReceiver", fields: [inviteeId], references: [id])
 
   @@index([communityId])
   @@index([inviteeId])
@@ -655,7 +655,7 @@ model CommunityRequest {
   responderId String?       @map("responder_id")
 
   community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation("RequestSender", fields: [userId], references: [id], onDelete: Cascade)
   responder User?     @relation("RequestResponder", fields: [responderId], references: [id])
 
   @@unique([communityId, userId])
