@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--border2:#2d384d;--text:#f4f7fb;--text2:#9aa7bc;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);--shadow-soft:0 2px 8px rgba(0,0,0,.22)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif}a{color:inherit;text-decoration:none}button,input{font:inherit}button{cursor:pointer}
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px)}[data-theme="dark"] .nav{background:rgba(8,11,19,.92)}
+.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;width:min(1200px,calc(100% - 48px));margin:0 auto}.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit";font-weight:800;font-size:19px}.logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:grid;place-items:center;font-size:18px}.nav-links{display:flex;justify-content:center;gap:4px}.nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700}.nav-link:hover,.nav-link.active{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;align-items:center;gap:8px}.icon-btn,.menu-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center}.pill-btn{height:36px;border:1.5px solid var(--border2);border-radius:999px;background:var(--primary);color:var(--bg);display:inline-flex;align-items:center;gap:8px;padding:0 16px;font-weight:800;font-size:13px}
+.page{width:min(900px,calc(100% - 32px));margin:0 auto;padding:34px 0 72px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft)}.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:8px;transition:all .2s;cursor:pointer}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.sm{height:34px;padding:0 12px;font-size:12px}.btn.outline{background:transparent;border-color:var(--accent);color:var(--accent)}.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800}.badge-accent{background:rgba(124,58,237,.12);color:var(--accent)}.badge-green{background:rgba(22,163,74,.12);color:var(--green)}.badge-gold{background:rgba(245,179,1,.12);color:var(--gold)}.badge-blue{background:rgba(37,99,235,.1);color:var(--accent2)}.small{font-size:12px;color:var(--text3)}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.space{justify-content:space-between}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);padding:12px 28px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:700;font-size:14px;z-index:999;opacity:0;transition:all .35s;pointer-events:none;white-space:nowrap}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Profile hero */
+.profile-hero{display:flex;align-items:center;gap:20px;padding:28px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft);margin-bottom:24px}.prof-av{width:72px;height:72px;border-radius:50%;background:var(--brand-blue);display:grid;place-items:center;color:#fff;font-size:30px;font-weight:800;flex-shrink:0;overflow:hidden}.prof-av img{width:100%;height:100%;object-fit:cover}.prof-info{flex:1;min-width:0}.prof-info h1{margin:0;font-family:Outfit;font-size:24px;font-weight:800}.prof-info .p-username{color:var(--text2);font-size:14px;margin:2px 0 6px}.prof-info .p-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.prof-actions{display:flex;gap:8px;flex-shrink:0}
+
+/* Stats grid */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}.stat-card{padding:18px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);text-align:center}.stat-card .sv{font-family:Outfit;font-size:24px;font-weight:800;margin-bottom:2px}.stat-card .sl{font-size:12px;color:var(--text3)}
+
+/* Content grid */
+.prof-content{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}.prof-main{min-width:0}.prof-sidebar{display:grid;gap:16px}
+.sidebar-card{padding:18px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft)}.sidebar-card .sbt{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:12px}
+
+/* Activity list */
+.activity-item{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}.activity-item:last-child{border:0}.a-icon{width:36px;height:36px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);display:grid;place-items:center;font-size:18px;flex-shrink:0;color:var(--accent)}.a-info{flex:1;min-width:0}.a-info .a-t{font-size:13px;font-weight:600}.a-info .a-m{font-size:11px;color:var(--text3);margin-top:1px}.a-amt{font-size:13px;font-weight:700;color:var(--green)}
+
+@media(max-width:768px){.profile-hero{flex-wrap:wrap}.prof-actions{width:100%}.stats-grid{grid-template-columns:repeat(2,1fr)}.prof-content{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="nav-inner"><a href="index.html" class="brand"><span class="logo">O</span>OgaPay</a><nav class="nav-links"><a class="nav-link" href="tasks.html"><i class="ti ti-briefcase"></i>Tasks</a><a class="nav-link" href="store.html"><i class="ti ti-discount-2"></i>Deals</a><a class="nav-link" href="communities.html"><i class="ti ti-users-group"></i>Communities</a><a class="nav-link" href="dashboard.html"><i class="ti ti-dashboard"></i>Dashboard</a></nav><div class="nav-actions"><a class="pill-btn" href="post-task.html"><i class="ti ti-square-plus"></i>Post Task</a><button class="icon-btn" id="themeToggle" onclick="t()"><i class="ti ti-sun" id="ti"></i></button><button class="menu-btn" onclick="document.querySelector('.drawer').classList.toggle('open')"><i class="ti ti-menu-2"></i></button></div></div></header>
+
+<div class="page">
+  <div id="loading" style="text-align:center;padding:80px 0"><i class="ti ti-loader" style="font-size:32px;color:var(--text3);animation:spin 1s linear infinite"></i><p style="margin-top:12px;color:var(--text2)">Loading profile...</p></div>
+  <div id="content" style="display:none">
+    <!-- Hero -->
+    <div class="profile-hero">
+      <div class="prof-av" id="profAv">?</div>
+      <div class="prof-info">
+        <h1 id="profName">User Name</h1>
+        <div class="p-username"><span id="profUsername">@username</span></div>
+        <div class="p-badges">
+          <span class="badge badge-accent" id="profRole">Worker</span>
+          <span class="badge badge-blue" id="profLevel">Level 1</span>
+          <span class="badge badge-green" id="profAvailable">Available</span>
+        </div>
+      </div>
+      <div class="prof-actions">
+        <button class="btn sm" onclick="shareProfile()"><i class="ti ti-share"></i>Share</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card"><div class="sv" id="statTasks">0</div><div class="sl">Tasks Done</div></div>
+      <div class="stat-card"><div class="sv" id="statRate">0%</div><div class="sl">Success Rate</div></div>
+      <div class="stat-card"><div class="sv" id="statRating">—</div><div class="sl">Rating</div></div>
+      <div class="stat-card"><div class="sv" id="statLevel">—</div><div class="sl">Level</div></div>
+    </div>
+
+    <!-- Content -->
+    <div class="prof-content">
+      <div class="prof-main">
+        <div class="card" style="padding:24px">
+          <h3 style="font-family:Outfit;margin:0 0 12px;font-size:18px">About</h3>
+          <p id="profBio" style="color:var(--text2);line-height:1.7;margin:0;font-size:14px">No bio yet.</p>
+          <hr style="border:0;border-top:1px solid var(--border);margin:20px 0">
+          <h3 style="font-family:Outfit;margin:0 0 12px;font-size:18px">Skills</h3>
+          <div id="skillTags" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        </div>
+      </div>
+      <div class="prof-sidebar">
+        <div class="sidebar-card">
+          <div class="sbt">Member Since</div>
+          <div style="font-size:14px;font-weight:700" id="memberSince">Recently</div>
+        </div>
+        <div class="sidebar-card">
+          <div class="sbt">Verification</div>
+          <div style="display:grid;gap:8px;font-size:12px">
+            <div class="row space"><span>Account</span><span style="color:var(--green)"><i class="ti ti-circle-check"></i> Verified</span></div>
+            <div class="row space"><span>KYC</span><span id="kycStatus" style="color:var(--text3)">Not verified</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Done</div>
+
+<script>
+const API_BASE = (window.OGAPAY_API_BASE || localStorage.getItem('ogapay_api_base') || 'https://ogapay-production.up.railway.app/api/v1').replace(/\/$/, '');
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const username = params.get('username');
+  if (!username) { showError('No username specified'); return; }
+
+  try {
+    const res = await fetch(API_BASE + '/users/' + encodeURIComponent(username));
+    if (!res.ok) throw new Error('User not found');
+    const data = await res.json();
+    const u = data.data || data;
+    render(u);
+  } catch(e) {
+    showError('User not found');
+  }
+}
+
+function showError(msg) {
+  document.getElementById('loading').innerHTML = '<div style="padding:80px 0"><i class="ti ti-user-off" style="font-size:40px;color:var(--text3)"></i><p style="color:var(--text2);margin-top:12px">' + msg + '</p><a class="btn" href="wurkers.html" style="margin-top:12px"><i class="ti ti-arrow-left"></i>Browse Workers</a></div>';
+}
+
+function render(u) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+
+  const initial = (u.firstName || u.username || '?')[0].toUpperCase();
+  const avEl = document.getElementById('profAv');
+  if (u.avatarUrl) {
+    avEl.innerHTML = '<img src="' + u.avatarUrl + '" alt="Avatar" />';
+  } else {
+    avEl.textContent = initial;
+  }
+
+  document.getElementById('profName').textContent = u.firstName || u.username || 'Unknown';
+  document.getElementById('profUsername').textContent = '@' + u.username;
+  document.getElementById('profRole').textContent = u.role === 'WORKER' ? 'Worker' : u.role === 'POSTER' ? 'Creator' : 'User';
+  document.getElementById('memberSince').textContent = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-US', {year:'numeric',month:'long'}) : 'Recently';
+
+  const wp = u.workerProfile || {};
+  document.getElementById('profLevel').textContent = 'Level ' + (wp.level || 1);
+  document.getElementById('profAvailable').textContent = wp.isAvailable ? 'Available for work' : 'Unavailable';
+  document.getElementById('profAvailable').className = 'badge ' + (wp.isAvailable ? 'badge-green' : '');
+  document.getElementById('statTasks').textContent = wp.tasksCompleted || 0;
+  document.getElementById('statRate').textContent = (wp.successRate || 0) + '%';
+  document.getElementById('statRating').textContent = wp.avgRating ? wp.avgRating.toFixed(1) : '—';
+  document.getElementById('statLevel').textContent = wp.level || '—';
+  document.getElementById('profBio').textContent = wp.bio || 'No bio yet.';
+
+  // Skills
+  const skillsEl = document.getElementById('skillTags');
+  if (wp.skills && Array.isArray(wp.skills)) {
+    skillsEl.innerHTML = wp.skills.map(s => '<span class="badge badge-blue">' + s + '</span>').join('');
+  } else if (typeof wp.skills === 'string' && wp.skills) {
+    skillsEl.innerHTML = wp.skills.split(',').map(s => '<span class="badge badge-blue">' + s.trim() + '</span>').join('');
+  } else {
+    skillsEl.innerHTML = '<span style="color:var(--text3);font-size:12px">No skills listed</span>';
+  }
+
+  document.title = (u.firstName || u.username) + ' - Profile | OgaPay';
+}
+
+function shareProfile() {
+  navigator.clipboard?.writeText(window.location.href);
+  showToast('Link copied!');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function t() {
+  const h = document.documentElement;
+  const d = h.getAttribute('data-theme') || 'light';
+  const n = d === 'light' ? 'dark' : 'light';
+  h.setAttribute('data-theme', n);
+  try { localStorage.setItem('ogapay-theme', n) } catch(e) {}
+  const i = document.getElementById('ti');
+  if (i) i.className = n === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+}
+(function() {
+  const h = document.documentElement;
+  h.setAttribute('data-theme', h.getAttribute('data-theme') || 'light');
+  const d = document.getElementById('ti');
+  if (d) d.className = h.getAttribute('data-theme') === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+})();
+
+init();
+</script>
+</body>
+</html>
