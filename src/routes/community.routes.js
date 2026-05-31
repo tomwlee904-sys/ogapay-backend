@@ -16,6 +16,27 @@ router.get('/', async (req, res) => {
   successResponse(res, communities, 'Communities fetched');
 });
 
+router.get('/:id', async (req, res) => {
+  const { ApiError } = require('../utils/apiResponse');
+  const community = communities.find(c => c.id === req.params.id);
+  if (!community) throw ApiError.notFound('Community not found');
+  successResponse(res, {
+    id: community.id,
+    slug: community.id,
+    name: community.name,
+    description: community.description || 'Join and participate in community tasks and earn rewards.',
+    accentColor: community.accent,
+    category: community.category || 'General',
+    isPublic: true,
+    owner: { firstName: 'OgaPay', lastName: 'Team', username: 'ogapay' },
+    memberCount: community.members,
+    inviteCount: 0,
+    requestCount: 0,
+    recentMembers: [],
+    userRole: null,
+  });
+});
+
 router.post('/:id/join', authenticate, async (req, res) => {
   const community = communities.find((item) => item.id === req.params.id);
   if (!community) {
