@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wurkers Directory - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+:root{
+  --bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--gold:#f5b301;--green:#16a34a;--soft-purple:#f4f6fa;--soft-blue:#eef6ff;--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--radius:14px;
+}
+[data-theme="dark"]{
+  --bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--soft-purple:#111725;--soft-blue:#0d1d34;--shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);--shadow-soft:0 2px 8px rgba(0,0,0,.22);
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
+.nav-link:hover,.pill-btn{height:36px;border:1.5px solid var(--border2);border-radius:999px;background:var(--primary);color:var(--bg);display:inline-flex;align-items:center;gap:8px;padding:0 16px;font-weight:800;font-size:13px}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px;flex-wrap:wrap}.page-head h1{font-family:Outfit;font-size:28px;font-weight:800;margin:0}.page-head p{font-size:14px;color:var(--text2);margin:2px 0 0}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft)}.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;cursor:pointer;text-decoration:none;white-space:nowrap}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:34px;padding:0 12px;font-size:12px}.btn.outline{background:transparent;border-color:var(--accent);color:var(--accent)}.btn.ghost{background:transparent;border-color:transparent;color:var(--text2)}.btn.ghost:hover{background:var(--bg2);color:var(--text);border-color:var(--border)}.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700}.badge-accent{background:rgba(124,58,237,.12);color:var(--accent)}.badge-green{background:rgba(22,163,74,.1);color:var(--green)}.badge-blue{background:rgba(37,99,235,.1);color:var(--accent2)}.badge-gold{background:rgba(245,179,1,.12);color:var(--gold)}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);font-size:12px;font-weight:700;margin-bottom:8px}.small{font-size:12px;color:var(--text3)}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.space{justify-content:space-between}.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);padding:12px 28px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:700;font-size:14px;z-index:999;opacity:0;transition:all .35s;pointer-events:none;white-space:nowrap}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Search & filter bar */
+.filter-bar{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}.search-wrap{flex:1;min-width:200px;position:relative}.search-wrap input{width:100%;height:44px;padding:0 16px 0 42px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;outline:none;transition:border-color .2s}.search-wrap input:focus{border-color:var(--accent)}.search-wrap .si{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:18px}.filter-btn-group{display:flex;gap:6px;flex-wrap:wrap}
+
+/* Worker grid */
+.wurker-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}.wurker-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .25s;display:flex;flex-direction:column;cursor:pointer}.wurker-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(16,21,37,.08);border-color:var(--border2)}.wurker-card .wc-head{display:flex;align-items:center;gap:14px;margin-bottom:12px}.wurker-card .wc-avatar{width:48px;height:48px;border-radius:50%;background:var(--brand-blue);display:grid;place-items:center;color:#fff;font-size:20px;font-weight:800;flex-shrink:0;overflow:hidden}.wurker-card .wc-avatar img{width:100%;height:100%;object-fit:cover}.wurker-card .wc-info{flex:1;min-width:0}.wurker-card .wc-name{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wurker-card .wc-uname{font-size:12px;color:var(--text3)}.wurker-card .wc-meta{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}.wurker-card .wc-bio{font-size:12px;color:var(--text2);line-height:1.4;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.wurker-card .wc-stats{display:flex;gap:12px;margin-bottom:12px}.wurker-card .wc-stat{text-align:center;flex:1}.wurker-card .wc-stat-val{font-size:16px;font-weight:800;font-family:Outfit}.wurker-card .wc-stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}.wurker-card .wc-foot{margin-top:auto;display:flex;gap:8px}.wurker-card .wc-foot .btn{flex:1;height:36px;font-size:12px}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:24px}.pagination .btn{min-width:40px;height:40px;padding:0 12px}.pagination .btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}.pagination .info{font-size:13px;color:var(--text2)}
+
+/* Drawer */
+
+@media(max-width:1024px){.wurker-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.wurker-grid{grid-template-columns:1fr}.filter-bar{flex-direction:column}.search-wrap{width:100%}.filter-btn-group{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:4px}.filter-btn-group .btn{flex-shrink:0}}
+</style>
+<style>
+</style>
+</head>
+<body style="padding-bottom:64px">
+<nav class="og-nav" role="navigation" aria-label="Main">
+<a href="#og-main-content" class="og-skip">Skip to content</a>
+<div class="og-nav-inner">
+<a href="index.html" class="og-brand"><span class="og-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="8" fill="#0d1323"/><path d="M17 6c6.075 0 11 4.925 11 11s-4.925 11-11 11S6 23.075 6 17 10.925 6 17 6z" fill="#7C3AED" opacity="1"/><path d="M17 9a8 8 0 018 8 8 8 0 01-8 8 8 8 0 01-8-8 8 8 0 018-8z" fill="#0d1323"/><path d="M17 12c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5z" fill="#7C3AED"/><path d="M17 15a2 2 0 012 2 2 2 0 01-2 2 2 2 0 01-2-2 2 2 0 012-2z" fill="#fff"/></svg></span>OgaPay</a>
+<div class="og-nav-links">
+<a href="index.html" class="og-nav-link"><i class="ti ti-home"></i>Home</a>
+<a href="tasks.html" class="og-nav-link"><i class="ti ti-briefcase"></i>Tasks</a>
+<a href="store.html" class="og-nav-link"><i class="ti ti-discount-2"></i>Deals</a>
+<a href="communities.html" class="og-nav-link"><i class="ti ti-users-group"></i>Communities</a>
+<a href="faq.html" class="og-nav-link"><i class="ti ti-help-circle"></i>FAQ</a>
+</div>
+<div class="og-nav-actions">
+<button class="og-theme-btn" id="ogThemeBtn" aria-label="Toggle theme"><i class="ti ti-sun"></i></button>
+<a href="login.html" class="og-login-btn"><i class="ti ti-login"></i>Login</a>
+<a href="login.html?signup=1" class="og-cta-btn">Get Started <i class="ti ti-arrow-right"></i></a>
+<button class="og-menu-btn" id="ogMenuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
+</div>
+</div>
+</nav>
+<div class="og-layout"><aside class="og-sidebar" id="ogSidebar" role="navigation" aria-label="Side">
+<div class="og-sidebar-wrap">
+<button class="og-sidebar-toggle" id="ogSidebarToggle" aria-label="Toggle sidebar"><i class="ti ti-chevron-left"></i></button>
+<div class="og-sidebar-scroll">
+<div class="og-sidebar-section">Tasks</div>
+<a href="tasks.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-briefcase"></i></span>Browse All Tasks</a>
+<a href="monitor.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-eye"></i></span>Job Monitor</a>
+<div class="og-sidebar-section">Deals</div>
+<a href="blog.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-news"></i></span>Blog</a>
+<a href="vault.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-building-bank"></i></span>Vault</a>
+<div class="og-sidebar-section">Resources</div>
+<a href="faq.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-help-circle"></i></span>FAQ</a>
+<a href="support.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-headset"></i></span>Support</a>
+</div>
+<div class="og-sidebar-footer">
+<a href="login.html" class="og-sidebar-login"><i class="ti ti-login"></i> Login</a>
+</div>
+</div></div>
+<main class="og-main" id="og-main-content">
+
+
+<section class="page">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow"><i class="ti ti-users"></i>Directory</span>
+      <h1>Wurkers</h1>
+      <p>Browse verified workers and find the perfect match for your task.</p>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <div class="search-wrap">
+      <i class="ti ti-search si"></i>
+      <input type="text" id="searchInput" placeholder="Search by name or username..." oninput="debounceSearch()">
+    </div>
+    <div class="filter-btn-group" id="roleFilters">
+      <button class="btn primary sm" data-role="">All</button>
+      <button class="btn sm" data-role="WORKER">Workers</button>
+      <button class="btn sm" data-role="POSTER">Posters</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading" style="text-align:center;padding:60px 0;color:var(--text3)"><i class="ti ti-loader" style="font-size:32px;animation:spin 1s linear infinite"></i><p style="margin-top:12px">Loading wurkers...</p></div>
+
+  <!-- Grid -->
+  <div id="wurkerGrid" class="wurker-grid" style="display:none"></div>
+
+  <!-- Empty -->
+  <div id="emptyState" style="display:none;text-align:center;padding:60px 0;color:var(--text3)"><i class="ti ti-user-off" style="font-size:40px"></i><p style="margin-top:12px;font-size:16px">No wurkers found</p><p style="font-size:13px;color:var(--text2)">Try a different search or filter.</p></div>
+
+  <!-- Pagination -->
+  <div id="pagination" class="pagination" style="display:none"></div>
+</section>
+
+</div>
+ id="toast">Done</div>
+
+<style>
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.mobile-bottom-nav a{min-width:0;display:grid;justify-items:center;gap:4px;color:#66738a;font-size:13px;font-weight:800;text-decoration:none}
+
+[data-theme="dark"] .mobile-bottom-nav .active,[data-theme="dark"] .mobile-bottom-nav a:hover{color:#f8fafc}
+
+[data-theme="dark"] 
+</style>
+<script>
+const API_BASE = (window.OGAPAY_API_BASE || localStorage.getItem('ogapay_api_base') || 'https://ogapay-production.up.railway.app/api/v1').replace(/\/$/, '');
+const API_TIMEOUT = 15000; // 15s timeout for API calls
+let currentPage = 1;
+let currentRole = '';
+let currentSearch = '';
+let totalPages = 1;
+let debounceTimer;
+
+function debounceSearch() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    currentSearch = document.getElementById('searchInput').value;
+    currentPage = 1;
+    loadWurkers();
+  }, 400);
+}
+
+async function loadWurkers() {
+  const grid = document.getElementById('wurkerGrid');
+  const loading = document.getElementById('loading');
+  const empty = document.getElementById('emptyState');
+  const pagination = document.getElementById('pagination');
+
+  loading.style.display = 'block';
+  grid.style.display = 'none';
+  empty.style.display = 'none';
+  pagination.style.display = 'none';
+
+  try {
+    const params = new URLSearchParams();
+    params.set('page', currentPage);
+    params.set('limit', '24');
+    if (currentRole) params.set('role', currentRole);
+    if (currentSearch) params.set('search', currentSearch);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+    const res = await fetch(API_BASE + '/users/directory/list?' + params.toString(), { signal: controller.signal });
+    clearTimeout(timeoutId);
+    const data = await res.json();
+
+    if (!data.success || !data.data || data.data.length === 0) {
+      loading.style.display = 'none';
+      empty.style.display = 'block';
+      return;
+    }
+
+    const users = data.data;
+    const pag = data.pagination || {};
+    totalPages = pag.pages || pag.totalPages || Math.ceil(pag.total / pag.limit) || 1;
+
+    grid.innerHTML = users.map(u => {
+      const wp = u.workerProfile || {};
+      const initial = (u.firstName || u.username || '?')[0].toUpperCase();
+      const avatar = u.avatarUrl
+        ? '<img src="' + u.avatarUrl + '" alt="Avatar" />'
+        : initial;
+      const name = u.firstName ? (u.firstName + (u.lastName ? ' ' + u.lastName : '')) : (u.username || 'Unknown');
+      const role = u.role === 'WORKER' ? 'Worker' : u.role === 'POSTER' ? 'Creator' : 'User';
+      const level = wp.level || 1;
+      const tasksCompleted = wp.tasksCompleted || 0;
+      const bio = wp.bio || '';
+      const available = wp.isAvailable;
+      const repScore = wp.reputationScore || 0;
+
+      return '<div class="wurker-card" onclick="viewProfile(\'' + u.username + '\')">' +
+        '<div class="wc-head">' +
+          '<div class="wc-avatar">' + avatar + '</div>' +
+          '<div class="wc-info">' +
+            '<div class="wc-name">' + escapeHtml(name) + '</div>' +
+            '<div class="wc-uname">@' + escapeHtml(u.username) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="wc-meta">' +
+          '<span class="badge ' + (available ? 'badge-green' : '') + '">' + role + '</span>' +
+          '<span class="badge badge-accent">Level ' + level + '</span>' +
+          (available ? '<span class="badge badge-green">Available</span>' : '') +
+        '</div>' +
+        (bio ? '<div class="wc-bio">' + escapeHtml(bio) + '</div>' : '') +
+        '<div class="wc-stats">' +
+          '<div class="wc-stat"><div class="wc-stat-val">' + tasksCompleted + '</div><div class="wc-stat-lbl">Tasks</div></div>' +
+          '<div class="wc-stat"><div class="wc-stat-val">' + repScore + '</div><div class="wc-stat-lbl">Rep Score</div></div>' +
+          '<div class="wc-stat"><div class="wc-stat-val">' + level + '</div><div class="wc-stat-lbl">Level</div></div>' +
+        '</div>' +
+        '<div class="wc-foot">' +
+          '<button class="btn primary sm" onclick="event.stopPropagation();viewProfile(\'' + u.username + '\')"><i class="ti ti-eye"></i>View Profile</button>' +
+          '<button class="btn sm" onclick="event.stopPropagation();messageUser(\'' + u.username + '\')"><i class="ti ti-message-2"></i>Message</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    // Pagination
+    if (totalPages > 1) {
+      let pagHtml = '<button class="btn sm" onclick="goPage(' + (currentPage - 1) + ')" ' + (currentPage <= 1 ? 'disabled' : '') + '><i class="ti ti-chevron-left"></i></button>';
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === currentPage || i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+          pagHtml += '<button class="btn sm ' + (i === currentPage ? 'active' : '') + '" onclick="goPage(' + i + ')">' + i + '</button>';
+        } else if (Math.abs(i - currentPage) === 2) {
+          pagHtml += '<span style="color:var(--text3);padding:0 4px">...</span>';
+        }
+      }
+      pagHtml += '<button class="btn sm" onclick="goPage(' + (currentPage + 1) + ')" ' + (currentPage >= totalPages ? 'disabled' : '') + '><i class="ti ti-chevron-right"></i></button>';
+      pagHtml += '<span class="info">Page ' + currentPage + ' of ' + totalPages + '</span>';
+      pagination.innerHTML = pagHtml;
+      pagination.style.display = 'flex';
+    }
+
+    loading.style.display = 'none';
+    grid.style.display = 'grid';
+  } catch(e) {
+    loading.style.display = 'none';
+    empty.style.display = 'block';
+    empty.innerHTML = '<i class="ti ti-cloud-off" style="font-size:40px;color:var(--text3)"></i><p style="margin-top:12px;font-size:16px">Unable to load wurkers</p><p style="font-size:13px;color:var(--text2);max-width:400px;margin:8px auto">The directory service is being deployed. Please try again in a few minutes.</p><button class="btn" onclick="loadWurkers()" style="margin-top:12px"><i class="ti ti-refresh"></i>Retry</button>';
+  }
+}
+
+function goPage(page) {
+  if (page < 1 || page > totalPages) return;
+  currentPage = page;
+  loadWurkers();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function viewProfile(username) {
+  window.location.href = 'public-profile.html?username=' + encodeURIComponent(username);
+}
+
+function messageUser(username) {
+  window.location.href = 'messages.html?user=' + encodeURIComponent(username);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Role filter buttons
+document.getElementById('roleFilters').addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-role]');
+  if (!btn) return;
+  this.querySelectorAll('[data-role]').forEach(b => b.classList.remove('primary'));
+  btn.classList.add('primary');
+  currentRole = btn.dataset.role;
+  currentPage = 1;
+  loadWurkers();
+});
+
+ catch(e) {}
+  const i = document.getElementById('ti');
+  if (i) i.className = n === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+}
+
+(function() {
+  const h = document.documentElement;
+  h.setAttribute('data-theme', h.getAttribute('data-theme') || 'light');
+  const d = document.getElementById('ti');
+  if (d) d.className = h.getAttribute('data-theme') === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+})();
+
+loadWurkers();
+</script>
+<script src="assets/ogapay-live.js"></script>
+
+
+</main>
+</div>
+<div class="og-drawer-overlay" id="ogDrawerOverlay"></div>
+<aside class="og-drawer" id="ogDrawer" role="dialog" aria-label="Menu">
+<div class="og-drawer-head">
+<a class="og-brand" href="index.html"><span class="og-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="8" fill="#0d1323"/><path d="M17 6c6.075 0 11 4.925 11 11s-4.925 11-11 11S6 23.075 6 17 10.925 6 17 6z" fill="#7C3AED" opacity="1"/><path d="M17 9a8 8 0 018 8 8 8 0 01-8 8 8 8 0 01-8-8 8 8 0 018-8z" fill="#0d1323"/><path d="M17 12c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5z" fill="#7C3AED"/><path d="M17 15a2 2 0 012 2 2 2 0 01-2 2 2 2 0 01-2-2 2 2 0 012-2z" fill="#fff"/></svg></span>OgaPay</a>
+<button class="og-theme-btn" id="ogDrawerClose" style="border:none;background:transparent;font-size:20px"><i class="ti ti-x"></i></button>
+</div>
+<div class="og-drawer-body">
+<div class="og-drawer-section">Navigate</div>
+<a href="index.html" class="og-drawer-link"><i class="ti ti-home"></i>Home</a>
+<a href="tasks.html" class="og-drawer-link"><i class="ti ti-briefcase"></i>Tasks</a>
+<a href="store.html" class="og-drawer-link"><i class="ti ti-discount-2"></i>Deals</a>
+<a href="communities.html" class="og-drawer-link"><i class="ti ti-users-group"></i>Communities</a>
+<a href="faq.html" class="og-drawer-link"><i class="ti ti-help-circle"></i>FAQ</a>
+<div class="og-drawer-section">Tasks</div>
+<a href="tasks.html" class="og-drawer-link"><i class="ti ti-briefcase"></i>Browse All Tasks</a>
+<a href="monitor.html" class="og-drawer-link"><i class="ti ti-eye"></i>Job Monitor</a>
+<div class="og-drawer-section">Deals</div>
+<a href="blog.html" class="og-drawer-link"><i class="ti ti-news"></i>Blog</a>
+<a href="vault.html" class="og-drawer-link"><i class="ti ti-building-bank"></i>Vault</a>
+<div class="og-drawer-section">Resources</div>
+<a href="faq.html" class="og-drawer-link"><i class="ti ti-help-circle"></i>FAQ</a>
+<a href="support.html" class="og-drawer-link"><i class="ti ti-headset"></i>Support</a>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+<a href="login.html" class="og-login-btn" style="justify-content:center;height:44px"><i class="ti ti-login"></i>Login</a>
+<a href="login.html?signup=1" class="og-cta-btn" style="justify-content:center;height:44px">Get Started <i class="ti ti-arrow-right"></i></a>
+</div>
+</div>
+</aside>
+<nav class="og-mobile-nav" aria-label="Mobile">
+<a href="index.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>Home</span></a>
+<a href="tasks.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Tasks</span></a>
+<a href="post-task.html" class="create-btn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></a>
+<a href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Deals</span></a>
+<a href="login.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Login</span></a>
+</nav>
+
+<script>
+(function(){function g(){var d=document.documentElement,t=d.getAttribute('data-theme')||'light',n=t==='dark'?'light':'dark';d.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}var i=document.getElementById('ogThemeBtn');if(i){var ic=i.querySelector('i');if(ic)ic.className=n==='dark'?'ti ti-sun':'ti ti-moon'}}var s;(function(){try{s=localStorage.getItem('ogapay-theme')}catch(e){}var t=s||document.documentElement.getAttribute('data-theme')||'light';document.documentElement.setAttribute('data-theme',t);var i=document.getElementById('ogThemeBtn');if(i){var ic=i.querySelector('i');if(ic)ic.className=t==='dark'?'ti ti-sun':'ti ti-moon'}})();document.getElementById('ogThemeBtn')?.addEventListener('click',g);document.getElementById('ogSidebarToggle')?.addEventListener('click',function(){document.getElementById('ogSidebar')?.classList.toggle('collapsed')});document.getElementById('ogMenuBtn')?.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.add('open');document.getElementById('ogDrawerOverlay')?.classList.add('show');document.body.style.overflow='hidden'});document.getElementById('ogDrawerOverlay')?.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.remove('open');document.getElementById('ogDrawerOverlay')?.classList.remove('show');document.body.style.overflow=''});document.getElementById('ogDrawerClose')?.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.remove('open');document.getElementById('ogDrawerOverlay')?.classList.remove('show');document.body.style.overflow=''});document.querySelectorAll('.og-drawer-link').forEach(function(e){e.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.remove('open');document.getElementById('ogDrawerOverlay')?.classList.remove('show');document.body.style.overflow=''})});document.querySelector('.og-skip')?.addEventListener('click',function(e){e.preventDefault();var m=document.getElementById('og-main-content');if(m){m.setAttribute('tabindex','-1');m.focus();setTimeout(function(){m.removeAttribute('tabindex')},100)}});
+})();
+</script>
+
+</body>
+</html>

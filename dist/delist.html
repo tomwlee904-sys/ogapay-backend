@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Delist Request - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--shadow-glow:0 0 30px rgba(124,58,237,.15);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);--shadow-soft:0 2px 8px rgba(0,0,0,.22);--shadow-glow:0 0 30px rgba(167,139,250,.12)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif}a{color:inherit;text-decoration:none}button,input,textarea{font:inherit}button{cursor:pointer}
+[data-theme="dark"] [data-theme="light"] 
+
+.page{width:min(800px,calc(100% - 32px));margin:0 auto;padding:34px 0 72px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px}.card h1{font-family:Outfit;font-size:24px;font-weight:800;margin:0 0 6px}.card p{font-size:14px;color:var(--text2);margin:0 0 16px}.fg{margin-bottom:14px}.fg label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;display:block}.fg input,.fg select,.fg textarea{width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;outline:none;font-family:inherit}.fg textarea{height:80px;padding:10px 12px;resize:vertical}.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;text-decoration:none;cursor:pointer}.btn.primary{background:var(--accent,#7C3AED);color:#fff;border-color:var(--accent,#7C3AED)}.full{width:100%}
+.app{display:flex;min-height:calc(100vh - var(--nav-h))}body.is-authed .main{flex:1;min-width:0}.page{width:min(1120px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}
+
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px;flex-wrap:wrap}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px}.eyebrow i{font-size:15px;color:var(--accent)}.lead{color:var(--text2);font-size:16px;line-height:1.7;margin:6px 0 0;max-width:680px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft)}.btn{height:48px;padding:0 24px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--card);color:var(--text);font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;cursor:pointer;text-decoration:none}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:38px;padding:0 16px;font-size:13px}.btn.outline{background:transparent;border-color:var(--accent);color:var(--accent)}.btn.full{width:100%}.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800}.badge-accent{background:rgba(124,58,237,.12);color:var(--accent)}.badge-blue{background:rgba(37,99,235,.1);color:var(--accent2)}.badge-green{background:rgba(22,163,74,.12);color:var(--green)}.badge-gold{background:rgba(245,179,1,.12);color:var(--gold)}.small{font-size:12px;color:var(--text3)}.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);padding:12px 28px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:700;font-size:14px;z-index:999;opacity:0;transition:all .35s;pointer-events:none;white-space:nowrap}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;visibility:hidden;opacity:0;transition:all .3s}.modal.open{visibility:visible;opacity:1}.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}.modal-panel{position:relative;width:min(440px,calc(100% - 32px));background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transform:translateY(20px);transition:all .3s}.modal.open .modal-panel{transform:translateY(0)}.fg{margin-bottom:14px}.fg label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;display:block}.fg input,.fg select,.fg textarea{width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;outline:none}.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}.fg-h{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid{display:grid;gap:16px}.grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.space{justify-content:space-between}
+@media(max-width:768px){.mobile-bottom-nav{display:flex}}@media(min-width:769px){.mobile-bottom-nav{display:none!important}}[data-theme="dark"] [data-theme="light"] .mobile-bottom-nav a{min-width:0;display:grid;justify-items:center;gap:3px;color:var(--text3);font-size:11px;font-weight:800;text-decoration:none;transition:color .15s}.mobile-bottom-nav a i{font-size:22px}.mobile-bottom-nav a:hover,.mobile-bottom-nav a.active{color:var(--accent)}.mobile-bottom-nav a.create{transform:translateY(-10px)}.mobile-bottom-nav a.create i{width:50px;height:50px;border-radius:16px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:26px;box-shadow:0 6px 20px rgba(124,58,237,.3)}</style>
+<style>.og-skip{position:absolute;top:-100px;left:8px;z-index:9999;background:var(--accent);color:#fff;padding:8px 16px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none}.og-skip:focus{top:8px}
+.og-nav{position:sticky;top:0;z-index:1000;height:var(--nav-h);background:rgba(255,255,255,.94);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4)}[data-theme="dark"] .og-nav{background:rgba(8,11,19,.92)}
+.og-nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;width:min(1280px,calc(100% - 32px));margin:0 auto;gap:16px}
+.og-brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-weight:800;font-size:19px;color:var(--text);text-decoration:none;flex-shrink:0}
+.og-logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden}
+.og-logo svg{width:100%;height:100%;display:block;border-radius:9px}
+.og-nav-links{display:flex;align-items:center;gap:2px;flex:1;justify-content:center}
+.og-nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700;text-decoration:none;transition:all .15s;white-space:nowrap}
+.og-nav-link:hover,.og-nav-link.active{background:var(--bg2);color:var(--text)}
+.og-nav-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.og-theme-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center;cursor:pointer;transition:all .15s;font-size:18px}
+.og-theme-btn:hover{color:var(--text);background:var(--bg2)}
+.og-login-btn{height:36px;padding:0 18px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;text-decoration:none;transition:all .15s}
+.og-login-btn:hover{border-color:var(--border2);box-shadow:0 2px 8px rgba(16,21,37,.05)}
+.og-cta-btn{height:36px;padding:0 18px;border:none;border-radius:999px;background:var(--accent);color:#fff;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:6px;text-decoration:none;transition:all .2s}
+.og-cta-btn:hover{box-shadow:0 4px 20px rgba(124,58,237,.35);transform:translateY(-1px)}
+.og-menu-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:none;place-items:center;cursor:pointer;transition:all .15s;font-size:18px}
+.og-menu-btn:hover{color:var(--text);background:var(--bg2)}
+.og-layout{display:flex;min-height:calc(100vh - var(--nav-h))}.og-main{flex:1;min-width:0;width:100%}
+.og-sidebar{width:230px;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));border-right:1px solid var(--border);background:var(--bg);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;transition:width .25s,margin .25s}
+.og-sidebar.collapsed{width:0;margin-left:-230px;overflow:hidden;border-right-color:transparent}
+.og-sidebar-wrap{position:relative;display:flex;flex-direction:column;height:100%;min-width:230px}
+.og-sidebar-scroll{flex:1;overflow-y:auto;padding:12px 8px 8px}
+.og-sidebar-section{padding:14px 10px 5px;color:var(--text3);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px}
+.og-sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--text2);font-size:13.5px;font-weight:700;text-decoration:none;transition:all .15s}
+.og-sidebar-item:hover,.og-sidebar-item.active{background:var(--bg2);color:var(--text)}
+.og-sidebar-icon{width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);display:grid;place-items:center;color:var(--text3);flex-shrink:0}
+.og-sidebar-icon i{font-size:16px}
+.og-sidebar-footer{padding:10px 8px 14px;border-top:1px solid var(--border)}
+.og-sidebar-login{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border-radius:999px;background:var(--accent);color:#fff;font-weight:800;font-size:13px;text-decoration:none;transition:all .2s}
+.og-sidebar-login:hover{opacity:.92}
+.og-sidebar-toggle{position:absolute;top:12px;right:-14px;width:28px;height:28px;border:1px solid var(--border);border-radius:50%;background:var(--card);color:var(--text2);display:grid;place-items:center;cursor:pointer;z-index:5;transition:all .2s;box-shadow:0 2px 8px rgba(16,21,37,.05)}
+.og-sidebar-toggle:hover{color:var(--text);border-color:var(--border2)}
+.og-sidebar.collapsed .og-sidebar-toggle{right:-14px;transform:rotate(180deg)}
+.og-drawer-overlay{position:fixed;inset:0;z-index:1999;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .3s}
+.og-drawer-overlay.show{opacity:1;pointer-events:auto}
+.og-drawer{position:fixed;top:0;right:0;width:300px;height:100dvh;z-index:2000;background:var(--card);border-left:1px solid var(--border);transform:translateX(100%);transition:transform .3s;overflow-y:auto}
+.og-drawer.open{transform:translateX(0)}
+.og-drawer-head{display:flex;align-items:center;justify-content:space-between;padding:20px 16px 8px}
+.og-drawer-body{padding:8px 16px 24px}
+.og-drawer-section{padding:14px 8px 5px;color:var(--text3);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px}
+.og-drawer-link{display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:9px;color:var(--text2);font-size:14px;font-weight:700;text-decoration:none}
+.og-drawer-link:hover,.og-drawer-link.active{background:var(--bg2);color:var(--text)}
+.og-drawer-link i{width:20px;text-align:center}
+.og-mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;height:64px;background:var(--card);border-top:1px solid var(--border);justify-content:space-around;align-items:center;padding:0 6px 6px}
+.og-mobile-nav a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 10px;border-radius:8px;color:var(--text3);font-size:10px;font-weight:600;text-decoration:none;transition:all .15s;min-width:48px}
+.og-mobile-nav a:hover,.og-mobile-nav a.active{color:var(--accent)}
+.og-mobile-nav a svg{width:22px;height:22px}
+.og-mobile-nav .create-btn{width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;margin-top:-12px;box-shadow:0 4px 16px rgba(124,58,237,.3)}
+.og-mobile-nav .create-btn svg{width:22px;height:22px}
+@media(max-width:1024px){.og-sidebar{width:200px}}
+@media(max-width:768px){.og-nav-links{display:none}.og-menu-btn{display:grid}.og-sidebar{display:none}.og-mobile-nav{display:flex}.og-login-btn{display:none}.og-nav-inner{width:calc(100% - 16px)}}
+
+</style>
+</head>
+<body style="padding-bottom:64px">
+<nav class="og-nav" role="navigation" aria-label="Main">
+<a href="#og-main-content" class="og-skip">Skip to content</a>
+<div class="og-nav-inner">
+<a href="index.html" class="og-brand"><span class="og-logo"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</a>
+<div class="og-nav-links">
+<a href="index.html" class="og-nav-link"><i class="ti ti-home"></i>Home</a>
+<a href="tasks.html" class="og-nav-link"><i class="ti ti-briefcase"></i>Tasks</a>
+<a href="store.html" class="og-nav-link"><i class="ti ti-discount-2"></i>Deals</a>
+<a href="communities.html" class="og-nav-link"><i class="ti ti-users-group"></i>Communities</a>
+<a href="faq.html" class="og-nav-link"><i class="ti ti-help-circle"></i>FAQ</a>
+</div>
+<div class="og-nav-actions">
+<button class="og-theme-btn" id="ogThemeBtn" aria-label="Toggle theme"><i class="ti ti-sun"></i></button>
+<a href="login.html" class="og-login-btn"><i class="ti ti-login"></i>Login</a>
+<a href="login.html?signup=1" class="og-cta-btn">Get Started <i class="ti ti-arrow-right"></i></a>
+<button class="og-menu-btn" id="ogMenuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
+</div>
+</div>
+</nav>
+<div class="og-layout">
+<aside class="og-sidebar" id="ogSidebar" role="navigation" aria-label="Side">
+<div class="og-sidebar-wrap">
+<button class="og-sidebar-toggle" id="ogSidebarToggle" aria-label="Toggle sidebar"><i class="ti ti-chevron-left"></i></button>
+<div class="og-sidebar-scroll">
+<div class="og-sidebar-section">Tasks</div>
+<a href="tasks.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-briefcase"></i></span>Browse All Tasks</a>
+<a href="monitor.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-eye"></i></span>Job Monitor</a>
+<div class="og-sidebar-section">Deals</div>
+<a href="blog.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-news"></i></span>Blog</a>
+<a href="vault.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-building-bank"></i></span>Vault</a>
+<div class="og-sidebar-section">Resources</div>
+<a href="faq.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-help-circle"></i></span>FAQ</a>
+<a href="support.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-headset"></i></span>Support</a>
+</div>
+<div class="og-sidebar-footer">
+<a href="login.html" class="og-sidebar-login"><i class="ti ti-login"></i> Login</a>
+</div>
+</div>
+</aside>
+<main class="og-main" id="og-main-content">
+
+
+<!-- app removed -->
+
+
+<section class="page">
+<div class="card"><h1>Request Delist</h1><p>Request removal of your content from the OgaPay marketplace.</p>
+<div class="fg"><label>Content type</label><select><option>Task listing</option><option>Product / Store item</option><option>Community</option><option>Account</option></select></div>
+<div class="fg"><label>Content ID or URL</label><input placeholder="e.g. task/abc123 or product/xyz" /></div>
+<div class="fg"><label>Reason</label><textarea placeholder="Why do you want this content delisted?" rows="3"></textarea></div>
+<button class="btn primary full"><i class="ti ti-send"></i>Submit Delist Request</button></div>
+</section>
+</main>
+</div>
+
+<script>
+catch(e){}const i=document.getElementById('ti');if(i)i.className=n==='dark'?'ti ti-sun':'ti ti-moon'}
+(function(){const h=document.documentElement;h.setAttribute('data-theme',h.getAttribute('data-theme')||'light');const d=document.getElementById('ti');if(d)d.className=h.getAttribute('data-theme')==='dark'?'ti ti-sun':'ti ti-moon'})();
+</script>
+
+</main>
+</div>
+<div class="og-drawer-overlay" id="ogDrawerOverlay"></div>
+<aside class="og-drawer" id="ogDrawer" role="dialog" aria-label="Menu">
+<div class="og-drawer-head">
+<a class="og-brand" href="index.html"><span class="og-logo"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</a>
+<button class="og-theme-btn" id="ogDrawerClose" style="border:none;background:transparent;font-size:20px"><i class="ti ti-x"></i></button>
+</div>
+<div class="og-drawer-body">
+<div class="og-drawer-section">Navigate</div>
+<a href="index.html" class="og-drawer-link"><i class="ti ti-home"></i>Home</a>
+<a href="tasks.html" class="og-drawer-link"><i class="ti ti-briefcase"></i>Tasks</a>
+<a href="store.html" class="og-drawer-link"><i class="ti ti-discount-2"></i>Deals</a>
+<a href="communities.html" class="og-drawer-link"><i class="ti ti-users-group"></i>Communities</a>
+<a href="faq.html" class="og-drawer-link"><i class="ti ti-help-circle"></i>FAQ</a>
+<div class="og-drawer-section">Tasks</div>
+<a href="tasks.html" class="og-drawer-link"><i class="ti ti-briefcase"></i>Browse All Tasks</a>
+<a href="monitor.html" class="og-drawer-link"><i class="ti ti-eye"></i>Job Monitor</a>
+<div class="og-drawer-section">Deals</div>
+<a href="blog.html" class="og-drawer-link"><i class="ti ti-news"></i>Blog</a>
+<a href="vault.html" class="og-drawer-link"><i class="ti ti-building-bank"></i>Vault</a>
+<div class="og-drawer-section">Resources</div>
+<a href="faq.html" class="og-drawer-link"><i class="ti ti-help-circle"></i>FAQ</a>
+<a href="support.html" class="og-drawer-link"><i class="ti ti-headset"></i>Support</a>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+<a href="login.html" class="og-login-btn" style="justify-content:center;height:44px"><i class="ti ti-login"></i>Login</a>
+<a href="login.html?signup=1" class="og-cta-btn" style="justify-content:center;height:44px">Get Started <i class="ti ti-arrow-right"></i></a>
+</div>
+</div>
+</aside>
+<nav class="og-mobile-nav" aria-label="Mobile">
+<a href="index.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>Home</span></a>
+<a href="tasks.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Tasks</span></a>
+<a href="post-task.html" class="create-btn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></a>
+<a href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Deals</span></a>
+<a href="login.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Login</span></a>
+</nav>
+
+<script>
+(function(){function g(){var d=document.documentElement,t=d.getAttribute('data-theme')||'light',n=t==='dark'?'light':'dark';d.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}var i=document.getElementById('ogThemeBtn');if(i){var ic=i.querySelector('i');if(ic)ic.className=n==='dark'?'ti ti-sun':'ti ti-moon'}}var s;(function(){try{s=localStorage.getItem('ogapay-theme')}catch(e){}var t=s||document.documentElement.getAttribute('data-theme')||'light';document.documentElement.setAttribute('data-theme',t);var i=document.getElementById('ogThemeBtn');if(i){var ic=i.querySelector('i');if(ic)ic.className=t==='dark'?'ti ti-sun':'ti ti-moon'}})();document.getElementById('ogThemeBtn')?.addEventListener('click',g);document.getElementById('ogSidebarToggle')?.addEventListener('click',function(){document.getElementById('ogSidebar')?.classList.toggle('collapsed')});document.getElementById('ogMenuBtn')?.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.add('open');document.getElementById('ogDrawerOverlay')?.classList.add('show');document.body.style.overflow='hidden'});document.getElementById('ogDrawerOverlay')?.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.remove('open');document.getElementById('ogDrawerOverlay')?.classList.remove('show');document.body.style.overflow=''});document.getElementById('ogDrawerClose')?.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.remove('open');document.getElementById('ogDrawerOverlay')?.classList.remove('show');document.body.style.overflow=''});document.querySelectorAll('.og-drawer-link').forEach(function(e){e.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.remove('open');document.getElementById('ogDrawerOverlay')?.classList.remove('show');document.body.style.overflow=''})});document.querySelector('.og-skip')?.addEventListener('click',function(e){e.preventDefault();var m=document.getElementById('og-main-content');if(m){m.setAttribute('tabindex','-1');m.focus();setTimeout(function(){m.removeAttribute('tabindex')},100)}});
+})();
+</script>
+
+</body>
+</html>
