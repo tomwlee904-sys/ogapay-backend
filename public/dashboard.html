@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'dark')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050816;--bg2:#080B1A;--card:#0B1020;--card2:#0F1428;--border:#1A2040;--border2:#2A3070;--text:#FFFFFF;--text2:#8B8FA3;--text3:#5C6080;--accent:#A855F7;--accent2:#7C3AED;--accent-dim:rgba(168,85,247,.12);--accent-glow:0 0 40px rgba(168,85,247,.2);--green:#22C55E;--gold:#F5B301;--red:#EF4444;--shadow:0 4px 24px rgba(0,0,0,.5);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="light"]{--bg:#050816;--bg2:#080B1A;--card:#0B1020;--card2:#0F1428;--border:#1A2040;--border2:#2A3070;--text:#FFFFFF;--text2:#8B8FA3;--text3:#5C6080;--accent:#A855F7}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
+a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}input,select,textarea{font:inherit}img{max-width:100%;display:block}
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(5,8,22,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4)}
+.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:19px;font-weight:800;letter-spacing:-.4px;white-space:nowrap}
+.logo-mark{width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:9px;overflow:hidden}
+.logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}
+.brand span span{color:var(--text)}
+.nav-links{display:flex;align-items:center;justify-content:center;gap:4px}
+.nav-link{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:600;line-height:1;transition:all .14s}
+.nav-link svg{width:15px;height:15px;stroke-width:2.2;flex-shrink:0}
+.nav-link.active,.nav-link:hover{color:var(--text);background:var(--bg2)}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.wallet-btn{height:36px;padding:0 14px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:all .2s}
+.wallet-btn:hover{border-color:var(--accent);background:var(--accent-dim)}
+.wallet-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.wallet-btn.primary:hover{box-shadow:0 4px 20px rgba(168,85,247,.3)}
+.icon-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text2);font-size:18px;display:grid;place-items:center;transition:all .2s}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.mobile-menu{display:none;position:fixed;inset:0;z-index:150}
+.mobile-menu.open{display:block}
+.mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+.oga-drawer{position:absolute;right:0;top:0;bottom:0;width:min(360px,88vw);background:#0B1020;border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s}
+.mobile-menu.open .oga-drawer{transform:translateX(0)}
+.oga-drawer-head{height:60px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.oga-drawer-close{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text2);display:grid;place-items:center;cursor:pointer}
+.oga-drawer-nav{padding:12px;overflow-y:auto;flex:1}
+.oga-drawer-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:var(--text2);text-decoration:none;font-weight:600;font-size:14px;transition:all .14s}
+.oga-drawer-item:hover{background:var(--card2);color:var(--text)}
+.oga-drawer-item svg{width:18px;height:18px;color:var(--accent)}
+.oga-drawer-foot{padding:12px;border-top:1px solid var(--border)}
+.oga-drawer-actions{display:flex;gap:10px}
+.oga-drawer-actions .wallet-btn{flex:1;justify-content:center}
+.authed-only{display:none!important}.public-only{display:flex!important}
+body[data-auth="authed"] .authed-only{display:flex!important}
+body[data-auth="authed"] .public-only{display:none!important}
+.main-wrap{flex:1;width:min(1200px,calc(100% - 32px));margin:0 auto;padding:calc(var(--nav-h) + 16px) 0 60px}
+@keyframes fadeIn{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* welcome banner */
+.welcome-banner{background:linear-gradient(135deg,var(--accent-dim),var(--card));border:1px solid var(--border);border-radius:var(--radius);padding:28px 32px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.welcome-banner .wb-greeting{font-family:Outfit;font-size:22px;font-weight:800;margin:0 0 4px}
+.welcome-banner .wb-balance{font-family:Outfit;font-size:36px;font-weight:900;margin:0 0 10px;background:linear-gradient(135deg,#fff,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.welcome-banner .wb-actions{display:flex;gap:8px;flex-wrap:wrap}
+.wb-btn{height:40px;padding:0 20px;border-radius:10px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;text-decoration:none}
+.wb-btn.primary{background:var(--accent);color:#fff;border:0}
+.wb-btn.primary:hover{box-shadow:0 4px 20px rgba(168,85,247,.3);transform:translateY(-1px)}
+.wb-btn.outline{border:1px solid var(--border);background:transparent;color:var(--text2)}
+.wb-btn.outline:hover{border-color:var(--accent);color:var(--accent)}
+
+/* section */
+.section-title{font-family:Outfit;font-size:18px;font-weight:800;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+.section-title svg{width:20px;height:20px;color:var(--accent)}
+
+/* stat cards */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:900px){.stat-row{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.stat-row{grid-template-columns:1fr}}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;transition:all .25s}
+.stat-card:hover{transform:translateY(-2px);border-color:var(--accent-dim)}
+.stat-card .sc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.stat-card .sc-head .sci{width:36px;height:36px;border-radius:8px;background:var(--accent-dim);color:var(--accent);display:grid;place-items:center}
+.stat-card .sc-head .sci svg{width:18px;height:18px}
+.stat-card .sc-head .sc-change{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px}
+.stat-card .sc-head .sc-change.up{background:rgba(34,197,94,.1);color:var(--green)}
+.stat-card .sc-head .sc-change.down{background:rgba(239,68,68,.1);color:var(--red)}
+.stat-card .sc-num{font-family:Outfit;font-size:26px;font-weight:900}
+.stat-card .sc-lbl{color:var(--text2);font-size:13px;margin-top:2px}
+
+/* wallet card */
+.wallet-grid{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:24px}
+@media(max-width:700px){.wallet-grid{grid-template-columns:1fr}}
+.wallet-card{background:linear-gradient(135deg,var(--accent-dim),var(--card));border:1px solid var(--border);border-radius:var(--radius);padding:22px;position:relative;overflow:hidden}
+.wallet-card::before{content:'';position:absolute;top:-50%;right:-50%;width:200px;height:200px;border-radius:50%;background:rgba(168,85,247,.05);pointer-events:none}
+.wallet-card .wc-label{color:var(--text2);font-size:13px;font-weight:600;margin-bottom:4px}
+.wallet-card .wc-balance{font-family:Outfit;font-size:32px;font-weight:900;margin-bottom:2px}
+.wallet-card .wc-usd{color:var(--text2);font-size:14px;margin-bottom:16px}
+.wallet-card .wc-actions{display:flex;gap:8px}
+.wallet-card .wc-actions a{height:38px;padding:0 18px;border-radius:9px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;text-decoration:none}
+.wallet-card .wc-actions .wca-primary{background:var(--accent);color:#fff;border:0}
+.wallet-card .wc-actions .wca-primary:hover{box-shadow:0 4px 16px rgba(168,85,247,.3)}
+.wallet-card .wc-actions .wca-outline{border:1px solid var(--border);background:transparent;color:var(--text2)}
+.wallet-card .wc-actions .wca-outline:hover{border-color:var(--accent);color:var(--accent)}
+
+.quick-wallet{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.qw-item{text-align:center;padding:8px;border-radius:8px;cursor:pointer;transition:all .2s}
+.qw-item:hover{background:var(--accent-dim)}
+.qw-item svg{width:22px;height:22px;color:var(--accent);margin-bottom:4px}
+.qw-item .qw-label{font-size:12px;font-weight:600;color:var(--text2)}
+
+/* earnings graph */
+.graph-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:24px}
+.graph-card .gc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.graph-tabs{display:flex;gap:4px}
+.graph-tab{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.graph-tab.active,.graph-tab:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.graph-visual{height:160px;display:flex;align-items:flex-end;gap:6px;padding:0 4px}
+.graph-visual .gv-bar{flex:1;border-radius:4px 4px 0 0;background:var(--accent-dim);position:relative;transition:all .3s;min-height:4px}
+.graph-visual .gv-bar:hover{background:var(--accent);opacity:.8}
+.graph-visual .gv-bar .gv-tooltip{position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;color:var(--text2);white-space:nowrap;display:none}
+.graph-visual .gv-bar:hover .gv-tooltip{display:block}
+.graph-labels{display:flex;justify-content:space-between;margin-top:8px;color:var(--text3);font-size:10px;font-weight:600}
+
+/* tasks */
+.task-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:24px}
+.task-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;transition:all .25s}
+.task-card:hover{transform:translateY(-2px);border-color:var(--accent-dim);box-shadow:var(--shadow)}
+.task-card .tc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.task-card .tc-title{font-weight:700;font-size:15px}
+.task-card .tc-reward{color:var(--green);font-weight:700;font-size:14px}
+.task-card .tc-desc{color:var(--text2);font-size:13px;margin-bottom:10px;line-height:1.4}
+.task-card .tc-progress{height:4px;border-radius:999px;background:var(--bg2);margin-bottom:8px;overflow:hidden}
+.task-card .tc-progress .tcp-fill{height:100%;border-radius:999px;background:var(--accent);transition:width .5s}
+.task-card .tc-status{font-size:11px;font-weight:600;color:var(--text3);margin-bottom:8px}
+.task-card .tc-start{height:34px;padding:0 16px;border-radius:8px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+.task-card .tc-start:hover{background:var(--accent);color:#fff}
+
+/* activity */
+.activity-list{display:grid;gap:8px;margin-bottom:24px}
+.activity-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);transition:all .2s}
+.activity-item:hover{border-color:var(--accent-dim)}
+.activity-item .ai-icon{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;flex-shrink:0}
+.activity-item .ai-icon.earn{background:rgba(34,197,94,.1);color:var(--green)}
+.activity-item .ai-icon.task{background:rgba(168,85,247,.1);color:var(--accent)}
+.activity-item .ai-icon.withdraw{background:rgba(245,179,1,.1);color:var(--gold)}
+.activity-item .ai-text{flex:1;font-size:13px}
+.activity-item .ai-text strong{font-weight:600}
+.activity-item .ai-text .ai-amount{color:var(--green);font-weight:700}
+.activity-item .ai-time{color:var(--text3);font-size:11px}
+
+/* announcements + community */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}}
+.announce-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.announce-card .ac-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.announce-card .ac-item:last-child{border-bottom:0;padding-bottom:0}
+.announce-card .ac-item .ac-title{font-weight:600;font-size:14px;margin-bottom:2px}
+.announce-card .ac-item .ac-date{color:var(--text3);font-size:11px}
+.announce-card .ac-item .ac-desc{color:var(--text2);font-size:12px;margin-top:4px;line-height:1.4}
+
+/* recommended - scroll */
+.rec-row{display:flex;gap:14px;overflow-x:auto;padding:4px 0 12px;margin-bottom:24px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.rec-row::-webkit-scrollbar{height:4px}
+.rec-row::-webkit-scrollbar-thumb{background:var(--border2);border-radius:999px}
+.rec-row .task-card{min-width:260px;scroll-snap-align:start}
+
+/* footer */
+.site-footer{position:relative;overflow:hidden;padding:60px 24px 32px;background:linear-gradient(180deg,var(--bg) 0%,#000 100%);border-top:1px solid var(--border)}
+.site-footer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.15;pointer-events:none}
+.footer-overlay{position:relative;z-index:1;max-width:1120px;margin:0 auto}
+.footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:34px;margin-bottom:32px}
+@media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:24px}}
+.footer-brand{display:flex;align-items:center;gap:10px;font-family:Outfit;font-size:22px;font-weight:900;margin-bottom:10px}
+.footer-brand .logo-mark{width:28px;height:28px}
+.footer-desc{color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:16px;max-width:280px}
+.footer-social{display:flex;gap:10px}
+.footer-social a{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);display:grid;place-items:center;color:var(--text2);transition:all .2s}
+.footer-social a:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.footer-col h4{font-size:14px;font-weight:700;margin:0 0 14px;color:var(--text)}
+.footer-col nav{display:grid;gap:8px}
+.footer-col a{color:var(--text2);font-size:13px;transition:color .2s}
+.footer-col a:hover{color:var(--accent)}
+.footer-bottom{display:flex;justify-content:space-between;padding-top:20px;border-top:1px solid var(--border);color:var(--text3);font-size:13px;flex-wrap:wrap;gap:12px}
+@media(max-width:768px){.nav-links{display:none}.nav-actions .wallet-btn .wallet-label{display:none}}
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span><span>Oga<span>Pay</span></span></a>
+    <nav class="nav-links">
+      <a class="nav-link active" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+      <a class="nav-link" href="tasks.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Tasks</a>
+      <a class="nav-link" href="profile.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</a>
+      <a class="nav-link" href="wallet.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M16 12h.01"/></svg>Wallet</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="wallet-btn" href="wallet.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>NGN 12,450</a>
+      <a class="wallet-btn authed-only" href="profile.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+      <button class="icon-btn" id="themeToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+      <button class="icon-btn" id="menuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    </div>
+  </div>
+</header>
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-overlay" data-close-menu></div>
+  <div class="oga-drawer">
+    <div class="oga-drawer-head"><span style="font-weight:800;font-size:16px">Menu</span><button class="oga-drawer-close" data-close-menu><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="oga-drawer-nav">
+      <a class="oga-drawer-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+      <a class="oga-drawer-item" href="tasks.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Tasks</a>
+      <a class="oga-drawer-item" href="profile.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</a>
+      <a class="oga-drawer-item" href="wallet.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M16 12h.01"/></svg>Wallet</a>
+      <a class="oga-drawer-item" href="communities.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Communities</a>
+      <a class="oga-drawer-item" href="store.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" x2="21" y1="6" y2="6"/></svg>Marketplace</a>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <a class="oga-drawer-item" href="earnings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Earnings</a>
+        <a class="oga-drawer-item" href="referrals.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/></svg>Referrals</a>
+        <a class="oga-drawer-item" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>Settings</a>
+      </div>
+    </div>
+    <div class="oga-drawer-foot">
+      <div class="oga-drawer-actions">
+        <a class="wallet-btn" href="wallet.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/></svg>Wallet</a>
+        <a class="wallet-btn primary" href="profile.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main-wrap">
+<!-- Welcome Banner -->
+<div class="welcome-banner">
+  <div>
+    <div class="wb-greeting">Welcome back, John</div>
+    <div class="wb-balance">NGN 12,450.00</div>
+    <div style="color:var(--text2);font-size:14px">Available Balance</div>
+  </div>
+  <div class="wb-actions">
+    <a href="tasks.html" class="wb-btn primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Browse Tasks</a>
+    <a href="wallet.html" class="wb-btn outline"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Withdraw</a>
+  </div>
+</div>
+
+<!-- Earnings Summary -->
+<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Earnings Summary</div>
+<div class="stat-row">
+  <div class="stat-card"><div class="sc-head"><div class="sci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><span class="sc-change up">+12%</span></div><div class="sc-num">NGN 45,200</div><div class="sc-lbl">Total Earned</div></div>
+  <div class="stat-card"><div class="sc-head"><div class="sci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M16 12h.01"/></svg></div><span class="sc-change up">+5%</span></div><div class="sc-num">NGN 12,450</div><div class="sc-lbl">Available Balance</div></div>
+  <div class="stat-card"><div class="sc-head"><div class="sci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="10"/></svg></div><span class="sc-change down">-2%</span></div><div class="sc-num">NGN 3,200</div><div class="sc-lbl">Pending Earnings</div></div>
+  <div class="stat-card"><div class="sc-head"><div class="sci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><span class="sc-change up">+18%</span></div><div class="sc-num">NGN 8,900</div><div class="sc-lbl">This Month</div></div>
+</div>
+
+<!-- Wallet Overview -->
+<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M16 12h.01"/></svg>Wallet Overview</div>
+<div class="wallet-grid">
+  <div class="wallet-card">
+    <div class="wc-label">Wallet Balance</div>
+    <div class="wc-balance">NGN 12,450.00</div>
+    <div class="wc-usd">$8.42 USDC</div>
+    <div class="wc-actions">
+      <a href="#" class="wca-primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Deposit</a>
+      <a href="#" class="wca-outline"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>Withdraw</a>
+      <a href="#" class="wca-outline"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/></svg>Transfer</a>
+    </div>
+  </div>
+  <div class="quick-wallet">
+    <a href="earnings.html" class="qw-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><div class="qw-label">Earnings</div></a>
+    <a href="wallet.html" class="qw-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M16 12h.01"/></svg><div class="qw-label">Wallet</div></a>
+    <a href="referrals.html" class="qw-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/></svg><div class="qw-label">Referrals</div></a>
+    <a href="vault.html" class="qw-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H3v16h18V4z"/><line x1="1" y1="12" x2="23" y2="12"/></svg><div class="qw-label">Vault</div></a>
+    <a href="my-store.html" class="qw-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" x2="21" y1="6" y2="6"/></svg><div class="qw-label">My Store</div></a>
+    <a href="worker.html" class="qw-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><div class="qw-label">Worker</div></a>
+  </div>
+</div>
+
+<!-- Earnings Graph -->
+<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Earnings</div>
+<div class="graph-card">
+  <div class="gc-head">
+    <span style="font-weight:700;font-size:15px">Earnings Overview</span>
+    <div class="graph-tabs">
+      <button class="graph-tab active" onclick="switchGraph(this,'7d')">7 Days</button>
+      <button class="graph-tab" onclick="switchGraph(this,'30d')">30 Days</button>
+      <button class="graph-tab" onclick="switchGraph(this,'all')">All Time</button>
+    </div>
+  </div>
+  <div class="graph-visual" id="graphVisual"></div>
+  <div class="graph-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+</div>
+
+<!-- Active Tasks -->
+<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Active Tasks</div>
+<div class="task-row">
+  <div class="task-card"><div class="tc-head"><span class="tc-title">Social Media Engagement</span><span class="tc-reward">NGN 500</span></div><div class="tc-desc">Like and comment on 10 posts</div><div class="tc-progress"><div class="tcp-fill" style="width:60%"></div></div><div class="tc-status">6/10 completed</div><button class="tc-start">Continue</button></div>
+  <div class="task-card"><div class="tc-head"><span class="tc-title">Content Review</span><span class="tc-reward">NGN 1,200</span></div><div class="tc-desc">Review and provide feedback on 5 articles</div><div class="tc-progress"><div class="tcp-fill" style="width:20%"></div></div><div class="tc-status">1/5 completed</div><button class="tc-start">Continue</button></div>
+  <div class="task-card"><div class="tc-head"><span class="tc-title">UI Feedback</span><span class="tc-reward">NGN 800</span></div><div class="tc-desc">Test and report UI issues</div><div class="tc-progress"><div class="tcp-fill" style="width:0%"></div></div><div class="tc-status">Not started</div><button class="tc-start">Start</button></div>
+</div>
+
+<!-- Pending Tasks -->
+<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Pending Tasks</div>
+<div class="task-row">
+  <div class="task-card"><div class="tc-head"><span class="tc-title">Logo Design</span><span class="tc-reward">NGN 2,500</span></div><div class="tc-desc" style="color:var(--gold)">Awaiting approval</div><div class="tc-status">Submitted 2 days ago</div><button class="tc-start" style="border-color:var(--gold);color:var(--gold)">View Submission</button></div>
+  <div class="task-card"><div class="tc-head"><span class="tc-title">Twitter Thread</span><span class="tc-reward">NGN 600</span></div><div class="tc-desc" style="color:var(--red)">Revision requested</div><div class="tc-status">Rejected - Resubmit</div><button class="tc-start" style="border-color:var(--red);color:var(--red)">Resubmit</button></div>
+  <div class="task-card"><div class="tc-head"><span class="tc-title">Market Research</span><span class="tc-reward">NGN 1,000</span></div><div class="tc-desc" style="color:var(--text3)">Pending review</div><div class="tc-status">Under review</div><button class="tc-start">Check Status</button></div>
+</div>
+
+<!-- Recommended Tasks -->
+<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Recommended Tasks</div>
+<div class="rec-row">
+  <div class="task-card"><div class="tc-head"><span class="tc-title">Video Editing</span><span class="tc-reward">NGN 3,000</span></div><div class="tc-desc">Edit a 2-minute YouTube short</div><div class="tc-status">Est. 2 hours</div><button class="tc-start">Start Task</button></div>
+  <div class="task-card"><div class="tc-head"><span class="tc-title">Community Moderation</span><span class="tc-reward">NGN 1,500</span></div><div class="tc-desc">Moderate community posts for 1 hour</div><div class="tc-status">Est. 1 hour</div><button class="tc-start">Start Task</button></div>
+  <div class="task-card"><div class="tc-head"><span class="tc-title">Copywriting</span><span class="tc-reward">NGN 2,000</span></div><div class="tc-desc">Write 3 social media captions</div><div class="tc-status">Est. 30 min</div><button class="tc-start">Start Task</button></div>
+  <div class="task-card"><div class="tc-head"><span class="tc-title">Beta Testing</span><span class="tc-reward">NGN 1,800</span></div><div class="tc-desc">Test new app features and report bugs</div><div class="tc-status">Est. 1.5 hours</div><button class="tc-start">Start Task</button></div>
+</div>
+
+<!-- Recent Activity -->
+<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Recent Activity</div>
+<div class="activity-list">
+  <div class="activity-item"><div class="ai-icon earn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="ai-text">Earned <span class="ai-amount">NGN 500</span> from Social Media Task</div><span class="ai-time">2h ago</span></div>
+  <div class="activity-item"><div class="ai-icon task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div class="ai-text">Completed <strong>Content Review</strong> task</div><span class="ai-time">5h ago</span></div>
+  <div class="activity-item"><div class="ai-icon withdraw"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12H3"/><path d="M15 6l6 6-6 6"/></svg></div><div class="ai-text">Withdrew <span class="ai-amount">NGN 2,000</span> to bank account</div><span class="ai-time">1d ago</span></div>
+  <div class="activity-item"><div class="ai-icon earn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="ai-text">Referral bonus <span class="ai-amount">NGN 300</span> credited</div><span class="ai-time">2d ago</span></div>
+  <div class="activity-item"><div class="ai-icon task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div class="ai-text">Task <strong>UI Feedback</strong> approved</div><span class="ai-time">3d ago</span></div>
+</div>
+
+<!-- Announcements + Community -->
+<div class="two-col">
+  <div><div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</div>
+    <div class="announce-card">
+      <div class="ac-item"><div class="ac-title">New Task Categories Added</div><div class="ac-date">2 hours ago</div><div class="ac-desc">We've added new task categories including AI training and data labeling.</div></div>
+      <div class="ac-item"><div class="ac-title">Platform Upgrade</div><div class="ac-date">1 day ago</div><div class="ac-desc">We've upgraded our payment system. Withdrawals are now faster.</div></div>
+      <div class="ac-item"><div class="ac-title">Community Challenge</div><div class="ac-date">3 days ago</div><div class="ac-desc">Join the weekly community challenge and earn bonus rewards.</div></div>
+    </div>
+  </div>
+  <div><div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Community Updates</div>
+    <div class="announce-card">
+      <div class="ac-item"><div class="ac-title">Solana Builders</div><div class="ac-date">Active</div><div class="ac-desc">New tasks available - 5 slots open</div></div>
+      <div class="ac-item"><div class="ac-title">Design Masters</div><div class="ac-date">Trending</div><div class="ac-desc">Weekly design challenge live now</div></div>
+      <div class="ac-item"><div class="ac-title">Crypto Traders</div><div class="ac-date">2,500 members</div><div class="ac-desc">Trading competition starts tomorrow</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<footer class="site-footer">
+  <video autoplay muted loop playsinline poster=""><source src="https://ogapay-five.vercel.app/videos/ogapay-bg.mp4" type="video/mp4"></video>
+  <div class="footer-overlay">
+    <div class="footer-grid">
+      <div><div class="footer-brand"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</div><p class="footer-desc">Work. Earn. Repeat.</p><div class="footer-social"><a href="#" aria-label="X"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a><a href="#" aria-label="Telegram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 11 10 14 20 4"/><path d="M4 11l4 9 2-6 6-4-12 1z"/></svg></a><a href="#" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><line x1="17" y1="7" x2="17.01" y2="7"/></svg></a></div></div>
+      <div class="footer-col"><h4>Platform</h4><nav><a href="tasks.html">Browse Tasks</a><a href="store.html">Marketplace</a><a href="communities.html">Communities</a><a href="earnings.html">Earnings</a><a href="wallet.html">Wallet</a></nav></div>
+      <div class="footer-col"><h4>Resources</h4><nav><a href="blog.html">Blog</a><a href="faq.html">FAQ</a><a href="support.html">Support</a><a href="roadmap.html">Roadmap</a><a href="referrals.html">Referrals</a></nav></div>
+      <div class="footer-col"><h4>Company</h4><nav><a href="about.html">About</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="contact.html">Contact</a></nav></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; 2026 OgaPay. All rights reserved.</span><span style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M6 8l6-4 6 4-6 4-6-4z"/><path d="M6 16l6-4 6 4-6 4-6-4z"/></svg>Powered by Solana</span></div>
+  </div>
+</footer>
+
+<script>
+function $(id){return document.getElementById(id)}
+
+function renderGraph(){
+  const bars = [35,55,42,70,48,62,85];
+  const v = $('graphVisual');
+  if(v) v.innerHTML = bars.map(b => '<div class="gv-bar" style="height:'+b+'%"><div class="gv-tooltip">NGN '+b*10+'</div></div>').join('');
+}
+renderGraph();
+
+function switchGraph(btn,period){
+  document.querySelectorAll('.graph-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const data = { '7d':[35,55,42,70,48,62,85], '30d':[45,62,38,55,72,48,58,65,42,58,70,52,48,62,78,55,48,62,70,52,58,45,62,68,52,58,72,48,55,62],
+    'all':[30,40,35,50,45,55,60,48,52,58,42,55,48,62,58,52,65,58,62,68,55,60,58,62,65,58,62,68,72,78] };
+  const bars = data[period]||data['7d'];
+  const v = $('graphVisual');
+  if(v) v.innerHTML = bars.map(b => '<div class="gv-bar" style="height:'+Math.min(b*1.1,90)+'%"><div class="gv-tooltip">NGN '+b*10+'</div></div>').join('');
+}
+
+(function(){
+  try{var th=localStorage.getItem('ogapay-theme')||'dark';document.documentElement.setAttribute('data-theme',th);}catch(e){}
+  try{var authed=localStorage.getItem('ogapay-authenticated')==='true';document.body.setAttribute('data-auth',authed?'authed':'public');}catch(e){}
+  (function(){var t=document.getElementById('themeToggle');if(t){t.addEventListener('click',function(){var h=document.documentElement;var n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n);}catch(e){}var s=t.querySelector('svg');if(s)s.outerHTML=n==='dark'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/><\/svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/><\/svg>';});}})();
+  var m=document.getElementById('menuBtn'),mm=document.getElementById('mobileMenu');if(m&&mm){m.addEventListener('click',function(){mm.classList.add('open');});mm.querySelectorAll('[data-close-menu]').forEach(function(e){e.addEventListener('click',function(){mm.classList.remove('open');});});}
+})();
+</script>
+</body>
+</html>

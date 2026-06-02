@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Submit Work - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--card2:#f5f5f5;--border:#e5e5e5;--border2:#d4d4d4;--text:#111111;--text2:#525252;--text3:#a1a1aa;--primary:#111111;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 4px 16px rgba(0,0,0,.06),0 1px 4px rgba(0,0,0,.03);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--card2:#151515;--border:#232323;--border2:#333333;--text:#ffffff;--text2:#a1a1aa;--text3:#667186;--primary:#ffffff;--accent:#A78BFA;--accent2:#60A5FA;--shadow:0 4px 16px rgba(0,0,0,.5),0 1px 4px rgba(0,0,0,.3)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}img{max-width:100%}
+
+/* ═══ NAVBAR ═══ */
+.nav{position:sticky;top:0;z-index:200;height:var(--nav-h);background:rgba(255,255,255,.94);backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid var(--border)}
+[data-theme="dark"] .nav{background:rgba(0,0,0,.94)}.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-family:Outfit,sans-serif;font-size:19px;font-weight:900;letter-spacing:-.4px;white-space:nowrap}.logo-mark{width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:9px;overflow:hidden;box-shadow:0 8px 22px rgba(37,99,235,.12)}.logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}
+.nav-links{display:flex;align-items:center;justify-content:center;gap:4px}.nav-link{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:600;transition:all .14s}.nav-link:hover,.nav-link.active{color:var(--text);background:var(--bg2)}
+.nav-actions{display:flex;align-items:center;gap:8px}.wallet-btn{height:36px;padding:0 18px;display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--border2);border-radius:999px;background:var(--card);color:var(--text);font-size:13.5px;font-weight:700;transition:border-color .2s;text-decoration:none}.wallet-btn:hover{border-color:var(--text)}.icon-btn{width:36px;height:36px;display:grid;place-items:center;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);transition:all .2s}.icon-btn:hover{color:var(--text);border-color:var(--border2)}
+@media(max-width:768px){.nav-links{display:none}.nav-inner{width:100%;padding:0 20px;gap:10px;grid-template-columns:1fr auto}}
+
+/* ═══ DRAWER ═══ */
+.mobile-menu{position:fixed;top:0;left:0;right:0;bottom:0;z-index:300;display:none;visibility:hidden;pointer-events:none}.mobile-menu.open{display:block;visibility:visible;pointer-events:auto}
+.mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(4px)}.oga-drawer{position:absolute;right:0;top:0;bottom:0;width:min(340px,90vw);padding:0;background:var(--bg2);border-left:1px solid var(--border);box-shadow:-16px 0 42px rgba(16,21,37,.12);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}[data-theme="dark"] .oga-drawer{background:#000}.mobile-menu.open .oga-drawer{transform:translateX(0)}.oga-drawer-head{height:64px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}.oga-drawer-close{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);font-size:20px;display:grid;place-items:center;cursor:pointer}
+.oga-drawer-nav{padding:10px 8px;overflow-y:auto;flex:1}.oga-drawer-item{width:100%;min-height:52px;display:flex;align-items:center;gap:12px;padding:8px 10px;border:0;border-radius:10px;background:transparent;color:inherit;text-decoration:none;cursor:pointer;font:inherit}.oga-drawer-item:hover{background:var(--card)}.oga-drawer-icon{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--border);border-radius:9px;background:var(--card);color:var(--text2);flex:0 0 auto;font-size:18px}.oga-drawer-item strong{display:block;font-size:15px;font-weight:800}.oga-drawer-group{overflow:hidden}.oga-drawer-group .oga-drawer-sub{max-height:0;overflow:hidden;transition:max-height .28s ease;padding-left:48px}.oga-drawer-group.open .oga-drawer-sub{max-height:500px}
+.authed-only{display:none!important}.public-only{display:inline-flex!important}body[data-auth="authed"] .authed-only{display:inline-flex!important}body[data-auth="authed"] .public-only{display:none!important}
+
+/* ═══ LAYOUT ═══ */
+.page{width:min(820px,calc(100% - 48px));margin:0 auto;padding:calc(var(--nav-h) + 28px) 0 72px}
+.section-title{font-family:Outfit;font-size:20px;font-weight:900;margin:0 0 16px;letter-spacing:-.3px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.section-head h2{font-family:Outfit;font-size:18px;font-weight:900;margin:0;letter-spacing:-.3px}
+
+/* ═══ COMPONENTS ═══ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:var(--radius-sm);border:1.5px solid var(--border2);background:var(--card);color:var(--text);font-weight:700;font-size:14px;transition:all .2s;cursor:pointer;white-space:nowrap;text-decoration:none}.btn:hover{background:var(--bg2);border-color:var(--border2)}.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn-primary:hover{opacity:.9;border-color:var(--accent);box-shadow:0 6px 20px rgba(124,58,237,.25)}.btn-primary:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}.btn-sm{height:36px;padding:0 14px;font-size:13px}.btn-ghost{border-color:transparent;background:transparent}.btn-ghost:hover{background:var(--bg2)}.btn-block{width:100%;justify-content:center}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800}.badge-purple{background:var(--accent);color:#fff}.badge-green{background:var(--green);color:#fff}.badge-soft{background:rgba(124,58,237,.1);color:var(--accent);border:1px solid rgba(124,58,237,.2)}.badge-soft-green{background:rgba(22,163,74,.1);color:var(--green);border:1px solid rgba(22,163,74,.2)}.badge-soft-gold{background:rgba(245,179,1,.1);color:var(--gold);border:1px solid rgba(245,179,1,.2)}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;background:var(--bg2);color:var(--text2);border:1px solid var(--border)}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--primary);color:var(--bg);border-radius:12px;padding:12px 16px;font-weight:700;font-size:13px;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);transition:all .2s ease;z-index:500;pointer-events:none;backdrop-filter:blur(8px)}.toast.show{opacity:1;transform:translateY(0)}
+
+/* ═══ BACK ═══ */
+.back-row{display:flex;align-items:center;gap:10px;margin-bottom:20px}.back-row a{display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;font-weight:700;text-decoration:none;transition:color .15s}.back-row a:hover{color:var(--text)}.back-row i{font-size:18px}
+
+/* ═══ STEP INDICATOR ═══ */
+.steps{display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:28px}.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .3s}.step-dot.active{background:var(--accent);width:24px;border-radius:4px}.step-dot.done{background:var(--green)}.step-label{display:none}
+
+/* ═══ CARD ═══ */
+.glass{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;transition:all .2s;backdrop-filter:blur(8px)}.glass:hover{border-color:var(--border2)}.glass h3{font-family:Outfit;font-size:15px;font-weight:800;margin:0 0 14px;display:flex;align-items:center;gap:8px}.glass h3 i{color:var(--text2)}
+.glass-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.glass-header h3{margin-bottom:0}
+
+/* ═══ JOB SUMMARY ═══ */
+.summary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.summary-item{padding:12px;background:var(--bg2);border-radius:var(--radius-sm);text-align:center}.summary-item .si-val{font-family:Outfit;font-size:18px;font-weight:900;line-height:1.2}.summary-item .si-lbl{font-size:11px;color:var(--text2);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+
+/* ═══ FORM ═══ */
+.form-group{margin-bottom:16px}.form-group:last-child{margin-bottom:0}.form-label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:var(--text2)}.form-label .required{color:var(--red)}.form-input,.form-textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:14px;transition:all .2s;outline:none;font-family:inherit}.form-input:focus,.form-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,.1)}.form-input::placeholder,.form-textarea::placeholder{color:var(--text3)}.form-textarea{resize:vertical;min-height:80px}.form-hint{font-size:12px;color:var(--text3);margin-top:4px}
+
+/* ═══ DROP ZONE ═══ */
+.drop-zone{position:relative;border:2px dashed var(--border);border-radius:var(--radius-sm);padding:28px 20px;text-align:center;transition:all .2s;cursor:pointer;background:var(--bg2)}.drop-zone:hover,.drop-zone.dragover{border-color:var(--accent);background:rgba(124,58,237,.04)}.drop-zone .dz-icon{font-size:32px;color:var(--text3);margin-bottom:8px}.drop-zone .dz-text{font-weight:700;font-size:14px}.drop-zone .dz-sub{font-size:12px;color:var(--text2);margin-top:4px}.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}.file-list{display:grid;gap:8px;margin-top:12px}.file-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm)}.file-item .fi-icon{color:var(--accent);font-size:20px}.file-item .fi-info{flex:1;min-width:0}.file-item .fi-name{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.file-item .fi-size{font-size:11px;color:var(--text3)}.file-item .fi-remove{width:28px;height:28px;display:grid;place-items:center;border:0;border-radius:6px;background:var(--bg2);color:var(--text3);cursor:pointer;transition:all .15s;font-size:16px;flex-shrink:0}.file-item .fi-remove:hover{background:rgba(220,38,38,.1);color:var(--red)}
+
+/* ═══ SUCCESS STATE ═══ */
+.submission-success{text-align:center;padding:40px 20px}.submission-success .ss-icon{width:64px;height:64px;border-radius:50%;background:rgba(22,163,74,.1);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;animation:successPop .4s ease}.submission-success h2{font-family:Outfit;font-size:22px;font-weight:900;margin:0 0 6px}.submission-success p{color:var(--text2);font-size:14px;margin:0 0 20px;line-height:1.5}.ss-details{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:400px;margin:0 auto 24px}.ss-detail{padding:12px;background:var(--bg2);border-radius:var(--radius-sm);text-align:center}.ss-detail .ssd-val{font-weight:800;font-size:15px}.ss-detail .ssd-lbl{font-size:11px;color:var(--text2);margin-top:2px}
+@keyframes successPop{0%{transform:scale(0)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* ═══ STATUS TRACKER ═══ */
+.status-tracker{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:24px}.st-step{text-align:center;padding:12px 6px;border-radius:var(--radius-sm);background:var(--bg2);border:1px solid var(--border);position:relative;transition:all .3s}.st-step .st-icon{font-size:20px;margin-bottom:4px;color:var(--text3);transition:all .3s}.st-step .st-label{font-size:11px;font-weight:700;color:var(--text2);transition:all .3s}.st-step.done{border-color:var(--green);background:rgba(22,163,74,.06)}.st-step.done .st-icon{color:var(--green)}.st-step.done .st-label{color:var(--green)}.st-step.active{border-color:var(--accent);background:rgba(124,58,237,.06);box-shadow:0 0 0 3px rgba(124,58,237,.1)}.st-step.active .st-icon{color:var(--accent)}.st-step.active .st-label{color:var(--accent)}.st-step.inactive{opacity:.45}
+
+/* ═══ SUBMISSION VIEW ═══ */
+.submission-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}.submission-card .sc-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}.submission-card .sc-row:last-child{border-bottom:0}.submission-card .sc-lbl{color:var(--text2);font-weight:600}.submission-card .sc-val{font-weight:700}
+
+/* ═══ VIEWS ═══ */
+.view{display:none;animation:fadeIn .3s ease}.view.active{display:block}
+.view.active.view-center{display:flex;flex-direction:column;align-items:center;justify-content:center}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:768px){
+  .page{width:min(100% - 24px,820px);padding-top:calc(var(--nav-h) + 16px)}
+  .summary-grid{grid-template-columns:repeat(2,1fr)}
+  .status-tracker{overflow-x:auto;gap:4px}
+  .st-step{min-width:80px}
+  body{padding-bottom:80px}
+  .ss-details{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:520px){
+  .glass{padding:16px}
+  .summary-item .si-val{font-size:16px}
+}
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html" aria-label="OgaPay home">
+      <span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
+      <span>Oga<span>Pay</span></span>
+    </a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a class="nav-link" href="index.html" data-navlink><i class="ti ti-home"></i>Home</a>
+      <a class="nav-link" href="tasks.html" data-navlink><i class="ti ti-layout-grid"></i>Tasks</a>
+      <a class="nav-link" href="monitor.html" data-navlink><i class="ti ti-radar"></i>Monitor</a>
+      <a class="nav-link" href="store.html" data-navlink><i class="ti ti-discount-2"></i>Deals</a>
+      <a class="nav-link" href="communities.html" data-navlink><i class="ti ti-users-group"></i>Communities</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="wallet-btn public-only" href="login.html"><i class="ti ti-login"></i><span class="wallet-label">Login</span></a>
+      <a class="wallet-btn public-only" href="login.html?mode=signup"><i class="ti ti-arrow-right"></i><span class="wallet-label">Get Started</span></a>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="ti ti-sun" id="ti"></i></button>
+      <button class="icon-btn" id="menuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-overlay" data-close-menu></div>
+  <div class="oga-drawer">
+    <div class="oga-drawer-head">
+      <span class="oga-drawer-logo logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
+      <button class="oga-drawer-close" data-close-menu aria-label="Close menu"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="oga-drawer-nav">
+      <div class="oga-drawer-group">
+        <button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false"><span class="oga-drawer-icon"><i class="ti ti-briefcase"></i></span><span><strong>Jobs</strong></span></button>
+        <div class="oga-drawer-sub">
+          <a class="oga-drawer-item" href="tasks.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-layout-grid"></i></span><span>Browse Tasks</span></a>
+          <a class="oga-drawer-item" href="my-tasks.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-list-check"></i></span><span>My Tasks</span></a>
+          <a class="oga-drawer-item" href="monitor.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-radar"></i></span><span>Job Monitor</span></a>
+          <a class="oga-drawer-item" href="post-task.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-square-plus"></i></span><span>Post Task</span></a>
+        </div>
+      </div>
+      <a class="oga-drawer-item" href="store.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-discount-2"></i></span><span><strong>Store</strong></span></a>
+      <a class="oga-drawer-item" href="wallet.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-wallet"></i></span><span><strong>Wallet</strong></span></a>
+      <a class="oga-drawer-item" href="communities.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-users-group"></i></span><span><strong>Communities</strong></span></a>
+      <a class="oga-drawer-item" href="earnings.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-chart-bar"></i></span><span><strong>Earnings</strong></span></a>
+      <a class="oga-drawer-item" href="notifications.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-bell"></i></span><span><strong>Notifications</strong></span></a>
+      <a class="oga-drawer-item" href="settings.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-settings"></i></span><span><strong>Settings</strong></span></a>
+      <a class="oga-drawer-item" href="vault.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-shield-lock"></i></span><span><strong>Vault</strong></span></a>
+      <a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span><span><strong>FAQ</strong></span></a>
+      <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-headset"></i></span><span><strong>Support</strong></span></a>
+      <a class="oga-drawer-item logout-item" href="login.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-logout"></i></span><span><strong>Logout</strong></span></a>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <!-- ═══ STEP DOTS ═══ -->
+  <div class="steps" id="stepDots">
+    <span class="step-dot active"></span>
+    <span class="step-dot"></span>
+    <span class="step-dot"></span>
+  </div>
+
+  <!-- ═══ VIEW 1: SUBMIT WORK ═══ -->
+  
+  <!-- ═══ VIEW: LOADING ═══ -->
+  <div class="view active view-center" id="viewLoading">
+    <div style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:16px"></div>
+    <div style="font-family:Outfit;font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px">Loading task...</div>
+    <div style="font-size:14px;color:var(--text2)">Preparing your application</div>
+    <div style="width:min(280px,100%);margin-top:24px;display:grid;gap:10px">
+      <div style="height:14px;background:var(--bg2);border-radius:8px;animation:pulse 1.5s ease-in-out infinite"></div>
+      <div style="height:14px;width:85%;background:var(--bg2);border-radius:8px;animation:pulse 1.5s ease-in-out infinite 0.15s"></div>
+      <div style="height:14px;width:70%;background:var(--bg2);border-radius:8px;animation:pulse 1.5s ease-in-out infinite 0.3s"></div>
+      <div style="height:80px;background:var(--bg2);border-radius:var(--radius-sm);animation:pulse 1.5s ease-in-out infinite 0.45s;margin-top:6px"></div>
+    </div>
+  </div>
+
+  <!-- ═══ VIEW: ERROR ═══ -->
+  <div class="view view-center" id="viewError">
+    <div style="width:56px;height:56px;border-radius:50%;background:rgba(220,38,38,.1);color:var(--red);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:24px"><i class="ti ti-circle-off"></i></div>
+    <h2 style="font-family:Outfit;font-size:20px;font-weight:900;margin:0 0 6px">Task not found</h2>
+    <p style="font-size:14px;color:var(--text2);margin:0 0 20px;line-height:1.5">The task you're looking for doesn't exist or has been removed.</p>
+    <a href="tasks.html" class="btn btn-primary"><i class="ti ti-arrow-left"></i> Back to Tasks</a>
+  </div>
+<div class="view" id="viewSubmit">
+    <div class="back-row">
+      <a href="tasks.html"><i class="ti ti-arrow-left"></i> Back to Tasks</a>
+    </div>
+
+    <!-- Job Summary Card -->
+    <div class="glass" id="jobSummary">
+      <div class="glass-header">
+        <h3><i class="ti ti-briefcase"></i> <span id="jobTitle">Task Title</span></h3>
+        <span class="badge badge-soft" id="jobStatus">Open</span>
+      </div>
+      <div class="summary-grid">
+        <div class="summary-item"><div class="si-val" style="color:var(--accent)" id="jobReward">₦0</div><div class="si-lbl">Reward</div></div>
+        <div class="summary-item"><div class="si-val" id="jobTime">—</div><div class="si-lbl">Est. Completion</div></div>
+        <div class="summary-item"><div class="si-val" id="jobSlots">0/0</div><div class="si-lbl">Remaining Slots</div></div>
+        <div class="summary-item"><div class="si-val" id="jobVerify"><span class="badge badge-soft-green">Verified</span></div><div class="si-lbl">Verification</div></div>
+      </div>
+    </div>
+
+    <!-- Proof Submission -->
+    <div class="glass">
+      <h3><i class="ti ti-upload"></i> Proof Submission</h3>
+      <div class="form-group">
+        <label class="form-label">Proof Link <span class="required">*</span></label>
+        <input class="form-input" id="proofLink" type="url" placeholder="https://drive.google.com/your-work" autocomplete="off">
+        <div class="form-hint">Link to your completed work (Google Drive, Dropbox, etc.)</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Screenshots / Files</label>
+        <div class="drop-zone" id="dropZone">
+          <div class="dz-icon"><i class="ti ti-cloud-upload"></i></div>
+          <div class="dz-text">Drop files here or click to upload</div>
+          <div class="dz-sub">PNG, JPG, PDF up to 10MB each</div>
+          <input type="file" id="fileInput" multiple accept="image/png,image/jpeg,image/jpg,application/pdf" onchange="handleFiles(this.files)">
+        </div>
+        <div class="file-list" id="fileList"></div>
+      </div>
+    </div>
+
+    <!-- Optional Notes -->
+    <div class="glass">
+      <h3><i class="ti ti-notes"></i> Notes <span style="font-weight:400;font-size:12px;color:var(--text3)">(optional)</span></h3>
+      <div class="form-group">
+        <textarea class="form-textarea" id="workNotes" placeholder="Add any additional information about your submission..." rows="3" maxlength="500"></textarea>
+        <div class="form-hint"><span id="noteCount">0</span>/500</div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="glass" style="border-color:var(--accent);border-width:1.5px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <i class="ti ti-shield-check" style="color:var(--green);font-size:18px"></i>
+        <span style="font-size:13px;color:var(--text2)">By submitting, you confirm this is your original work</span>
+      </div>
+      <button class="btn btn-primary btn-block" id="submitBtn" onclick="submitWork()" style="margin-top:12px;height:50px;font-size:15px">
+        <i class="ti ti-send"></i> Submit Work
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ VIEW 2: SUBMISSION SUCCESS ═══ -->
+  <div class="view" id="viewSuccess">
+    <div class="glass" style="border-color:var(--green)">
+      <div class="submission-success">
+        <div class="ss-icon"><i class="ti ti-circle-check"></i></div>
+        <h2>Submission Received!</h2>
+        <p>Your work has been submitted successfully and is now pending review by the task creator.</p>
+        <div class="ss-details">
+          <div class="ss-detail"><div class="ssd-val" style="color:var(--accent)" id="ssReward">₦0</div><div class="ssd-lbl">Reward</div></div>
+          <div class="ss-detail"><div class="ssd-val" id="ssReviewTime">≈ 24 hrs</div><div class="ssd-lbl">Est. Review Time</div></div>
+          <div class="ss-detail"><div class="ssd-val" id="ssStatus" style="color:var(--gold)">Pending</div><div class="ssd-lbl">Status</div></div>
+          <div class="ss-detail"><div class="ssd-val" id="ssId">#—</div><div class="ssd-lbl">Submission ID</div></div>
+        </div>
+        <button class="btn btn-primary" onclick="showStatus()" style="margin-bottom:8px"><i class="ti ti-timeline"></i> Track Status</button>
+        <br>
+        <a href="tasks.html" class="btn btn-ghost" style="display:inline-flex"><i class="ti ti-arrow-left"></i> Back to Tasks</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ VIEW 3: STATUS TRACKER ═══ -->
+  <div class="view" id="viewStatus">
+    <div class="back-row">
+      <a href="tasks.html"><i class="ti ti-arrow-left"></i> Back to Tasks</a>
+    </div>
+
+    <div class="glass" style="border-color:var(--accent)">
+      <h3><i class="ti ti-timeline"></i> Submission Progress</h3>
+      <div class="status-tracker" id="statusTracker">
+        <div class="st-step done"><div class="st-icon"><i class="ti ti-send"></i></div><div class="st-label">Submitted</div></div>
+        <div class="st-step active" id="stReview"><div class="st-icon"><i class="ti ti-eye"></i></div><div class="st-label">Under Review</div></div>
+        <div class="st-step" id="stApproved"><div class="st-icon"><i class="ti ti-thumb-up"></i></div><div class="st-label">Approved</div></div>
+        <div class="st-step" id="stPaid"><div class="st-icon"><i class="ti ti-coin"></i></div><div class="st-label">Reward Paid</div></div>
+      </div>
+    </div>
+
+    <div class="submission-card">
+      <div class="sc-row"><span class="sc-lbl">Submission ID</span><span class="sc-val" id="stId">#—</span></div>
+      <div class="sc-row"><span class="sc-lbl">Task</span><span class="sc-val" id="stTask">—</span></div>
+      <div class="sc-row"><span class="sc-lbl">Reward</span><span class="sc-val" style="color:var(--accent)" id="stReward">₦0</span></div>
+      <div class="sc-row"><span class="sc-lbl">Submitted</span><span class="sc-val" id="stDate">—</span></div>
+      <div class="sc-row"><span class="sc-lbl">Proof Link</span><span class="sc-val" id="stLink">—</span></div>
+      <div class="sc-row"><span class="sc-lbl">Status</span><span class="sc-val"><span class="badge badge-soft-gold" id="stStatusBadge">Under Review</span></span></div>
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <a href="my-tasks.html" class="btn btn-ghost" style="flex:1;justify-content:center"><i class="ti ti-list-check"></i> My Submissions</a>
+      <a href="tasks.html" class="btn btn-primary" style="flex:1;justify-content:center"><i class="ti ti-layout-grid"></i> Browse Tasks</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+let uploadedFiles = [];
+
+// Load job from URL params or localStorage
+const urlParams = new URLSearchParams(window.location.search);
+let jobData = null;
+
+(function() {
+  const jobId = urlParams.get('id');
+
+  // Try to load from localStorage first (set by monitor.html's applyForJob)
+  const stored = localStorage.getItem('ogapay_apply_job');
+  if (stored) {
+    try { jobData = JSON.parse(stored); } catch(e) {}
+  }
+
+  // If we have an ID but no data, try to look up from monitor jobs
+  if (jobId && (!jobData || String(jobData.id) !== jobId)) {
+    try {
+      const monitorJobs = JSON.parse(localStorage.getItem('ogapay_monitor_jobs') || '[]');
+      const found = monitorJobs.find(function(j) { return String(j.id) === jobId; });
+      if (found) {
+        jobData = {
+          id: found.id,
+          title: found.task,
+          reward: found.reward,
+          usd: found.usd,
+          time: found.cooldown || '—',
+          slots: found.slots,
+          verify: found.verify,
+          platform: found.platform,
+          req: found.req,
+          desc: found.desc,
+          target: found.target,
+          inst: found.inst,
+          creator: found.creator,
+          creatorStat: found.creatorStat
+        };
+      }
+    } catch(e) {}
+  }
+
+  // URL params override (always)
+  const title = urlParams.get('title');
+  if (title) {
+    jobData = jobData || {};
+    jobData.title = title;
+    if (urlParams.get('reward')) jobData.reward = urlParams.get('reward');
+    if (urlParams.get('usd')) jobData.usd = urlParams.get('usd');
+    if (urlParams.get('time')) jobData.time = urlParams.get('time');
+    if (urlParams.get('slots')) jobData.slots = urlParams.get('slots');
+    if (urlParams.get('verify')) jobData.verify = urlParams.get('verify') === 'true';
+    if (urlParams.get('id')) jobData.id = urlParams.get('id');
+  }
+
+  if (jobData) {
+    // Populate the form with job data
+    document.getElementById('jobTitle').textContent = jobData.title || 'Task';
+    document.getElementById('jobReward').textContent = jobData.reward || '₦0';
+    document.getElementById('jobTime').textContent = jobData.time || '—';
+    document.getElementById('jobSlots').textContent = jobData.slots || '—';
+    document.getElementById('jobVerify').innerHTML = jobData.verify
+      ? '<span class="badge badge-soft-green">Required</span>'
+      : '<span class="badge badge-soft">Not Required</span>';
+    document.getElementById('ssReward').textContent = jobData.reward || '₦0';
+    document.getElementById('stTask').textContent = jobData.title || '—';
+    document.getElementById('stReward').textContent = jobData.reward || '₦0';
+
+    // Switch from loading to submit view
+    switchView('submit');
+  } else {
+    // No job data found - show error
+    switchView('error');
+  }
+})();
+
+// ═══════════════════════════════════════════════════════════════
+//  FILE HANDLING
+// ═══════════════════════════════════════════════════════════════
+function handleFiles(files) {
+  for (const file of files) {
+    if (file.size > 10 * 1024 * 1024) {
+      say(file.name + ' exceeds 10MB limit');
+      continue;
+    }
+    uploadedFiles.push(file);
+  }
+  renderFiles();
+}
+
+function renderFiles() {
+  const list = document.getElementById('fileList');
+  if (!uploadedFiles.length) { list.innerHTML = ''; return; }
+  list.innerHTML = uploadedFiles.map((f, i) => {
+    const size = f.size > 1024 * 1024
+      ? (f.size / (1024 * 1024)).toFixed(1) + ' MB'
+      : (f.size / 1024).toFixed(0) + ' KB';
+    return '<div class="file-item">' +
+      '<div class="fi-icon"><i class="ti ti-file-text"></i></div>' +
+      '<div class="fi-info"><div class="fi-name">' + f.name + '</div><div class="fi-size">' + size + '</div></div>' +
+      '<button class="fi-remove" onclick="removeFile(' + i + ')" title="Remove"><i class="ti ti-x"></i></button>' +
+    '</div>';
+  }).join('');
+}
+
+function removeFile(index) {
+  uploadedFiles.splice(index, 1);
+  renderFiles();
+}
+
+// Drag and drop
+const dropZone = document.getElementById('dropZone');
+if (dropZone) {
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+  });
+}
+
+// Character count
+document.getElementById('workNotes')?.addEventListener('input', function() {
+  document.getElementById('noteCount').textContent = this.value.length;
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  SUBMIT WORK
+// ═══════════════════════════════════════════════════════════════
+function submitWork() {
+  const proofLink = document.getElementById('proofLink').value.trim();
+  const notes = document.getElementById('workNotes').value.trim();
+
+  if (!proofLink) {
+    document.getElementById('proofLink').focus();
+    say('Please provide a proof link');
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Submitting...';
+
+  // Simulate submission
+  setTimeout(() => {
+    const subId = 'OGP-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2,5).toUpperCase();
+    const now = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    // Save to submission history
+    saveSubmission({
+      id: subId,
+      task: jobData?.title || 'Task',
+      reward: jobData?.reward || '₦0',
+      date: now,
+      status: 'Under Review',
+      proofLink: proofLink,
+      files: uploadedFiles.map(f => f.name)
+    });
+
+    // Update success view
+    document.getElementById('ssReward').textContent = jobData?.reward || '₦0';
+    document.getElementById('ssStatus').textContent = 'Under Review';
+    document.getElementById('ssId').textContent = '#' + subId;
+
+    // Update status view
+    document.getElementById('stId').textContent = '#' + subId;
+    document.getElementById('stDate').textContent = now;
+    document.getElementById('stLink').textContent = proofLink;
+    document.getElementById('stLink').href = proofLink;
+
+    // Status tracker: mark first two steps
+    document.getElementById('stReview').classList.add('active');
+    document.getElementById('stApproved').classList.remove('active');
+    document.getElementById('stPaid').classList.remove('active');
+
+    switchView('success');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-send"></i> Submit Work';
+    updateSteps(1);
+    say('Work submitted successfully!');
+  }, 1800);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SAVE SUBMISSION
+// ═══════════════════════════════════════════════════════════════
+function saveSubmission(sub) {
+  let subs = JSON.parse(localStorage.getItem('ogapay_submissions') || '[]');
+  subs.unshift(sub);
+  if (subs.length > 20) subs = subs.slice(0, 20);
+  localStorage.setItem('ogapay_submissions', JSON.stringify(subs));
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  VIEW SWITCHING
+// ═══════════════════════════════════════════════════════════════
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+  const steps = { submit: 0, success: 1, status: 2 };
+  updateSteps(steps[name] || 0);
+}
+
+function updateSteps(active) {
+  document.querySelectorAll('.step-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === active);
+    d.classList.toggle('done', i < active);
+  });
+}
+
+function showStatus() {
+  switchView('status');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════════
+function say(text) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = text;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  THEME / MENU / NAV
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('click', function(e) {
+  const themeBtn = e.target.closest('#themeToggle');
+  if (themeBtn) {
+    const html = document.documentElement;
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('ogapay-theme', next);
+    const ti = document.getElementById('ti');
+    if (ti) ti.className = next === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+  }
+
+  if (e.target.closest('#menuBtn')) {
+    document.getElementById('mobileMenu').classList.add('open');
+  }
+  if (e.target.closest('[data-close-menu]')) {
+    document.getElementById('mobileMenu').classList.remove('open');
+  }
+});
+
+// Drawer accordion
+document.addEventListener('click', function(e) {
+  const toggle = e.target.closest('.oga-drawer-group-toggle');
+  if (toggle) {
+    const group = toggle.closest('.oga-drawer-group');
+    const open = !group.classList.contains('open');
+    group.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════════════
+(function() {
+  // Theme
+  const html = document.documentElement;
+  const theme = localStorage.getItem('ogapay-theme') || 'light';
+  html.setAttribute('data-theme', theme);
+  const ti = document.getElementById('ti');
+  if (ti) ti.className = theme === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+
+  // Auth
+  const authed = localStorage.getItem('ogapay-authenticated') === 'true';
+  document.body.setAttribute('data-auth', authed ? 'authed' : 'public');
+
+  // Active nav link
+  const path = window.location.pathname.split('/').pop() || 'index.html';
+  document.querySelectorAll('[data-navlink]').forEach(function(a) {
+    if (a.getAttribute('href') === path) a.classList.add('active');
+  });
+})();
+</script>
+</body>
+</html>

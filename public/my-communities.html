@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Communities - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'dark')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050816;--bg2:#080B1A;--card:#0B1020;--card2:#0F1428;--border:#1A2040;--border2:#2A3070;--text:#FFFFFF;--text2:#8B8FA3;--text3:#5C6080;--accent:#3B82F6;--accent2:#2563EB;--accent-dim:rgba(59,130,246,.12);--green:#22C55E;--shadow:0 4px 24px rgba(0,0,0,.5);--radius:14px;--nav-h:60px}
+[data-theme="light"]{--bg:#050816;--bg2:#080B1A;--card:#0B1020;--card2:#0F1428;--border:#1A2040;--border2:#2A3070;--text:#FFFFFF;--text2:#8B8FA3;--text3:#5C6080;--accent:#3B82F6}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
+a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}input,select,textarea{font:inherit}img{max-width:100%;display:block}
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(5,8,22,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4)}
+.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:19px;font-weight:800;letter-spacing:-.4px;white-space:nowrap}
+.logo-mark{width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:9px;overflow:hidden}
+.logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}.brand span span{color:var(--text)}
+.nav-links{display:flex;align-items:center;justify-content:center;gap:4px}
+.nav-link{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:600;line-height:1;transition:all .14s}
+.nav-link svg{width:15px;height:15px;stroke-width:2.2;flex-shrink:0}
+.nav-link.active,.nav-link:hover{color:var(--text);background:var(--bg2)}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.wallet-btn{height:36px;padding:0 14px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:all .2s}
+.wallet-btn:hover{border-color:var(--accent);background:var(--accent-dim)}
+.wallet-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.icon-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text2);font-size:18px;line-height:1;display:grid;place-items:center;transition:all .2s}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.main-wrap{flex:1;width:min(1200px,calc(100% - 32px));margin:0 auto;padding:calc(var(--nav-h) + 16px) 0 60px}
+@keyframes fadeIn{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+
+.mc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.mc-header h1{font-family:Outfit;font-size:28px;font-weight:900;margin:0;background:linear-gradient(135deg,#fff 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.tabs{display:flex;gap:4px;margin-bottom:24px;flex-wrap:wrap}
+.tab{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.tab.active,.tab:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+
+.mc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.mc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all .25s;cursor:pointer}
+.mc-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 8px 24px rgba(59,130,246,.12)}
+.mc-card .mcc-banner{height:80px;background:linear-gradient(135deg,#1a1a4e,#3B82F6);position:relative}
+.mc-card .mcc-av{width:48px;height:48px;border-radius:50%;border:3px solid var(--card);background:var(--bg2);display:grid;place-items:center;font-size:16px;font-weight:800;color:var(--accent);margin-top:-24px;margin-left:16px}
+.mc-card .mcc-body{padding:8px 16px 16px}
+.mc-card .mcc-name{font-weight:700;font-size:15px}
+.mc-card .mcc-role{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;background:var(--accent-dim);color:var(--accent);margin:4px 0 8px}
+.mc-card .mcc-stats{display:flex;gap:16px;margin-bottom:8px;font-size:12px;color:var(--text2)}
+.mc-card .mcc-stats span{display:flex;align-items:center;gap:4px}
+.mc-card .mcc-stats svg{width:14px;height:14px;color:var(--accent)}
+.mc-card .mcc-action{display:flex;gap:6px}
+.mc-card .mcc-action button{flex:1;height:32px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s}
+.mc-open{border:1px solid var(--accent);background:var(--accent);color:#fff}
+.mc-manage{border:1px solid var(--border);background:transparent;color:var(--text2)}
+.mc-manage:hover{border-color:var(--accent);color:var(--accent)}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;padding:64px 24px;text-align:center}
+.empty-state svg{width:56px;height:56px;color:var(--text3);margin-bottom:16px}
+.empty-state h3{font-size:18px;font-weight:700;margin:0 0 4px}
+.empty-state p{color:var(--text2);font-size:14px;margin:0 0 20px}
+.empty-state .btn{padding:10px 24px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.empty-state .btn:hover{box-shadow:0 4px 20px rgba(59,130,246,.3)}
+
+.site-footer{position:relative;overflow:hidden;padding:60px 24px 32px;background:linear-gradient(180deg,var(--bg) 0%,#000 100%);border-top:1px solid var(--border);margin-top:auto}
+.site-footer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.15;pointer-events:none}
+.footer-overlay{position:relative;z-index:1;max-width:1120px;margin:0 auto}
+.footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:34px;margin-bottom:32px}
+@media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:24px}}
+.footer-brand{display:flex;align-items:center;gap:10px;font-family:Outfit;font-size:22px;font-weight:900;margin-bottom:10px}
+.footer-brand .logo-mark{width:28px;height:28px}
+.footer-desc{color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:16px;max-width:280px}
+.footer-social{display:flex;gap:10px}
+.footer-social a{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);display:grid;place-items:center;color:var(--text2);transition:all .2s}
+.footer-social a:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.footer-col h4{font-size:14px;font-weight:700;margin:0 0 14px;color:var(--text)}
+.footer-col nav{display:grid;gap:8px}
+.footer-col a{color:var(--text2);font-size:13px;transition:color .2s}
+.footer-col a:hover{color:var(--accent)}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:20px;border-top:1px solid var(--border);color:var(--text3);font-size:13px;flex-wrap:wrap;gap:12px}
+@media(max-width:768px){.nav-links{display:none}.nav-actions .wallet-btn .wallet-label{display:none}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="nav-inner"><a class="brand" href="index.html"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span><span>Oga<span>Pay</span></span></a><nav class="nav-links"><a class="nav-link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a><a class="nav-link active" href="communities.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Communities</a><a class="nav-link" href="create-community.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Create</a></nav><div class="nav-actions"><button class="icon-btn" id="themeToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button><button class="icon-btn" id="menuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button></div></div></header>
+
+<div class="main-wrap">
+<div class="mc-header">
+  <h1>My Communities</h1>
+  <a href="create-community.html" style="padding:10px 20px;border-radius:8px;background:var(--accent);color:#fff;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:6px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Create Community
+  </a>
+</div>
+<div class="tabs">
+  <button class="tab active" onclick="switchMCTab(this,'all')">All</button>
+  <button class="tab" onclick="switchMCTab(this,'admin')">Admin</button>
+  <button class="tab" onclick="switchMCTab(this,'member')">Member</button>
+  <button class="tab" onclick="switchMCTab(this,'pending')">Pending</button>
+</div>
+<div id="mcGrid" class="mc-grid"></div>
+<div id="mcEmpty" class="empty-state" style="display:none">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+  <h3>No communities found</h3>
+  <p>Join or create a community to get started</p>
+  <a href="communities.html" class="btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>Browse Communities</a>
+</div>
+</div>
+
+<footer class="site-footer"><video autoplay muted loop playsinline poster=""><source src="https://ogapay-five.vercel.app/videos/ogapay-bg.mp4" type="video/mp4"></video><div class="footer-overlay"><div class="footer-grid"><div><div class="footer-brand"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</div></div></div><div class="footer-bottom"><span>&copy; 2026 OgaPay.</span></div></div></footer>
+
+<script>
+const MY_COMMUNITIES = [
+  {id:1,name:'Solana Builders',role:'admin',members:2840,tasks:456,rewards:45000,initials:'SB',pending:false},
+  {id:2,name:'Design Masters',role:'member',members:1820,tasks:320,rewards:28000,initials:'DM',pending:false},
+  {id:3,name:'Content Creators Hub',role:'member',members:3150,tasks:540,rewards:52000,initials:'CC',pending:false},
+  {id:4,name:'Web3 Marketing',role:'pending',members:1240,tasks:210,rewards:18000,initials:'WM',pending:true},
+];
+
+let currentTab = 'all';
+
+function $(id){return document.getElementById(id)}
+function html(el,h){el.innerHTML=h}
+
+function renderMyCommunities(tab){
+  const items = tab==='all'?MY_COMMUNITIES:MY_COMMUNITIES.filter(c=>c.role===tab);
+  const grid = $('mcGrid');
+  const empty = $('mcEmpty');
+  
+  if(!items.length){
+    grid.innerHTML='';empty.style.display='flex';return;
+  }
+  empty.style.display='none';
+  
+  grid.innerHTML = items.map(c=>{
+    const colors = {admin:'#1a1a4e,#3B82F6',member:'#1a4e3a,#22C55E',pending:'#4e3a1a,#F5B301'};
+    return '<div class="mc-card" onclick="window.location.href=\'community-profile.html?id='+c.id+'\'">'+
+      '<div class="mcc-banner" style="background:linear-gradient(135deg,'+(colors[c.role]||colors.member)+')"></div>'+
+      '<div class="mcc-av">'+c.initials+'</div>'+
+      '<div class="mcc-body">'+
+        '<div class="mcc-name">'+c.name+'</div>'+
+        '<div class="mcc-role">'+(c.role==='admin'?'Owner':c.role==='pending'?'Pending':'Member')+'</div>'+
+        '<div class="mcc-stats">'+
+          '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'+c.members.toLocaleString()+'</span>'+
+          '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'+c.tasks+' tasks</span>'+
+          '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>NGN '+c.rewards.toLocaleString()+'</span>'+
+        '</div>'+
+        '<div class="mcc-action">'+
+          '<button class="mc-open" onclick="event.stopPropagation();window.location.href=\'community-profile.html?id='+c.id+'\'">Open</button>'+
+          (c.role==='admin'?'<button class="mc-manage" onclick="event.stopPropagation();alert(\'Manage community\')">Manage</button>':'')+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function switchMCTab(el,tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  currentTab = tab;
+  renderMyCommunities(tab);
+}
+
+renderMyCommunities('all');
+
+(function(){
+  try{var th=localStorage.getItem('ogapay-theme')||'dark';document.documentElement.setAttribute('data-theme',th);}catch(e){}
+  try{var authed=localStorage.getItem('ogapay-authenticated')==='true';document.body.setAttribute('data-auth',authed?'authed':'public');}catch(e){}
+  var t=document.getElementById('themeToggle');if(t){t.addEventListener('click',function(){var h=document.documentElement;h.setAttribute('data-theme','dark');try{localStorage.setItem('ogapay-theme',next);}catch(e){}});}
+  var m=document.getElementById('menuBtn'),mm=document.getElementById('mobileMenu');if(m&&mm){m.addEventListener('click',function(){mm.classList.add('open');});mm.querySelectorAll('[data-close-menu]').forEach(function(e){e.addEventListener('click',function(){mm.classList.remove('open');});});}
+})();
+</script>
+</body>
+</html>

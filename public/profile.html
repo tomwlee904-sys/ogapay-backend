@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Profile - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(16,21,37,.06);--shadow-md:0 4px 16px rgba(16,21,37,.08);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(0,0,0,.25);--shadow-md:0 4px 16px rgba(0,0,0,.3)}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}button,input{font:inherit}button{cursor:pointer}
+
+/* ═══ NAVBAR ═══ */
+.nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:200;background:rgba(255,255,255,.94);backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid var(--border)}
+[data-theme="dark"] .nav{background:rgba(0,0,0,.94)}
+.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-family:Outfit,sans-serif;font-size:19px;font-weight:900;letter-spacing:-.4px}
+.logo-mark{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;overflow:hidden}
+.logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}
+.nav-links{display:flex;align-items:center;justify-content:center;gap:4px}
+.nav-link{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:600;transition:all .14s}
+.nav-link:hover,.nav-link.active{color:var(--text);background:var(--bg2)}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.wallet-btn{height:36px;padding:0 18px;display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--border2);border-radius:999px;background:var(--card);color:var(--text);font-size:13.5px;font-weight:700;transition:border-color .2s;text-decoration:none}
+.wallet-btn:hover{border-color:var(--text)}
+.icon-btn{width:36px;height:36px;display:grid;place-items:center;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);transition:all .2s}
+.icon-btn:hover{color:var(--text);border-color:var(--border2)}
+@media(max-width:768px){.nav-links{display:none}.nav-inner{width:100%;padding:0 20px;gap:10px;grid-template-columns:1fr auto}}
+
+/* ═══ DRAWER ═══ */
+.mobile-menu{position:fixed;top:0;left:0;right:0;bottom:0;z-index:300;display:none;visibility:hidden;pointer-events:none}
+.mobile-menu.open{display:block;visibility:visible;pointer-events:auto}
+.mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(4px)}
+.oga-drawer{position:absolute;right:0;top:0;bottom:0;width:min(340px,90vw);padding:0;background:var(--bg2);border-left:1px solid var(--border);box-shadow:-16px 0 42px rgba(16,21,37,.12);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}
+[data-theme="dark"] .oga-drawer{background:#000;border-left-color:var(--border)}
+.mobile-menu.open .oga-drawer{transform:translateX(0)}
+.oga-drawer-head{height:64px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.oga-drawer-close{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);font-size:20px;display:grid;place-items:center;cursor:pointer}
+.oga-drawer-nav{padding:10px 8px;overflow-y:auto;flex:1}
+.oga-drawer-item{width:100%;min-height:52px;display:flex;align-items:center;gap:12px;padding:8px 10px;border:0;border-radius:10px;background:transparent;color:inherit;text-decoration:none;cursor:pointer;font:inherit}
+.oga-drawer-item:hover{background:var(--card)}
+.oga-drawer-icon{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--border);border-radius:9px;background:var(--card);color:var(--text2);flex:0 0 auto;font-size:18px}
+.oga-drawer-item strong{display:block;font-size:15px;font-weight:800}
+.oga-drawer-item small{display:block;margin-top:2px;color:var(--text3);font-size:12px}
+.oga-drawer-chevron{width:14px;height:14px;margin-left:auto;color:var(--text3);transition:transform .16s;display:inline-block}
+.oga-drawer-group.open .oga-drawer-chevron{transform:rotate(180deg)}
+.oga-drawer-subnav{display:none;margin:4px 0 10px 18px;padding:6px 0 6px 22px;border-left:2px solid var(--border)}
+.oga-drawer-group.open .oga-drawer-subnav{display:grid;gap:4px}
+.oga-drawer-subnav a{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;font-size:13px;font-weight:600;color:var(--text2)}
+.oga-drawer-subnav a:hover{background:var(--card);color:var(--text)}
+.oga-drawer-foot{padding:8px 8px 0;border-top:1px solid var(--border)}
+.oga-drawer-foot-label{font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 10px 4px}
+.authed-only{display:none!important}.public-only{display:flex!important}
+body[data-auth="authed"] .authed-only{display:flex!important}
+body[data-auth="authed"] .public-only{display:none!important}
+nav.oga-drawer-nav.authed-only{display:none!important}nav.oga-drawer-nav.public-only{display:block!important}
+body[data-auth="authed"] nav.oga-drawer-nav.authed-only{display:block!important}
+body[data-auth="authed"] nav.oga-drawer-nav.public-only{display:none!important}
+div.oga-drawer-foot.authed-only{display:none!important}div.oga-drawer-foot.public-only{display:block!important}
+body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important}
+body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
+
+/* ═══ PAGE ═══ */
+.wrapper{width:min(860px,calc(100% - 40px));margin:0 auto;padding:calc(var(--nav-h) + 32px) 0 80px}
+.bread{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);margin-bottom:24px;flex-wrap:wrap}
+.bread a{color:var(--text2);font-weight:600}.bread a:hover{color:var(--accent)}.bread span{color:var(--text3)}
+
+/* ═══ TWO.COLUMN TOP ═══ */
+.top-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+@media(max-width:768px){.top-grid{grid-template-columns:1fr;gap:16px}}
+
+/* ═══ ACCOUNT CARD ═══ */
+.acct-card{padding:24px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card)}
+.acct-card .acct-head{font-size:13px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.acct-card .acct-bal{font-family:Outfit,sans-serif;font-size:28px;font-weight:900;letter-spacing:-.5px;color:var(--text);margin-bottom:4px}
+.acct-card .acct-avail{font-size:14px;color:var(--text2);margin-bottom:20px}
+.acct-card .acct-avail strong{color:var(--text)}
+.acct-card .acct-actions{display:flex;gap:8px;flex-wrap:wrap}
+.acct-btn{height:38px;padding:0 20px;border-radius:8px;border:1.5px solid var(--border2);background:transparent;color:var(--text);font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .12s;text-decoration:none}
+.acct-btn:hover{border-color:var(--accent);color:var(--accent)}
+.acct-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.acct-btn.primary:hover{box-shadow:0 4px 12px rgba(124,58,237,.2)}
+
+/* ═══ PROFILE CARD (RIGHT) ═══ */
+.prof-card{padding:24px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);display:flex;flex-direction:column;gap:12px}
+.prof-card .pr-row{display:flex;align-items:center;gap:16px}
+.prof-card .pr-avatar{width:56px;height:56px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;font-size:24px;border:2px solid var(--accent);flex-shrink:0;overflow:hidden;position:relative}
+.prof-card .pr-avatar .pr-verified{position:absolute;bottom:-1px;right:-1px;width:18px;height:18px;background:var(--green);border-radius:50%;border:2px solid var(--card);display:grid;place-items:center;color:#fff;font-size:7px}
+.prof-card .pr-name h2{margin:0;font-family:Outfit;font-size:18px;font-weight:900}
+.prof-card .pr-name .pr-uname{font-size:13px;color:var(--text2);margin-top:1px}
+.prof-card .pr-bio{font-size:13px;color:var(--text2);line-height:1.5;margin:0}
+.prof-card .pr-meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:2px}
+.pr-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid var(--border)}
+.pr-tag.gold{background:#f5b30110;color:var(--gold);border-color:rgba(245,179,1,.2)}
+.pr-tag.green{background:#16a34a10;color:var(--green);border-color:rgba(22,163,74,.2)}
+.pr-tag.purple{background:#7C3AED10;color:var(--accent);border-color:rgba(124,58,237,.2)}
+.prof-card .pr-edit{margin-top:4px}
+.edit-prof-btn{height:34px;padding:0 16px;border-radius:8px;border:1.5px solid var(--border2);background:transparent;color:var(--text);font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .12s;text-decoration:none}
+.edit-prof-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ═══ REFERRAL CARD ═══ */
+.ref-card{padding:20px 24px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.ref-card .ref-info{display:flex;align-items:center;gap:12px}
+.ref-card .ref-info .ref-icon{width:40px;height:40px;border-radius:10px;background:#7C3AED15;color:var(--accent);display:grid;place-items:center;font-size:18px;flex-shrink:0}
+.ref-card .ref-info .ref-text strong{display:block;font-size:14px;font-weight:800}
+.ref-card .ref-info .ref-text small{font-size:12px;color:var(--text2)}
+.ref-card .ref-link-wrap{display:flex;align-items:center;gap:6px;flex:1;min-width:200px;max-width:400px}
+.ref-card .ref-link-wrap input{flex:1;height:38px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:12px;font-family:monospace}
+.ref-card .ref-link-wrap .copy-btn{height:38px;width:38px;border:1.5px solid var(--border2);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center;cursor:pointer;transition:all .12s}
+.ref-card .ref-link-wrap .copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:768px){.ref-card{flex-direction:column;align-items:stretch;padding:18px}.ref-card .ref-link-wrap{max-width:none}}
+
+/* ═══ QUICK LINKS ═══ */
+.qnav-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.qnav-item{display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);text-decoration:none;transition:all .12s}
+.qnav-item:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.qnav-item .qnav-icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:18px}
+.qnav-item .qnav-label{font-size:11px;font-weight:700;color:var(--text);text-align:center;line-height:1.3}
+@media(max-width:768px){.qnav-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.qnav-grid{grid-template-columns:repeat(2,1fr);gap:8px}}
+
+/* ═══ MORE LINKS ═══ */
+.more-toggle{width:100%;height:44px;border:1.5px dashed var(--border);border-radius:var(--radius-sm);background:transparent;color:var(--text2);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .12s}
+.more-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.more-toggle.open{border-style:solid;border-color:var(--border2);color:var(--text)}
+.more-grid{display:none;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.more-grid.open{display:grid}
+.more-grid .qnav-item{padding:16px 10px}
+@media(max-width:768px){.more-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* ═══ TOAST ═══ */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);color:var(--text);padding:12px 24px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow-md);font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s ease;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body data-auth="public">
+
+<!-- ═══ NAVBAR ═══ -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/">
+      <span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
+      OgaPay
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="index.html" data-navlink><i class="ti ti-home"></i>Home</a>
+      <a class="nav-link" href="tasks.html" data-navlink><i class="ti ti-checklist"></i>Tasks</a>
+      <a class="nav-link" href="store.html" data-navlink><i class="ti ti-building-store"></i>Store</a>
+      <a class="nav-link" href="communities.html" data-navlink><i class="ti ti-users"></i>Communities</a>
+      <a class="nav-link" href="faq.html" data-navlink><i class="ti ti-help-circle"></i>FAQ</a>
+    </div>
+    <div class="nav-actions">
+      <a class="wallet-btn" href="login.html"><i class="ti ti-wallet"></i> &#8358;0.00</a>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="ti ti-moon"></i></button>
+      <button class="icon-btn" id="menuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ DRAWER ═══ -->
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-overlay" data-close-menu></div>
+  <div class="oga-drawer">
+    <div class="oga-drawer-head">
+      <span style="font-family:Outfit;font-weight:900;font-size:17px">Menu</span>
+      <button class="oga-drawer-close" data-close-menu><i class="ti ti-x"></i></button>
+    </div>
+    <nav class="oga-drawer-nav public-only">
+      <a class="oga-drawer-item" href="tasks.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-checklist"></i></span><span><strong>Tasks</strong><small>Browse available tasks</small></span></a>
+      <a class="oga-drawer-item" href="store.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-building-store"></i></span><span><strong>Store</strong><small>Browse products &amp; gigs</small></span></a>
+      <a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-article"></i></span><span><strong>Blog</strong><small>Latest insights</small></span></a>
+      <a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span><span><strong>FAQ</strong><small>Frequently asked questions</small></span></a>
+      <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-headset"></i></span><span><strong>Support</strong><small>Get help</small></span></a>
+      <div style="padding:12px 10px;margin-top:8px"><a class="wallet-btn" href="login.html" style="width:100%;justify-content:center" data-close-menu><i class="ti ti-login"></i> Login</a></div>
+    </nav>
+    <nav class="oga-drawer-nav authed-only">
+      <a class="oga-drawer-item" href="dashboard.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-dashboard"></i></span><span><strong>Dashboard</strong><small>Your overview</small></span></a>
+      <a class="oga-drawer-item" href="post-task.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-plus-circle"></i></span><span><strong>Create Job</strong><small>Post a new task</small></span></a>
+      <div class="oga-drawer-group">
+        <button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false"><span class="oga-drawer-icon"><i class="ti ti-briefcase"></i></span><span><strong>Jobs</strong><small>Manage your tasks</small></span><i class="ti ti-chevron-down oga-drawer-chevron"></i></button>
+        <div class="oga-drawer-subnav"><a href="tasks.html"><i class="ti ti-arrow-right"></i>Browse Tasks</a><a href="my-tasks.html"><i class="ti ti-arrow-right"></i>My Tasks</a></div>
+      </div>
+      <div class="oga-drawer-group">
+        <button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false"><span class="oga-drawer-icon"><i class="ti ti-building-store"></i></span><span><strong>Store</strong><small>Marketplace</small></span><i class="ti ti-chevron-down oga-drawer-chevron"></i></button>
+        <div class="oga-drawer-subnav"><a href="store.html"><i class="ti ti-arrow-right"></i>Wurker Store</a><a href="my-store.html"><i class="ti ti-arrow-right"></i>My Store</a><a href="worker.html"><i class="ti ti-arrow-right"></i>Wurker Portal</a><a href="messages.html"><i class="ti ti-arrow-right"></i>Messages</a></div>
+      </div>
+      <a class="oga-drawer-item" href="communities.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-users"></i></span><span><strong>Communities</strong><small>Connect with others</small></span></a>
+      <a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-article"></i></span><span><strong>Blog</strong><small>Latest insights</small></span></a>
+      <a class="oga-drawer-item" href="notifications.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-bell"></i></span><span><strong>Notifications</strong><small>Alerts &amp; updates</small></span></a>
+      <a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span><span><strong>FAQ</strong><small>Frequently asked questions</small></span></a>
+      <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-headset"></i></span><span><strong>Support</strong><small>Get help</small></span></a>
+    </nav>
+    <div class="oga-drawer-foot authed-only">
+      <div class="oga-drawer-foot-label">Account</div>
+      <a class="oga-drawer-item" href="profile.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-user"></i></span><span><strong>My Profile</strong><small>View and edit profile</small></span></a>
+      <button class="oga-drawer-item" onclick="localStorage.removeItem('ogapay-authenticated');document.body.setAttribute('data-auth','public')"><span class="oga-drawer-icon"><i class="ti ti-logout"></i></span><span><strong>Logout</strong><small>Sign out</small></span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE CONTENT ═══ -->
+<div class="wrapper">
+  <nav class="bread">
+    <a href="/"><i class="ti ti-home"></i></a>
+    <i class="ti ti-chevron-right" style="font-size:10px"></i>
+    <span>Profile</span>
+  </nav>
+
+  <!-- ═══ TOP TWO-COLUMN GRID ═══ -->
+  <div class="top-grid">
+
+    <!-- LEFT: ACCOUNT INFORMATION -->
+    <div class="acct-card">
+      <div class="acct-head"><i class="ti ti-wallet"></i> Account Information</div>
+      <div class="acct-bal">&#8358;245,800.00</div>
+      <div class="acct-avail">Available Balance: <strong>&#8358;189,420.50</strong></div>
+      <div class="acct-actions">
+        <a class="acct-btn primary" href="wallet.html?action=withdraw"><i class="ti ti-arrow-up"></i> Withdraw</a>
+        <a class="acct-btn" href="wallet.html?action=deposit"><i class="ti ti-arrow-down"></i> Deposit</a>
+        <a class="acct-btn" href="wallet.html?action=transfer"><i class="ti ti-transfer"></i> Transfer</a>
+      </div>
+    </div>
+
+    <!-- RIGHT: PROFILE INFORMATION -->
+    <div class="prof-card">
+      <div class="pr-row">
+        <div class="pr-avatar">
+          <i class="ti ti-user"></i>
+          <div class="pr-verified"><i class="ti ti-check" style="font-size:6px"></i></div>
+        </div>
+        <div class="pr-name">
+          <h2>Chisom Okafor</h2>
+          <div class="pr-uname">@chisom_okaf</div>
+        </div>
+      </div>
+      <p class="pr-bio">Gold Tier Worker · 847 tasks completed · 4.9 avg rating</p>
+      <div class="pr-meta">
+        <span class="pr-tag purple"><i class="ti ti-star"></i> Reputation: 8.4K</span>
+        <span class="pr-tag gold"><i class="ti ti-crown"></i> Gold Tier</span>
+        <span class="pr-tag green"><i class="ti ti-badge-check"></i> KYC Verified</span>
+      </div>
+      <div class="pr-edit">
+        <a class="edit-prof-btn" href="edit-profile.html"><i class="ti ti-edit"></i> Edit Profile</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ REFERRAL PROGRAM ═══ -->
+  <div class="ref-card">
+    <div class="ref-info">
+      <div class="ref-icon"><i class="ti ti-link"></i></div>
+      <div class="ref-text">
+        <strong>Referral Program</strong>
+        <small>Invite friends and earn &#8358;500 per referral</small>
+      </div>
+    </div>
+    <div class="ref-link-wrap">
+      <input type="text" id="refLink" value="https://ogapay.com/ref/chisom_okaf" readonly>
+      <button class="copy-btn" onclick="copyRefLink()" title="Copy referral link"><i class="ti ti-copy"></i></button>
+    </div>
+  </div>
+
+  <!-- ═══ QUICK LINKS ═══ -->
+  <div class="qnav-grid">
+    <a class="qnav-item" href="tasks.html">
+      <span class="qnav-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-checklist"></i></span>
+      <span class="qnav-label">Browse Tasks</span>
+    </a>
+    <a class="qnav-item" href="wallet.html">
+      <span class="qnav-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-wallet"></i></span>
+      <span class="qnav-label">Wallet</span>
+    </a>
+    <a class="qnav-item" href="my-store.html">
+      <span class="qnav-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-building-store"></i></span>
+      <span class="qnav-label">My Store</span>
+    </a>
+    <a class="qnav-item" href="communities.html">
+      <span class="qnav-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-users"></i></span>
+      <span class="qnav-label">Communities</span>
+    </a>
+    <a class="qnav-item" href="notifications.html">
+      <span class="qnav-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-bell"></i></span>
+      <span class="qnav-label">Notifications</span>
+    </a>
+    <a class="qnav-item" href="settings.html">
+      <span class="qnav-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-settings"></i></span>
+      <span class="qnav-label">Settings</span>
+    </a>
+  </div>
+
+  <!-- ═══ MORE LINKS ═══ -->
+  <button class="more-toggle" id="moreToggle" onclick="toggleMore()">
+    <i class="ti ti-chevron-down"></i> More Links <i class="ti ti-chevron-down"></i>
+  </button>
+  <div class="more-grid" id="moreGrid">
+    <a class="qnav-item" href="dashboard.html">
+      <span class="qnav-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-dashboard"></i></span>
+      <span class="qnav-label">Dashboard</span>
+    </a>
+    <a class="qnav-item" href="post-task.html">
+      <span class="qnav-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-plus-circle"></i></span>
+      <span class="qnav-label">Post a Task</span>
+    </a>
+    <a class="qnav-item" href="my-tasks.html">
+      <span class="qnav-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-briefcase"></i></span>
+      <span class="qnav-label">My Tasks</span>
+    </a>
+    <a class="qnav-item" href="messages.html">
+      <span class="qnav-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-message"></i></span>
+      <span class="qnav-label">Messages</span>
+    </a>
+    <a class="qnav-item" href="worker.html">
+      <span class="qnav-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-briefcase"></i></span>
+      <span class="qnav-label">Worker Portal</span>
+    </a>
+    <a class="qnav-item" href="public-profile.html">
+      <span class="qnav-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-eye"></i></span>
+      <span class="qnav-label">Public Profile</span>
+    </a>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast"></div>
+
+<script>
+function copyRefLink() {
+  var inp = document.getElementById('refLink');
+  inp.select(); inp.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(inp.value).then(function(){
+    showToast('Referral link copied!');
+  }).catch(function(){
+    inp.select(); document.execCommand('copy');
+    showToast('Referral link copied!');
+  });
+}
+function toggleMore() {
+  document.getElementById('moreGrid').classList.toggle('open');
+  document.getElementById('moreToggle').classList.toggle('open');
+}
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+// Theme & Nav
+(function(){
+  var th; try{th=localStorage.getItem('ogapay-theme')}catch(e){}
+  var t=th||document.documentElement.getAttribute('data-theme')||'light';
+  document.documentElement.setAttribute('data-theme',t);
+  var authed=false; try{authed=localStorage.getItem('ogapay-authenticated')==='true'}catch(e){}
+  document.body.setAttribute('data-auth',authed?'authed':'public');
+  var themeBtn=document.getElementById('themeToggle');
+  if(themeBtn){themeBtn.addEventListener('click',function(){var h=document.documentElement;var n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}})}
+  var menuBtn=document.getElementById('menuBtn');var mobileMenu=document.getElementById('mobileMenu');
+  if(menuBtn&&mobileMenu){menuBtn.addEventListener('click',function(){mobileMenu.classList.add('open')});mobileMenu.querySelectorAll('[data-close-menu]').forEach(function(el){el.addEventListener('click',function(){mobileMenu.classList.remove('open')})})}
+  document.addEventListener('click',function(e){var t=e.target.closest('.oga-drawer-group-toggle');if(t){var g=t.closest('.oga-drawer-group');var o=!g.classList.contains('open');g.classList.toggle('open',o);t.setAttribute('aria-expanded',String(o))}});
+  var p=window.location.pathname.split('/').pop()||'index.html';
+  document.querySelectorAll('[data-navlink]').forEach(function(a){if(a.getAttribute('href')===p)a.classList.add('active')});
+})();
+</script>
+</body>
+</html>

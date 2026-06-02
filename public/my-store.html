@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>My Store - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(16,21,37,.06);--shadow-md:0 4px 16px rgba(16,21,37,.08);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(0,0,0,.25);--shadow-md:0 4px 16px rgba(0,0,0,.3)}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
+img{max-width:100%}
+
+/* ═══ NAVBAR ═══ */
+.nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:200;background:rgba(255,255,255,.94);backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid var(--border)}
+[data-theme="dark"] .nav{background:rgba(0,0,0,.94)}
+.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-family:Outfit,sans-serif;font-size:19px;font-weight:900;letter-spacing:-.4px}
+.logo-mark{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;overflow:hidden}
+.logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}
+.nav-links{display:flex;align-items:center;justify-content:center;gap:4px}
+.nav-link{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:600;transition:all .14s}
+.nav-link:hover,.nav-link.active{color:var(--text);background:var(--bg2)}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.wallet-btn{height:36px;padding:0 18px;display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--border2);border-radius:999px;background:var(--card);color:var(--text);font-size:13.5px;font-weight:700;transition:border-color .2s;text-decoration:none}
+.wallet-btn:hover{border-color:var(--text)}
+.icon-btn{width:36px;height:36px;display:grid;place-items:center;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);transition:all .2s}
+.icon-btn:hover{color:var(--text);border-color:var(--border2)}
+@media(max-width:768px){.nav-links{display:none}.nav-inner{width:100%;padding:0 20px;gap:10px;grid-template-columns:1fr auto}}
+
+/* ═══ DRAWER ═══ */
+.mobile-menu{position:fixed;top:0;left:0;right:0;bottom:0;z-index:300;display:none;visibility:hidden;pointer-events:none}
+.mobile-menu.open{display:block;visibility:visible;pointer-events:auto}
+.mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(4px)}
+.oga-drawer{position:absolute;right:0;top:0;bottom:0;width:min(340px,90vw);padding:0;background:var(--bg2);border-left:1px solid var(--border);box-shadow:-16px 0 42px rgba(16,21,37,.12);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}
+[data-theme="dark"] .oga-drawer{background:#000;border-left-color:var(--border)}
+.mobile-menu.open .oga-drawer{transform:translateX(0)}
+.oga-drawer-head{height:64px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.oga-drawer-close{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);font-size:20px;display:grid;place-items:center;cursor:pointer}
+.oga-drawer-nav{padding:10px 8px;overflow-y:auto;flex:1}
+.oga-drawer-item{width:100%;min-height:52px;display:flex;align-items:center;gap:12px;padding:8px 10px;border:0;border-radius:10px;background:transparent;color:inherit;text-decoration:none;cursor:pointer;font:inherit}
+.oga-drawer-item:hover{background:var(--card)}
+.oga-drawer-icon{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--border);border-radius:9px;background:var(--card);color:var(--text2);flex:0 0 auto;font-size:18px}
+.oga-drawer-item strong{display:block;font-size:15px;font-weight:800}
+.oga-drawer-item small{display:block;margin-top:2px;color:var(--text3);font-size:12px}
+.oga-drawer-chevron{width:14px;height:14px;margin-left:auto;color:var(--text3);transition:transform .16s;display:inline-block}
+.oga-drawer-group.open .oga-drawer-chevron{transform:rotate(180deg)}
+.oga-drawer-subnav{display:none;margin:4px 0 10px 18px;padding:6px 0 6px 22px;border-left:2px solid var(--border)}
+.oga-drawer-group.open .oga-drawer-subnav{display:grid;gap:4px}
+.oga-drawer-subnav a{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;font-size:13px;font-weight:600;color:var(--text2)}
+.oga-drawer-subnav a:hover{background:var(--card);color:var(--text)}
+.oga-drawer-foot{padding:8px 8px 0;border-top:1px solid var(--border)}
+.oga-drawer-foot-label{font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 10px 4px}
+.authed-only{display:none!important}.public-only{display:flex!important}
+body[data-auth="authed"] .authed-only{display:flex!important}
+body[data-auth="authed"] .public-only{display:none!important}
+nav.oga-drawer-nav.authed-only{display:none!important}nav.oga-drawer-nav.public-only{display:block!important}
+body[data-auth="authed"] nav.oga-drawer-nav.authed-only{display:block!important}
+body[data-auth="authed"] nav.oga-drawer-nav.public-only{display:none!important}
+div.oga-drawer-foot.authed-only{display:none!important}div.oga-drawer-foot.public-only{display:block!important}
+body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important}
+body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
+
+/* ═══ PAGE LAYOUT ═══ */
+.wrapper{width:min(720px,calc(100% - 40px));margin:0 auto;padding:calc(var(--nav-h) + 32px) 0 100px}
+
+/* ═══ HEADER BAR ═══ */
+.page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:28px}
+.page-head .ph-left{display:flex;align-items:center;gap:12px}
+.page-head h1{margin:0;font-family:Outfit;font-size:22px;font-weight:900;letter-spacing:-.3px}
+.back-btn{width:38px;height:38px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text2);display:grid;place-items:center;cursor:pointer;transition:all .12s;flex-shrink:0}
+.back-btn:hover{color:var(--text);border-color:var(--border2)}
+.btn{height:40px;padding:0 18px;border:1.5px solid var(--border2);border-radius:10px;background:var(--card);color:var(--text);font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:7px;cursor:pointer;transition:all .12s;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{box-shadow:0 4px 12px rgba(124,58,237,.2)}
+
+/* ═══ EMPTY STATE ═══ */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center}
+.empty-state .es-icon{width:72px;height:72px;border-radius:18px;background:#7C3AED12;color:var(--accent);display:grid;place-items:center;font-size:32px;margin-bottom:20px}
+.empty-state h3{margin:0;font-family:Outfit;font-size:18px;font-weight:800}
+.empty-state p{margin:6px 0 0;font-size:14px;color:var(--text2);line-height:1.5}
+
+/* ═══ FORM ═══ */
+.form-section{display:none}
+.form-section.open{display:block}
+.form-card{padding:28px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card)}
+.form-card .fc-title{font-family:Outfit;font-size:16px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.form-group{margin-bottom:18px}
+.form-group:last-child{margin-bottom:0}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.03em}
+.form-group .required{color:var(--red);margin-left:2px}
+.form-group input,.form-group select,.form-group textarea{width:100%;height:44px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text);font-size:14px;transition:border-color .15s}
+.form-group textarea{height:100px;padding:12px 14px;resize:vertical;font-size:13px;line-height:1.5}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:0;border-color:var(--accent)}
+.form-group .file-upload{height:100px;border:2px dashed var(--border);border-radius:10px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:all .12s;color:var(--text2);font-size:12px}
+.form-group .file-upload:hover{border-color:var(--accent);color:var(--accent)}
+.form-group .file-upload i{font-size:22px}
+.form-group .file-upload input{display:none}
+.form-group .tags-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0}
+.form-group .tag{padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--card);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:5px;cursor:pointer;transition:all .1s}
+.form-group .tag:hover{border-color:var(--accent);color:var(--accent)}
+.form-group .tag.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.form-group .tag-input{height:36px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:13px;width:140px}
+.form-group .tag-input:focus{outline:0;border-color:var(--accent)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}}
+
+/* ═══ MODAL SELECT ═══ */
+.modal-select{position:relative}
+.modal-select .ms-trigger{width:100%;height:44px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text);font-size:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;text-align:left;transition:border-color .15s}
+.modal-select .ms-trigger:hover,.modal-select .ms-trigger:focus{border-color:var(--accent);outline:0}
+.modal-select .ms-trigger .ms-placeholder{color:var(--text3)}
+.modal-select .ms-trigger .ms-value{font-weight:600}
+.modal-overlay{position:fixed;inset:0;z-index:400;display:none;background:rgba(0,0,0,.4);backdrop-filter:blur(2px)}
+.modal-overlay.open{display:block}
+.modal-sheet{position:fixed;bottom:0;left:0;right:0;z-index:401;display:none;background:var(--card);border-radius:16px 16px 0 0;box-shadow:0 -8px 40px rgba(16,21,37,.12);max-height:70vh;overflow-y:auto;padding:20px 0 32px;transform:translateY(100%);transition:transform .25s ease}
+[data-theme="dark"] .modal-sheet{box-shadow:0 -8px 40px rgba(0,0,0,.35)}
+.modal-sheet.open{display:block;transform:translateY(0)}
+.modal-sheet .ms-head{display:flex;align-items:center;justify-content:space-between;padding:0 20px 12px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.modal-sheet .ms-head h3{margin:0;font-family:Outfit;font-size:17px;font-weight:800}
+.modal-sheet .ms-close{width:32px;height:32px;border:0;background:var(--bg2);border-radius:8px;color:var(--text2);display:grid;place-items:center;cursor:pointer;font-size:16px}
+.modal-sheet .ms-option{width:100%;padding:14px 20px;border:0;background:transparent;color:var(--text);font-size:14px;font-weight:600;text-align:left;cursor:pointer;transition:background .1s;display:flex;align-items:center;gap:10px}
+.modal-sheet .ms-option:hover{background:var(--bg2)}
+.modal-sheet .ms-option.selected{color:var(--accent);background:#7C3AED08}
+.modal-sheet .ms-option.selected i{opacity:1}
+.modal-sheet .ms-option i{opacity:0;margin-left:auto;color:var(--accent);font-size:16px}
+
+/* ═══ PRODUCT LIST ═══ */
+.products-list{display:grid;gap:10px}
+.prod-item{display:flex;align-items:center;gap:14px;padding:16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);transition:all .1s}
+.prod-item:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.prod-item .pi-thumb{width:52px;height:52px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);display:grid;place-items:center;font-size:22px;color:var(--text2);flex-shrink:0;overflow:hidden}
+.prod-item .pi-thumb img{width:100%;height:100%;object-fit:cover}
+.prod-item .pi-info{flex:1;min-width:0}
+.prod-item .pi-info h4{margin:0;font-size:14px;font-weight:700}
+.prod-item .pi-info .pi-meta{font-size:12px;color:var(--text2);margin-top:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.prod-item .pi-price{font-family:Outfit;font-size:16px;font-weight:800;white-space:nowrap}
+.prod-item .pi-status{height:24px;padding:0 10px;border-radius:999px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.pi-status.active{background:#16a34a12;color:var(--green);border:1px solid rgba(22,163,74,.2)}
+.pi-status.draft{background:#66738a12;color:var(--text3);border:1px solid var(--border)}
+
+/* ═══ TOAST ═══ */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);color:var(--text);padding:12px 24px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow-md);font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s ease;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body data-auth="public">
+
+<!-- ═══ NAVBAR ═══ -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/">
+      <span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
+      OgaPay
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="index.html" data-navlink><i class="ti ti-home"></i>Home</a>
+      <a class="nav-link" href="tasks.html" data-navlink><i class="ti ti-checklist"></i>Tasks</a>
+      <a class="nav-link" href="store.html" data-navlink><i class="ti ti-building-store"></i>Store</a>
+      <a class="nav-link" href="communities.html" data-navlink><i class="ti ti-users"></i>Communities</a>
+      <a class="nav-link" href="faq.html" data-navlink><i class="ti ti-help-circle"></i>FAQ</a>
+    </div>
+    <div class="nav-actions">
+      <a class="wallet-btn" href="login.html"><i class="ti ti-wallet"></i> &#8358;0.00</a>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="ti ti-moon"></i></button>
+      <button class="icon-btn" id="menuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ DRAWER ═══ -->
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-overlay" data-close-menu></div>
+  <div class="oga-drawer">
+    <div class="oga-drawer-head">
+      <span style="font-family:Outfit;font-weight:900;font-size:17px">Menu</span>
+      <button class="oga-drawer-close" data-close-menu><i class="ti ti-x"></i></button>
+    </div>
+    <nav class="oga-drawer-nav public-only">
+      <a class="oga-drawer-item" href="tasks.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-checklist"></i></span><span><strong>Tasks</strong><small>Browse available tasks</small></span></a>
+      <a class="oga-drawer-item" href="store.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-building-store"></i></span><span><strong>Store</strong><small>Browse products &amp; gigs</small></span></a>
+      <a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-article"></i></span><span><strong>Blog</strong><small>Latest insights</small></span></a>
+      <a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span><span><strong>FAQ</strong><small>Frequently asked questions</small></span></a>
+      <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-headset"></i></span><span><strong>Support</strong><small>Get help</small></span></a>
+      <div style="padding:12px 10px;margin-top:8px"><a class="wallet-btn" href="login.html" style="width:100%;justify-content:center" data-close-menu><i class="ti ti-login"></i> Login</a></div>
+    </nav>
+    <nav class="oga-drawer-nav authed-only">
+      <a class="oga-drawer-item" href="dashboard.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-dashboard"></i></span><span><strong>Dashboard</strong><small>Your overview</small></span></a>
+      <a class="oga-drawer-item" href="post-task.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-plus-circle"></i></span><span><strong>Create Job</strong><small>Post a new task</small></span></a>
+      <div class="oga-drawer-group">
+        <button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false"><span class="oga-drawer-icon"><i class="ti ti-briefcase"></i></span><span><strong>Jobs</strong><small>Manage your tasks</small></span><i class="ti ti-chevron-down oga-drawer-chevron"></i></button>
+        <div class="oga-drawer-subnav"><a href="tasks.html"><i class="ti ti-arrow-right"></i>Browse Tasks</a><a href="my-tasks.html"><i class="ti ti-arrow-right"></i>My Tasks</a></div>
+      </div>
+      <div class="oga-drawer-group">
+        <button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false"><span class="oga-drawer-icon"><i class="ti ti-building-store"></i></span><span><strong>Store</strong><small>Marketplace</small></span><i class="ti ti-chevron-down oga-drawer-chevron"></i></button>
+        <div class="oga-drawer-subnav"><a href="store.html"><i class="ti ti-arrow-right"></i>Wurker Store</a><a href="my-store.html"><i class="ti ti-arrow-right"></i>My Store</a><a href="worker.html"><i class="ti ti-arrow-right"></i>Wurker Portal</a><a href="messages.html"><i class="ti ti-arrow-right"></i>Messages</a></div>
+      </div>
+      <a class="oga-drawer-item" href="communities.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-users"></i></span><span><strong>Communities</strong><small>Connect with others</small></span></a>
+      <a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-article"></i></span><span><strong>Blog</strong><small>Latest insights</small></span></a>
+      <a class="oga-drawer-item" href="notifications.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-bell"></i></span><span><strong>Notifications</strong><small>Alerts &amp; updates</small></span></a>
+      <a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span><span><strong>FAQ</strong><small>Frequently asked questions</small></span></a>
+      <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-headset"></i></span><span><strong>Support</strong><small>Get help</small></span></a>
+    </nav>
+    <div class="oga-drawer-foot authed-only">
+      <div class="oga-drawer-foot-label">Account</div>
+      <a class="oga-drawer-item" href="profile.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-user"></i></span><span><strong>My Profile</strong><small>View and edit profile</small></span></a>
+      <button class="oga-drawer-item" onclick="localStorage.removeItem('ogapay-authenticated');document.body.setAttribute('data-auth','public')"><span class="oga-drawer-icon"><i class="ti ti-logout"></i></span><span><strong>Logout</strong><small>Sign out</small></span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE CONTENT ═══ -->
+<div class="wrapper">
+
+  <!-- ═══ PAGE HEADER ═══ -->
+  <div class="page-head">
+    <div class="ph-left">
+      <button class="back-btn" onclick="history.back()"><i class="ti ti-arrow-left"></i></button>
+      <h1>My Store</h1>
+    </div>
+    <button class="btn primary" id="addProductBtn" onclick="showForm()"><i class="ti ti-plus"></i> Add New Product</button>
+  </div>
+
+  <!-- ═══ PRODUCT LIST (DEFAULT / EMPTY) ═══ -->
+  <div id="productList">
+    <div class="empty-state" id="emptyState">
+      <div class="es-icon"><i class="ti ti-building-store"></i></div>
+      <h3>No products yet</h3>
+      <p>Start adding products to your store</p>
+    </div>
+    <!-- Products will be rendered here -->
+    <div class="products-list" id="productsContainer"></div>
+  </div>
+
+  <!-- ═══ ADD / EDIT PRODUCT FORM ═══ -->
+  <div class="form-section" id="productForm">
+    <div class="form-card">
+      <div class="fc-title"><i class="ti ti-plus-circle" style="color:var(--accent)"></i> <span id="formTitle">Add New Product</span></div>
+
+      <div class="form-group">
+        <label>Product Name <span class="required">*</span></label>
+        <input type="text" id="prodName" placeholder="e.g. Social Media Management Package" autocomplete="off">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category <span class="required">*</span></label>
+          <div class="modal-select">
+            <button class="ms-trigger" onclick="openModal('categoryModal')" id="catTrigger"><span class="ms-placeholder">Select category</span><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text3)"></i></button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Subcategory</label>
+          <div class="modal-select">
+            <button class="ms-trigger" onclick="openModal('subcatModal')" id="subcatTrigger"><span class="ms-placeholder">Select subcategory</span><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text3)"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Thumbnail</label>
+        <div class="file-upload" onclick="document.getElementById('thumbInput').click()">
+          <i class="ti ti-photo-plus"></i>
+          <span>Click to upload thumbnail</span>
+          <input type="file" id="thumbInput" accept="image/*">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Description <span class="required">*</span></label>
+        <textarea id="prodDesc" placeholder="Describe what you're offering in detail..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Price (&#8358;) <span class="required">*</span></label>
+          <input type="number" id="prodPrice" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>Revisions</label>
+          <div class="modal-select">
+            <button class="ms-trigger" onclick="openModal('revisionModal')" id="revTrigger"><span class="ms-placeholder">Select revisions</span><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text3)"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Expected Delivery</label>
+          <div class="modal-select">
+            <button class="ms-trigger" onclick="openModal('deliveryModal')" id="delTrigger"><span class="ms-placeholder">Select delivery time</span><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text3)"></i></button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Attachments</label>
+          <div class="file-upload" onclick="document.getElementById('attachInput').click()" style="height:44px;flex-direction:row">
+            <i class="ti ti-paperclip"></i>
+            <span>Upload files</span>
+            <input type="file" id="attachInput" multiple>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Tags</label>
+        <div class="tags-wrap" id="tagsContainer">
+          <span class="tag" onclick="selectTag(this)">social media</span>
+          <span class="tag" onclick="selectTag(this)">content</span>
+          <span class="tag" onclick="selectTag(this)">design</span>
+          <span class="tag" onclick="selectTag(this)">development</span>
+          <span class="tag" onclick="selectTag(this)">marketing</span>
+          <span class="tag" onclick="selectTag(this)">writing</span>
+          <span class="tag" onclick="selectTag(this)">video</span>
+          <span class="tag" onclick="selectTag(this)">audio</span>
+          <span class="tag" onclick="selectTag(this)">blockchain</span>
+          <span class="tag" onclick="selectTag(this)">ai</span>
+          <input class="tag-input" id="customTag" placeholder="+ custom" onkeydown="if(event.key==='Enter'){addCustomTag();event.preventDefault()}">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:24px;flex-wrap:wrap">
+        <button class="btn primary" onclick="saveProduct()" style="flex:1;justify-content:center"><i class="ti ti-device-floppy"></i> Save Product</button>
+        <button class="btn" onclick="hideForm()" style="justify-content:center"><i class="ti ti-x"></i> Cancel</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ MODAL SHEETS ═══ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModals()"></div>
+
+<!-- Category Modal -->
+<div class="modal-sheet" id="categoryModal">
+  <div class="ms-head"><h3>Select Category</h3><button class="ms-close" onclick="closeModals()"><i class="ti ti-x"></i></button></div>
+  <button class="ms-option" onclick="selectCategory(this,'Web & App Build')"><span>Web & App Build</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectCategory(this,'Bots & Automations')"><span>Bots & Automations</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectCategory(this,'Blockchain & Crypto Dev')"><span>Blockchain & Crypto Dev</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectCategory(this,'Data & Dashboards')"><span>Data & Dashboards</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectCategory(this,'AI & Machine Learning')"><span>AI & Machine Learning</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectCategory(this,'Graphics & Design')"><span>Graphics & Design</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectCategory(this,'Video & Animation')"><span>Video & Animation</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectCategory(this,'Music & Audio')"><span>Music & Audio</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectCategory(this,'Writing & Translation')"><span>Writing & Translation</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectCategory(this,'Social & Growth (Web3)')"><span>Social & Growth (Web3)</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectCategory(this,'Marketing & Ads')"><span>Marketing & Ads</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectCategory(this,'Community Raids & Engagement')"><span>Community Raids & Engagement</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectCategory(this,'Product & Operations')"><span>Product & Operations</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectCategory(this,'Consulting & Advisory')"><span>Consulting & Advisory</span><i class="ti ti-check"></i></button>
+</div>
+
+<!-- Subcategory Modal -->
+<div class="modal-sheet" id="subcatModal">
+  <div class="ms-head"><h3>Select Subcategory</h3><button class="ms-close" onclick="closeModals()"><i class="ti ti-x"></i></button></div>
+  <div id="subcatOptions"></div>
+  <div style="padding:14px 20px;font-size:13px;color:var(--text3);text-align:center" id="subcatEmpty">Select a category first</div>
+</div>
+
+<!-- Revisions Modal -->
+<div class="modal-sheet" id="revisionModal">
+  <div class="ms-head"><h3>Revisions</h3><button class="ms-close" onclick="closeModals()"><i class="ti ti-x"></i></button></div>
+  <button class="ms-option" onclick="selectRevision(this,'1')"><span>1 Revision</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectRevision(this,'2')"><span>2 Revisions</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectRevision(this,'3')"><span>3 Revisions</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectRevision(this,'5')"><span>5 Revisions</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectRevision(this,'Unlimited')"><span>Unlimited</span><i class="ti ti-check"></i></button>
+</div>
+
+<!-- Delivery Modal -->
+<div class="modal-sheet" id="deliveryModal">
+  <div class="ms-head"><h3>Expected Delivery</h3><button class="ms-close" onclick="closeModals()"><i class="ti ti-x"></i></button></div>
+  <button class="ms-option" onclick="selectDelivery(this,'1 Day')"><span>1 Day</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectDelivery(this,'2 Days')"><span>2 Days</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectDelivery(this,'3 Days')"><span>3 Days</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectDelivery(this,'4 Days')"><span>4 Days</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectDelivery(this,'5 Days')"><span>5 Days</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectDelivery(this,'6 Days')"><span>6 Days</span><i class="ti ti-check"></i></button>
+  <button class="ms-option" onclick="selectDelivery(this,'7 Days')"><span>7 Days</span><i class="ti ti-check"></i></button>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Subcategories ───
+var subcategories = {
+  "Web & App Build": ["Frontend Development", "Backend Development", "Full Stack", "API Development", "Mobile Apps", "PWA", "Landing Pages", "eCommerce Sites", "Web3 dApps"],
+  "Bots & Automations": ["Telegram Bots", "Discord Bots", "Twitter Bots", "WhatsApp Bots", "Scraping Bots", "Workflow Automation", "Trading Bots"],
+  "Blockchain & Crypto Dev": ["Smart Contracts (Solana, EVM)", "Token Launch / Presale Setup", "Mint Site Development", "On-chain Tools & Sniper Bots", "Contract Audits (Light)"],
+  "Data & Dashboards": ["Data Entry", "Data Cleaning", "Data Visualization", "Dashboard Build", "Spreadsheets", "Research & Analysis"],
+  "AI & Machine Learning": ["ChatGPT / LLM Fine-tuning", "Image Generation Models", "Voice Cloning", "AI Agents", "Data Labeling", "RAG Pipelines"],
+  "Graphics & Design": ["Logo Design", "Banner Design", "UI/UX Design", "NFT Art", "Brand Identity", "Packaging Design", "Photo Editing"],
+  "Video & Animation": ["Motion Graphics", "Video Editing", "2D Animation", "3D Modeling", "Explainer Videos", "Short Form Content"],
+  "Music & Audio": ["Voice Over", "Audio Editing", "Music Production", "Mixing & Mastering", "Sound Design", "Podcast Editing"],
+  "Writing & Translation": ["Content Writing", "Copywriting", "Proofreading", "Translation", "Technical Writing", "Ghostwriting", "Script Writing"],
+  "Social & Growth (Web3)": ["Community Management", "Discord Moderation", "Twitter/X Growth", "Content Curation", "Influencer Outreach", "Viral Marketing"],
+  "Marketing & Ads": ["Social Media Marketing", "Google Ads", "Facebook/IG Ads", "Email Marketing", "SEO", "Content Marketing", "Brand Strategy"],
+  "Community Raids & Engagement": ["Raid Management", "Engagement Campaigns", "Viral Boosting", "Comment Farming", "Reaction Campaigns"],
+  "Product & Operations": ["Product Management", "QA Testing", "User Research", "Project Management", "Operations Support", "Virtual Assistant"],
+  "Consulting & Advisory": ["Crypto Advisory", "Marketing Strategy", "Business Development", "Technical Consulting", "Legal (Web3)"]
+};
+
+// ─── Modal System ───
+function openModal(id) {
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById(id).classList.add('open');
+}
+function closeModals() {
+  document.querySelectorAll('.modal-overlay, .modal-sheet').forEach(function(el) {
+    el.classList.remove('open');
+  });
+}
+
+// ─── Category Selection ───
+function selectCategory(el, cat) {
+  document.querySelectorAll('#categoryModal .ms-option').forEach(function(o){o.classList.remove('selected')});
+  el.classList.add('selected');
+  document.getElementById('catTrigger').innerHTML = '<span class="ms-value">'+cat+'</span><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text3)"></i>';
+  document.getElementById('selectedCategory').value = cat;
+  // Update subcategories
+  var subs = subcategories[cat] || [];
+  var container = document.getElementById('subcatOptions');
+  var empty = document.getElementById('subcatEmpty');
+  container.innerHTML = '';
+  if(subs.length) {
+    empty.style.display = 'none';
+    subs.forEach(function(s){
+      var btn = document.createElement('button');
+      btn.className = 'ms-option';
+      btn.innerHTML = '<span>'+s+'</span><i class="ti ti-check"></i>';
+      btn.onclick = function(){selectSubcategory(this,s);};
+      container.appendChild(btn);
+    });
+  } else {
+    empty.style.display = 'block';
+  }
+  // Reset subcategory
+  document.getElementById('subcatTrigger').innerHTML = '<span class="ms-placeholder">Select subcategory</span><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text3)"></i>';
+  document.getElementById('selectedSubcategory').value = '';
+  closeModals();
+}
+
+function selectSubcategory(el, sub) {
+  document.querySelectorAll('#subcatOptions .ms-option').forEach(function(o){o.classList.remove('selected')});
+  el.classList.add('selected');
+  document.getElementById('subcatTrigger').innerHTML = '<span class="ms-value">'+sub+'</span><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text3)"></i>';
+  document.getElementById('selectedSubcategory').value = sub;
+  closeModals();
+}
+
+// ─── Revision Selection ───
+function selectRevision(el, rev) {
+  document.querySelectorAll('#revisionModal .ms-option').forEach(function(o){o.classList.remove('selected')});
+  el.classList.add('selected');
+  document.getElementById('revTrigger').innerHTML = '<span class="ms-value">'+rev+' Revision'+(rev!=='1'&&rev!=='Unlimited'?'s':'')+'</span><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text3)"></i>';
+  document.getElementById('selectedRevisions').value = rev;
+  closeModals();
+}
+
+// ─── Delivery Selection ───
+function selectDelivery(el, del) {
+  document.querySelectorAll('#deliveryModal .ms-option').forEach(function(o){o.classList.remove('selected')});
+  el.classList.add('selected');
+  document.getElementById('delTrigger').innerHTML = '<span class="ms-value">'+del+'</span><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text3)"></i>';
+  document.getElementById('selectedDelivery').value = del;
+  closeModals();
+}
+
+// ─── Tags ───
+function selectTag(el) {
+  el.classList.toggle('active');
+}
+function addCustomTag() {
+  var inp = document.getElementById('customTag');
+  var val = inp.value.trim().toLowerCase();
+  if(!val) return;
+  var container = document.getElementById('tagsContainer');
+  var span = document.createElement('span');
+  span.className = 'tag active';
+  span.innerHTML = val+' <i class="ti ti-x" style="font-size:10px;cursor:pointer" onclick="this.parentElement.remove()"></i>';
+  span.onclick = function(){this.classList.toggle('active')};
+  container.insertBefore(span, inp);
+  inp.value = '';
+}
+
+// ─── Show / Hide Form ───
+function showForm() {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('productForm').classList.add('open');
+  document.getElementById('addProductBtn').style.display = 'none';
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+function hideForm() {
+  document.getElementById('productForm').classList.remove('open');
+  document.getElementById('addProductBtn').style.display = '';
+  // If no products, show empty state
+  var products = JSON.parse(localStorage.getItem('ogapay-products')||'[]');
+  if(products.length===0) {
+    document.getElementById('emptyState').style.display = '';
+  }
+}
+
+// ─── Save Product ───
+function saveProduct() {
+  var name = document.getElementById('prodName').value.trim();
+  var cat = document.getElementById('selectedCategory').value;
+  var sub = document.getElementById('selectedSubcategory').value;
+  var desc = document.getElementById('prodDesc').value.trim();
+  var price = document.getElementById('prodPrice').value.trim();
+  var revisions = document.getElementById('selectedRevisions').value;
+  var delivery = document.getElementById('selectedDelivery').value;
+
+  if(!name || !cat || !desc || !price) {
+    showToast('Please fill in all required fields');
+    return;
+  }
+
+  var tags = [];
+  document.querySelectorAll('#tagsContainer .tag.active').forEach(function(t){
+    tags.push(t.textContent.trim());
+  });
+
+  var product = {
+    id: Date.now(),
+    name: name,
+    category: cat,
+    subcategory: sub,
+    description: desc,
+    price: price,
+    revisions: revisions,
+    delivery: delivery,
+    tags: tags,
+    status: 'active',
+    createdAt: new Date().toISOString()
+  };
+
+  var products = JSON.parse(localStorage.getItem('ogapay-products')||'[]');
+  products.unshift(product);
+  localStorage.setItem('ogapay-products', JSON.stringify(products));
+
+  showToast('Product saved!');
+  renderProducts();
+  hideForm();
+  resetForm();
+}
+
+function resetForm() {
+  document.getElementById('prodName').value = '';
+  document.getElementById('prodDesc').value = '';
+  document.getElementById('prodPrice').value = '';
+  document.getElementById('catTrigger').innerHTML = '<span class="ms-placeholder">Select category</span><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text3)"></i>';
+  document.getElementById('subcatTrigger').innerHTML = '<span class="ms-placeholder">Select subcategory</span><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text3)"></i>';
+  document.getElementById('revTrigger').innerHTML = '<span class="ms-placeholder">Select revisions</span><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text3)"></i>';
+  document.getElementById('delTrigger').innerHTML = '<span class="ms-placeholder">Select delivery time</span><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text3)"></i>';
+  document.getElementById('selectedCategory').value = '';
+  document.getElementById('selectedSubcategory').value = '';
+  document.getElementById('selectedRevisions').value = '';
+  document.getElementById('selectedDelivery').value = '';
+  document.querySelectorAll('#tagsContainer .tag.active').forEach(function(t){t.classList.remove('active')});
+}
+
+// ─── Render Products ───
+function renderProducts() {
+  var products = JSON.parse(localStorage.getItem('ogapay-products')||'[]');
+  var container = document.getElementById('productsContainer');
+  var empty = document.getElementById('emptyState');
+  if(products.length===0) {
+    empty.style.display = '';
+    container.innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+  container.innerHTML = products.map(function(p){
+    return '<div class="prod-item">'+
+      '<div class="pi-thumb"><i class="ti ti-box"></i></div>'+
+      '<div class="pi-info"><h4>'+escHtml(p.name)+'</h4>'+
+      '<div class="pi-meta"><span>'+escHtml(p.category)+'</span><span>&#8358;'+escHtml(p.price)+'</span><span>'+escHtml(p.delivery||'')+'</span></div></div>'+
+      '<span class="pi-status active"><i class="ti ti-circle-filled" style="font-size:6px"></i> Active</span>'+
+      '<span class="pi-price">&#8358;'+escHtml(p.price)+'</span>'+
+    '</div>';
+  }).join('');
+}
+
+function escHtml(s) {
+  if(!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Hidden fields for form data ───
+document.addEventListener('DOMContentLoaded', function(){
+  var hidden = document.createElement('div');
+  hidden.style.display = 'none';
+  hidden.innerHTML = '<input id="selectedCategory"><input id="selectedSubcategory"><input id="selectedRevisions"><input id="selectedDelivery">';
+  document.body.appendChild(hidden);
+  renderProducts();
+});
+
+// ─── Toast ───
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+// ─── Theme & Nav ───
+(function(){
+  var th; try{th=localStorage.getItem('ogapay-theme')}catch(e){}
+  var t=th||document.documentElement.getAttribute('data-theme')||'light';
+  document.documentElement.setAttribute('data-theme',t);
+  var authed=false; try{authed=localStorage.getItem('ogapay-authenticated')==='true'}catch(e){}
+  document.body.setAttribute('data-auth',authed?'authed':'public');
+  var themeBtn=document.getElementById('themeToggle');
+  if(themeBtn){themeBtn.addEventListener('click',function(){var h=document.documentElement;var n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}})}
+  var menuBtn=document.getElementById('menuBtn');var mobileMenu=document.getElementById('mobileMenu');
+  if(menuBtn&&mobileMenu){menuBtn.addEventListener('click',function(){mobileMenu.classList.add('open')});mobileMenu.querySelectorAll('[data-close-menu]').forEach(function(el){el.addEventListener('click',function(){mobileMenu.classList.remove('open')})})}
+  document.addEventListener('click',function(e){var t=e.target.closest('.oga-drawer-group-toggle');if(t){var g=t.closest('.oga-drawer-group');var o=!g.classList.contains('open');g.classList.toggle('open',o);t.setAttribute('aria-expanded',String(o))}});
+  var p=window.location.pathname.split('/').pop()||'index.html';
+  document.querySelectorAll('[data-navlink]').forEach(function(a){if(a.getAttribute('href')===p)a.classList.add('active')});
+})();
+</script>
+</body>
+</html>

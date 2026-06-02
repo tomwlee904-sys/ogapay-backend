@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Studio - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--shadow-glow:0 0 30px rgba(124,58,237,.15);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);--shadow-soft:0 2px 8px rgba(0,0,0,.22);--shadow-glow:0 0 30px rgba(167,139,250,.12)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
+.nav-link-featured:hover{background:rgba(124,58,237,.85)!important;color:#fff!important}.nav-link-featured i{color:#fff!important}.icon-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center;transition:all .15s}.icon-btn:hover{color:var(--text);background:var(--bg2)}
+.page{width:min(1100px,calc(100% - 32px));margin:0 auto;padding:34px 0 72px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;cursor:pointer;text-decoration:none}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:34px;padding:0 12px;font-size:12px}.btn.full{width:100%}.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(124,58,237,.12);color:var(--accent)}
+.agent-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}.agent-head h1{font-family:Outfit;font-size:28px;font-weight:800;margin:0;display:flex;align-items:center;gap:10px}.agent-head p{color:var(--text2);font-size:14px;margin:2px 0 0}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}.stat-card{padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);text-align:center}.stat-card .sv{font-family:Outfit;font-size:24px;font-weight:800}.stat-card .sl{font-size:11px;color:var(--text2);margin-top:2px}.stat-card .s-icon{font-size:16px;margin-bottom:4px;color:var(--accent2)}
+.protocol-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}.proto-card{padding:20px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);transition:all .2s}.proto-card:hover{border-color:var(--border2);transform:translateY(-2px)}.proto-card .p-icon{width:44px;height:44px;border-radius:12px;background:rgba(124,58,237,.08);display:grid;place-items:center;font-size:22px;color:var(--accent);margin-bottom:10px}.proto-card h3{margin:0;font-size:15px;font-weight:800}.proto-card p{margin:4px 0 10px;font-size:12px;color:var(--text2);line-height:1.4}.proto-card code{display:block;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:monospace;color:var(--text2);word-break:break-all}.proto-card .p-foot{margin-top:10px;display:flex;gap:6px}
+.usage-log{display:grid;gap:8px}.log-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}.log-item:last-child{border:0}.log-dot{width:28px;height:28px;border-radius:7px;background:var(--bg2);border:1px solid var(--border);display:grid;place-items:center;font-size:14px;flex-shrink:0}.log-info{flex:1;min-width:0}.log-info .lt{font-size:13px;font-weight:600}.log-info .lm{font-size:11px;color:var(--text2)}.log-cost{font-size:13px;font-weight:700;white-space:nowrap}
+.integration-steps{display:grid;gap:10px;counter-reset:step}.i-step{padding:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:flex-start;gap:12px}.i-step .s-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800;flex-shrink:0;margin-top:2px}.i-step .s-content{flex:1}.i-step .s-content h4{margin:0;font-size:13px;font-weight:800}.i-step .s-content p{margin:2px 0 0;font-size:12px;color:var(--text2);line-height:1.4}
+@media(max-width:1024px){.protocol-grid{grid-template-columns:1fr}}
+@media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.page{width:min(1120px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}
+
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px;flex-wrap:wrap}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px}.eyebrow i{font-size:15px;color:var(--accent)}.lead{color:var(--text2);font-size:16px;line-height:1.7;margin:6px 0 0;max-width:680px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft)}.btn{height:48px;padding:0 24px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--card);color:var(--text);font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;cursor:pointer;text-decoration:none}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:38px;padding:0 16px;font-size:13px}.btn.outline{background:transparent;border-color:var(--accent);color:var(--accent)}.btn.full{width:100%}.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800}.badge-accent{background:rgba(124,58,237,.12);color:var(--accent)}.badge-blue{background:rgba(37,99,235,.1);color:var(--accent2)}.badge-green{background:rgba(22,163,74,.12);color:var(--green)}.badge-gold{background:rgba(245,179,1,.12);color:var(--gold)}.small{font-size:12px;color:var(--text3)}.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);padding:12px 28px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:700;font-size:14px;z-index:999;opacity:0;transition:all .35s;pointer-events:none;white-space:nowrap}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;visibility:hidden;opacity:0;transition:all .3s}.modal.open{visibility:visible;opacity:1}.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}.modal-panel{position:relative;width:min(440px,calc(100% - 32px));background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transform:translateY(20px);transition:all .3s}.modal.open .modal-panel{transform:translateY(0)}.fg{margin-bottom:14px}.fg label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;display:block}.fg input,.fg select,.fg textarea{width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;outline:none}.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}.fg-h{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid{display:grid;gap:16px}.grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.space{justify-content:space-between}
+</style>
+<style>
+</style>
+</head>
+<body style="padding-bottom:64px">
+<nav class="og-nav" role="navigation" aria-label="Main">
+<a href="#og-main-content" class="og-skip">Skip to content</a>
+<div class="og-nav-inner">
+<a href="index.html" class="og-brand"><span class="og-logo"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</a>
+<div class="og-nav-links">
+<a href="index.html" class="og-nav-link"><i class="ti ti-home"></i>Home</a>
+<a href="tasks.html" class="og-nav-link"><i class="ti ti-briefcase"></i>Tasks</a>
+<a href="store.html" class="og-nav-link"><i class="ti ti-discount-2"></i>Deals</a>
+<a href="communities.html" class="og-nav-link"><i class="ti ti-users-group"></i>Communities</a>
+<a href="faq.html" class="og-nav-link"><i class="ti ti-help-circle"></i>FAQ</a>
+</div>
+<div class="og-nav-actions">
+<button class="og-theme-btn" id="ogThemeBtn" aria-label="Toggle theme"><i class="ti ti-sun"></i></button>
+<a href="login.html" class="og-login-btn"><i class="ti ti-login"></i>Login</a>
+<a href="login.html?signup=1" class="og-cta-btn">Get Started <i class="ti ti-arrow-right"></i></a>
+<button class="og-menu-btn" id="ogMenuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
+</div>
+</div>
+</nav>
+<div class="og-layout"><aside class="og-sidebar" id="ogSidebar" role="navigation" aria-label="Side">
+<div class="og-sidebar-wrap">
+<button class="og-sidebar-toggle" id="ogSidebarToggle" aria-label="Toggle sidebar"><i class="ti ti-chevron-left"></i></button>
+<div class="og-sidebar-scroll">
+<div class="og-sidebar-section">Tasks</div>
+<a href="tasks.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-briefcase"></i></span>Browse All Tasks</a>
+<a href="monitor.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-eye"></i></span>Job Monitor</a>
+<div class="og-sidebar-section">Deals</div>
+<a href="blog.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-news"></i></span>Blog</a>
+<a href="vault.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-building-bank"></i></span>Vault</a>
+<div class="og-sidebar-section">Resources</div>
+<a href="faq.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-help-circle"></i></span>FAQ</a>
+<a href="support.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-headset"></i></span>Support</a>
+</div>
+<div class="og-sidebar-footer">
+<a href="login.html" class="og-sidebar-login"><i class="ti ti-login"></i> Login</a>
+</div>
+</div></div>
+<main class="og-main" id="og-main-content">
+
+
+<section class="page">
+<div class="agent-head">
+  <div><h1><i class="ti ti-robot" style="color:var(--accent)"></i> Agent Studio</h1><p>Let AI agents hire humans through your tasks. Integrate via API, MCP, or direct HTTP.</p></div>
+  <a href="apikey.html" class="btn primary"><i class="ti ti-key"></i>Manage API Keys</a>
+</div>
+<div class="stats-row">
+  <div class="stat-card"><div class="s-icon"><i class="ti ti-robot"></i></div><div class="sv">47</div><div class="sl">Agent Requests</div></div>
+  <div class="stat-card"><div class="s-icon"><i class="ti ti-users"></i></div><div class="sv">23</div><div class="sl">Humans Hired</div></div>
+  <div class="stat-card"><div class="s-icon"><i class="ti ti-coin"></i></div><div class="sv">₦284K</div><div class="sl">Agent Spend</div></div>
+  <div class="stat-card"><div class="s-icon"><i class="ti ti-check"></i></div><div class="sv">94%</div><div class="sl">Completion Rate</div></div>
+</div>
+<h2 style="font-family:Outfit;font-size:18px;font-weight:800;margin:0 0 14px">Integration Protocols</h2>
+<div class="protocol-grid">
+  <div class="proto-card">
+    <div class="p-icon"><i class="ti ti-code"></i></div>
+    <h3>x402 API</h3>
+    <p>HTTP-based protocol. Call an endpoint, get a 402 with pricing, then pay with a signed payment header.</p>
+    <code>GET /api/v1/agent/hire?description=...&amp;winners=10&amp;perUser=0.025</code>
+    <div class="p-foot"><button class="btn sm primary" onclick="copyText('GET /api/v1/agent/hire')"><i class="ti ti-copy"></i> Copy CURL</button><a href="apikey.html" class="btn sm">Get Key</a></div>
+  </div>
+  <div class="proto-card">
+    <div class="p-icon"><i class="ti ti-plug"></i></div>
+    <h3>MCP Server</h3>
+    <p>Model Context Protocol — works with Claude Desktop, Cursor, and any MCP client.</p>
+    <code>endpoint: https://ogapay-five.vercel.app/api/mcp</code>
+    <div class="p-foot"><button class="btn sm" onclick="copyText('https://ogapay-five.vercel.app/api/mcp')"><i class="ti ti-copy"></i> Copy</button></div>
+  </div>
+  <div class="proto-card">
+    <div class="p-icon"><i class="ti ti-wand"></i></div>
+    <h3>OpenClaw Skill</h3>
+    <p>Install the OgaPay skill into your OpenClaw-compatible agent for seamless integration.</p>
+    <code>curl -s https://ogapay.fun/skill.md</code>
+    <div class="p-foot"><button class="btn sm" onclick="copyText('curl -s https://ogapay.fun/skill.md')"><i class="ti ti-copy"></i> Copy</button></div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+  <div class="card" style="padding:20px">
+    <h3 style="font-family:Outfit;font-size:15px;font-weight:800;margin:0 0 12px">Quick Start</h3>
+    <div class="integration-steps">
+      <div class="i-step"><div class="s-num">1</div><div class="s-content"><h4>Get an API key</h4><p>Generate a key from the <a href="apikey.html" style="color:var(--accent);font-weight:600">API Keys page</a> and set your spending limits.</p></div></div>
+      <div class="i-step"><div class="s-num">2</div><div class="s-content"><h4>Hire humans via API</h4><p>Send a POST request with your task description, reward, and the number of workers needed.</p></div></div>
+      <div class="i-step"><div class="s-num">3</div><div class="s-content"><h4>Collect responses</h4><p>Use the returned secret to fetch submissions once workers complete the task.</p></div></div>
+      <div class="i-step"><div class="s-num">4</div><div class="s-content"><h4>Automate workflows</h4><p>Integrate with MCP for Claude/Cursor agents or use the OpenClaw skill.</p></div></div>
+    </div>
+  </div>
+  <div class="card" style="padding:20px">
+    <h3 style="font-family:Outfit;font-size:15px;font-weight:800;margin:0 0 12px">Recent Agent Activity</h3>
+    <div class="usage-log">
+      <div class="log-item"><div class="log-dot" style="color:var(--green)"><i class="ti ti-check"></i></div><div class="log-info"><div class="lt">Logo feedback requested</div><div class="lm">Agent hire · 8 responses · 2h ago</div></div><div class="log-cost">$0.20</div></div>
+      <div class="log-item"><div class="log-dot" style="color:var(--green)"><i class="ti ti-check"></i></div><div class="log-info"><div class="lt">UI review task</div><div class="lm">Agent hire · 5 responses · 5h ago</div></div><div class="log-cost">$0.125</div></div>
+      <div class="log-item"><div class="log-dot" style="color:var(--gold)"><i class="ti ti-clock"></i></div><div class="log-info"><div class="lt">Survey responses</div><div class="lm">Agent hire · In progress · 3/10 done</div></div><div class="log-cost">$0.25</div></div>
+      <div class="log-item"><div class="log-dot" style="color:var(--text3)"><i class="ti ti-x"></i></div><div class="log-info"><div class="lt">Content tagging job</div><div class="lm">Expired · 0 responses</div></div><div class="log-cost">—</div></div>
+    </div>
+  </div>
+</div>
+</section>
+</main>
+<div class="toast" id="toast" style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);padding:10px 24px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:700;font-size:13px;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap">Copied</div>
+<style>[data-theme="dark"] .nav-links </style>
+<script>
+catch(e){}const i=document.getElementById('ti');if(i)i.className=n==='dark'?'ti ti-sun':'ti ti-moon'}
+(function(){const h=document.documentElement;h.setAttribute('data-theme',h.getAttribute('data-theme')||'light');const d=document.getElementById('ti');if(d)d.className=h.getAttribute('data-theme')==='dark'?'ti ti-sun':'ti ti-moon'})();
+function copyText(t){navigator.clipboard&&navigator.clipboard.writeText(t);const e=document.getElementById('toast');if(e){e.textContent='Copied!';e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}}
+</script>
+
+</main>
+</div>
+<div class="og-drawer-overlay" id="ogDrawerOverlay"></div>
+<aside class="og-drawer" id="ogDrawer" role="dialog" aria-label="Menu">
+<div class="og-drawer-head">
+<a class="og-brand" href="index.html"><span class="og-logo"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</a>
+<button class="og-theme-btn" id="ogDrawerClose" style="border:none;background:transparent;font-size:20px"><i class="ti ti-x"></i></button>
+</div>
+<div class="og-drawer-body">
+<div class="og-drawer-section">Navigate</div>
+<a href="index.html" class="og-drawer-link"><i class="ti ti-home"></i>Home</a>
+<a href="tasks.html" class="og-drawer-link"><i class="ti ti-briefcase"></i>Tasks</a>
+<a href="store.html" class="og-drawer-link"><i class="ti ti-discount-2"></i>Deals</a>
+<a href="communities.html" class="og-drawer-link"><i class="ti ti-users-group"></i>Communities</a>
+<a href="faq.html" class="og-drawer-link"><i class="ti ti-help-circle"></i>FAQ</a>
+<div class="og-drawer-section">Tasks</div>
+<a href="tasks.html" class="og-drawer-link"><i class="ti ti-briefcase"></i>Browse All Tasks</a>
+<a href="monitor.html" class="og-drawer-link"><i class="ti ti-eye"></i>Job Monitor</a>
+<div class="og-drawer-section">Deals</div>
+<a href="blog.html" class="og-drawer-link"><i class="ti ti-news"></i>Blog</a>
+<a href="vault.html" class="og-drawer-link"><i class="ti ti-building-bank"></i>Vault</a>
+<div class="og-drawer-section">Resources</div>
+<a href="faq.html" class="og-drawer-link"><i class="ti ti-help-circle"></i>FAQ</a>
+<a href="support.html" class="og-drawer-link"><i class="ti ti-headset"></i>Support</a>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+<a href="login.html" class="og-login-btn" style="justify-content:center;height:44px"><i class="ti ti-login"></i>Login</a>
+<a href="login.html?signup=1" class="og-cta-btn" style="justify-content:center;height:44px">Get Started <i class="ti ti-arrow-right"></i></a>
+</div>
+</div>
+</aside>
+<nav class="og-mobile-nav" aria-label="Mobile">
+<a href="index.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>Home</span></a>
+<a href="tasks.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Tasks</span></a>
+<a href="post-task.html" class="create-btn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></a>
+<a href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Deals</span></a>
+<a href="login.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Login</span></a>
+</nav>
+
+<script>
+(function(){function g(){var d=document.documentElement,t=d.getAttribute('data-theme')||'light',n=t==='dark'?'light':'dark';d.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}var i=document.getElementById('ogThemeBtn');if(i){var ic=i.querySelector('i');if(ic)ic.className=n==='dark'?'ti ti-sun':'ti ti-moon'}}var s;(function(){try{s=localStorage.getItem('ogapay-theme')}catch(e){}var t=s||document.documentElement.getAttribute('data-theme')||'light';document.documentElement.setAttribute('data-theme',t);var i=document.getElementById('ogThemeBtn');if(i){var ic=i.querySelector('i');if(ic)ic.className=t==='dark'?'ti ti-sun':'ti ti-moon'}})();document.getElementById('ogThemeBtn')?.addEventListener('click',g);document.getElementById('ogSidebarToggle')?.addEventListener('click',function(){document.getElementById('ogSidebar')?.classList.toggle('collapsed')});document.getElementById('ogMenuBtn')?.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.add('open');document.getElementById('ogDrawerOverlay')?.classList.add('show');document.body.style.overflow='hidden'});document.getElementById('ogDrawerOverlay')?.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.remove('open');document.getElementById('ogDrawerOverlay')?.classList.remove('show');document.body.style.overflow=''});document.getElementById('ogDrawerClose')?.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.remove('open');document.getElementById('ogDrawerOverlay')?.classList.remove('show');document.body.style.overflow=''});document.querySelectorAll('.og-drawer-link').forEach(function(e){e.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.remove('open');document.getElementById('ogDrawerOverlay')?.classList.remove('show');document.body.style.overflow=''})});document.querySelector('.og-skip')?.addEventListener('click',function(e){e.preventDefault();var m=document.getElementById('og-main-content');if(m){m.setAttribute('tabindex','-1');m.focus();setTimeout(function(){m.removeAttribute('tabindex')},100)}});
+})();
+</script>
+
+</body>
+</html>

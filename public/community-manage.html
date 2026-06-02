@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Community - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--red:#ef4444;--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--accent:#A78BFA;--accent2:#60A5FA;--shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);--shadow-soft:0 2px 8px rgba(0,0,0,.22)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
+.nav-link:hover,.nav-link.active{background:var(--bg2);color:var(--text)}.nav-link-featured:hover{background:rgba(124,58,237,.85)!important;color:#fff!important}.nav-link-featured i{color:#fff!important}.icon-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center}.icon-btn:hover{color:var(--text);background:var(--bg2);border-color:var(--border2)}.pill-btn{height:36px;border:1.5px solid var(--border2);border-radius:999px;background:var(--primary);color:var(--bg);display:inline-flex;align-items:center;gap:8px;padding:0 16px;font-weight:800;font-size:13px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft)}.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:8px;transition:all .2s;cursor:pointer}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.sm{height:34px;padding:0 12px;font-size:12px}.btn.danger{color:var(--red);border-color:rgba(239,68,68,.2)}.btn.danger:hover{background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.3)}.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800}.badge-accent{background:rgba(124,58,237,.12);color:var(--accent)}.badge-green{background:rgba(22,163,74,.12);color:var(--green)}.badge-red{background:rgba(239,68,68,.12);color:var(--red)}.small{font-size:12px;color:var(--text3)}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.space{justify-content:space-between}
+.fg{margin-bottom:14px}.fg label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;display:block}.fg input,.fg select,.fg textarea{width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;outline:none;font-family:inherit}.fg textarea{height:80px;padding:10px 12px;resize:vertical}.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:20px}.tab-btn{padding:10px 16px;border:0;background:transparent;color:var(--text3);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}.tab-btn:hover{color:var(--text2)}.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);padding:12px 28px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:700;font-size:14px;z-index:999;opacity:0;transition:all .35s;pointer-events:none;white-space:nowrap}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.page{width:min(900px,calc(100% - 32px));margin:0 auto;padding:34px 0 72px}
+.modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;visibility:hidden;opacity:0;transition:all .3s}.modal.open{visibility:visible;opacity:1}.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}.modal-panel{position:relative;width:min(440px,calc(100% - 32px));background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transform:translateY(20px);transition:all .3s}.modal.open .modal-panel{transform:translateY(0)}
+</style>
+<style>
+</style>
+</head>
+<body style="padding-bottom:64px">
+<nav class="og-nav" role="navigation" aria-label="Main">
+<a href="#og-main-content" class="og-skip">Skip to content</a>
+<div class="og-nav-inner">
+<a href="index.html" class="og-brand"><span class="og-logo"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</a>
+<div class="og-nav-links">
+<a href="index.html" class="og-nav-link"><i class="ti ti-home"></i>Home</a>
+<a href="tasks.html" class="og-nav-link"><i class="ti ti-briefcase"></i>Tasks</a>
+<a href="store.html" class="og-nav-link"><i class="ti ti-discount-2"></i>Deals</a>
+<a href="communities.html" class="og-nav-link"><i class="ti ti-users-group"></i>Communities</a>
+<a href="faq.html" class="og-nav-link"><i class="ti ti-help-circle"></i>FAQ</a>
+</div>
+<div class="og-nav-actions">
+<button class="og-theme-btn" id="ogThemeBtn" aria-label="Toggle theme"><i class="ti ti-sun"></i></button>
+<a href="login.html" class="og-login-btn"><i class="ti ti-login"></i>Login</a>
+<a href="login.html?signup=1" class="og-cta-btn">Get Started <i class="ti ti-arrow-right"></i></a>
+<button class="og-menu-btn" id="ogMenuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
+</div>
+</div>
+</nav>
+<div class="og-layout"><aside class="og-sidebar" id="ogSidebar" role="navigation" aria-label="Side">
+<div class="og-sidebar-wrap">
+<button class="og-sidebar-toggle" id="ogSidebarToggle" aria-label="Toggle sidebar"><i class="ti ti-chevron-left"></i></button>
+<div class="og-sidebar-scroll">
+<div class="og-sidebar-section">Tasks</div>
+<a href="tasks.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-briefcase"></i></span>Browse All Tasks</a>
+<a href="monitor.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-eye"></i></span>Job Monitor</a>
+<div class="og-sidebar-section">Deals</div>
+<a href="blog.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-news"></i></span>Blog</a>
+<a href="vault.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-building-bank"></i></span>Vault</a>
+<div class="og-sidebar-section">Resources</div>
+<a href="faq.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-help-circle"></i></span>FAQ</a>
+<a href="support.html" class="og-sidebar-item"><span class="og-sidebar-icon"><i class="ti ti-headset"></i></span>Support</a>
+</div>
+<div class="og-sidebar-footer">
+<a href="login.html" class="og-sidebar-login"><i class="ti ti-login"></i> Login</a>
+</div>
+</div></div>
+<main class="og-main" id="og-main-content">
+
+<header class="nav"><div class="nav-inner"><a href="index.html" class="brand"><span class="og-logo"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</a><div class="nav-actions"><a class="pill-btn" href="post-task.html"><i class="ti ti-square-plus"></i>Post Task</a><button class="icon-btn" id="themeToggle" onclick="t()"><i class="ti ti-sun" id="ti"></i></button><a href="wallet.html" class="wallet-pill"><i class="ti ti-wallet"></i><span id="navBalance">₦0.00</span></a>
+<a href="profile.html" class="nav-avatar"><span id="navAvatar">AD</span></a></div></div></header>
+
+<div class="page">
+  <div id="loading" style="text-align:center;padding:80px 0"><i class="ti ti-loader" style="font-size:32px;color:var(--text3);animation:spin 1s linear infinite"></i><p style="margin-top:12px;color:var(--text2)">Loading management panel...</p></div>
+  <div id="content" style="display:none">
+    <div class="row space" style="margin-bottom:20px">
+      <div><h1 style="font-family:Outfit;font-size:26px;font-weight:800;margin:0" id="pageTitle">Manage Community</h1><p style="color:var(--text2);font-size:14px;margin:2px 0 0" id="pageSub">Settings, members, and moderation</p></div>
+      <a class="btn" href="community-profile.html?id=" id="viewLink"><i class="ti ti-eye"></i>View Community</a>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'settings')">Settings</button>
+      <button class="tab-btn" onclick="switchTab(this,'members')">Members</button>
+      <button class="tab-btn" onclick="switchTab(this,'requests')">Requests</button>
+      <button class="tab-btn" onclick="switchTab(this,'invites')">Invites</button>
+      <button class="tab-btn" onclick="switchTab(this,'danger')">Danger Zone</button>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-panel active" id="tabSettings">
+      <div class="card" style="padding:24px">
+        <h3 style="font-family:Outfit;margin:0 0 16px;font-size:18px">Community Settings</h3>
+        <div class="fg"><label>Community name</label><input id="editName" placeholder="Enter community name" /></div>
+        <div class="fg"><label>Description</label><textarea id="editDesc" rows="3" placeholder="Describe your community"></textarea></div>
+        <div class="fg"><label>Category</label><select id="editCategory"><option value="">Select category</option><option>Development</option><option>Design</option><option>Social Media</option><option>Content Writing</option><option>Marketing</option><option>General</option></select></div>
+        <div class="fg"><label>Accent color</label><div class="row"><input id="editColor" type="color" value="#7C3AED" style="width:48px;height:40px;border:1px solid var(--border);border-radius:8px;padding:2px;cursor:pointer" /><span id="editColorVal" style="font-size:12px;color:var(--text3)">#7C3AED</span></div></div>
+        <div class="fg"><label><div class="row space"><span>Public community</span><button id="privacyToggle" class="btn sm" onclick="togglePrivacy()" style="height:30px;font-size:11px">Yes</button></div><span style="font-size:11px;color:var(--text3);font-weight:400">Anyone can join without approval</span></label></div>
+        <button class="btn primary" onclick="saveSettings()"><i class="ti ti-device-floppy"></i>Save Changes</button>
+      </div>
+    </div>
+
+    <!-- Members Tab -->
+    <div class="tab-panel" id="tabMembers">
+      <div class="row space" style="margin-bottom:14px">
+        <span style="font-size:13px;color:var(--text2);font-weight:600"><span id="mCount">0</span> members</span>
+        <button class="btn sm" onclick="openInviteModal()"><i class="ti ti-user-plus"></i>Invite</button>
+      </div>
+      <div id="memberList"></div>
+    </div>
+
+    <!-- Requests Tab -->
+    <div class="tab-panel" id="tabRequests">
+      <p id="noRequests" style="color:var(--text3);text-align:center;padding:40px 0">No pending join requests.</p>
+      <div id="requestList"></div>
+    </div>
+
+    <!-- Invites Tab -->
+    <div class="tab-panel" id="tabInvites">
+      <div class="row space" style="margin-bottom:14px"><span style="font-size:13px;color:var(--text2);font-weight:600">Sent Invitations</span></div>
+      <p id="noInvites" style="color:var(--text3);text-align:center;padding:40px 0">No invitations sent yet.</p>
+      <div id="inviteList"></div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="tab-panel" id="tabDanger">
+      <div class="card" style="padding:24px;border-color:rgba(239,68,68,.2)">
+        <h3 style="font-family:Outfit;margin:0 0 8px;font-size:18px;color:var(--red)">Danger Zone</h3>
+        <p style="color:var(--text2);font-size:13px;margin:0 0 16px">Once you delete your community, there is no going back. Please be certain.</p>
+        <button class="btn danger" onclick="confirmDelete()"><i class="ti ti-trash"></i>Delete this community</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Invite Modal -->
+<div class="modal" id="inviteModal">
+  <div class="modal-overlay" onclick="closeModal('inviteModal')"></div>
+  <div class="modal-panel">
+    <h2>Invite Members</h2>
+    <p>Send invitations to join this community.</p>
+    <div class="fg"><label>Username or email</label><input id="inviteInput" placeholder="e.g. @username or email@example.com" /></div>
+    <div class="fg"><label>Message (optional)</label><textarea id="inviteMsg" rows="2" placeholder="Add a personal message..."></textarea></div>
+    <button class="btn primary full" onclick="sendInvite()"><i class="ti ti-send"></i>Send Invite</button>
+  </div>
+<div class="toast" id="toast">Done</div>
+
+<script>
+let communityId = null;
+
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  communityId = params.get('id');
+  if (!communityId) { showError('No community selected'); return; }
+  
+  document.getElementById('viewLink').href = 'community-profile.html?id=' + communityId;
+  
+  try {
+    const res = await fetch('/api/v1/communities/' + communityId);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const c = data.data || data;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    document.getElementById('pageTitle').textContent = 'Manage ' + c.name;
+    
+    // Populate settings
+    document.getElementById('editName').value = c.name || '';
+    document.getElementById('editDesc').value = c.description || '';
+    document.getElementById('editCategory').value = c.category || '';
+    document.getElementById('editColor').value = c.accentColor || '#7C3AED';
+    document.getElementById('editColorVal').textContent = c.accentColor || '#7C3AED';
+    document.getElementById('privacyToggle').textContent = c.isPublic !== false ? 'Public' : 'Private';
+    document.getElementById('privacyToggle').dataset.isPublic = c.isPublic !== false ? 'true' : 'false';
+    
+    loadMembers();
+    loadRequests();
+    loadInvites();
+  } catch(e) { showError('Could not load community'); }
+}
+
+async function loadMembers() {
+  try {
+    const res = await fetch('/api/v1/communities/' + communityId + '/members');
+    if (!res.ok) return;
+    const data = await res.json();
+    const members = data.data || data;
+    document.getElementById('mCount').textContent = members.length;
+    document.getElementById('memberList').innerHTML = members.map(m => `
+      <div class="card" style="padding:14px;margin-bottom:8px">
+        <div class="row space">
+          <div class="row">
+            <div style="width:36px;height:36px;border-radius:50%;background:${m.role==='OWNER'?'var(--accent)':m.role==='ADMIN'?'var(--accent2)':'var(--text3)'};display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px">${(m.firstName||m.username||'?')[0]}</div>
+            <div><div style="font-weight:700;font-size:13px">${m.firstName||m.username||'Unknown'} ${m.lastName||''}</div><span class="small">@${m.username||''}</span></div>
+          </div>
+          <div class="row">
+            <select onchange="changeRole('${m.id}',this.value)" style="height:32px;padding:0 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:12px;font-weight:600">
+              <option value="MEMBER" ${m.role==='MEMBER'?'selected':''}>Member</option>
+              <option value="MODERATOR" ${m.role==='MODERATOR'?'selected':''}>Moderator</option>
+              <option value="ADMIN" ${m.role==='ADMIN'?'selected':''}>Admin</option>
+            </select>
+            ${m.role!=='OWNER' ? `<button class="btn sm" style="color:var(--red)" onclick="removeMember('${m.id}')"><i class="ti ti-user-x"></i></button>` : '<span class="badge badge-accent">Owner</span>'}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {}
+}
+
+async function loadRequests() {
+  try {
+    const res = await fetch('/api/v1/communities/' + communityId + '/requests');
+    if (!res.ok) return;
+    const data = await res.json();
+    const requests = data.data || data;
+    if (requests.length === 0) return;
+    document.getElementById('noRequests').style.display = 'none';
+    document.getElementById('requestList').innerHTML = requests.map(r => `
+      <div class="card" style="padding:14px;margin-bottom:8px">
+        <div class="row space">
+          <div class="row">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--accent2);display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px">${(r.user?.firstName||r.user?.username||'?')[0]}</div>
+            <div><div style="font-weight:700;font-size:13px">${r.user?.firstName||r.user?.username||'Unknown'} ${r.user?.lastName||''}</div><span class="small">@${r.user?.username||''}</span></div>
+          </div>
+          <div class="row">
+            <button class="btn sm primary" onclick="handleRequest('${r.id}','accept')"><i class="ti ti-check"></i>Accept</button>
+            <button class="btn sm" onclick="handleRequest('${r.id}','decline')"><i class="ti ti-x"></i>Decline</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {}
+}
+
+async function loadInvites() {
+  try {
+    const res = await fetch('/api/v1/communities/' + communityId + '/invites');
+    if (!res.ok) return;
+    const data = await res.json();
+    const invites = data.data || data;
+    if (invites.length === 0) return;
+    document.getElementById('noInvites').style.display = 'none';
+    document.getElementById('inviteList').innerHTML = invites.map(i => `
+      <div class="card" style="padding:14px;margin-bottom:8px">
+        <div class="row space">
+          <div><span style="font-weight:600;font-size:13px">${i.invitee?.username || i.email || 'Unknown'}</span><span class="small" style="margin-left:8px">by ${i.inviter?.username||'?'}</span></div>
+          <span class="badge ${i.status==='PENDING'?'badge-accent':i.status==='ACCEPTED'?'badge-green':'badge-red'}">${i.status}</span>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {}
+}
+
+function switchTab(el, tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+}
+
+async function saveSettings() {
+  const body = {
+    name: document.getElementById('editName').value,
+    description: document.getElementById('editDesc').value,
+    category: document.getElementById('editCategory').value,
+    accentColor: document.getElementById('editColor').value,
+    isPublic: document.getElementById('privacyToggle').dataset.isPublic === 'true',
+  };
+  try {
+    const res = await fetch('/api/v1/communities/' + communityId, {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body),
+    });
+    if (res.ok) showToast('Settings saved!');
+    else { const d = await res.json(); showToast(d.message || 'Error saving'); }
+  } catch(e) { showToast('Network error'); }
+}
+
+function togglePrivacy() {
+  const btn = document.getElementById('privacyToggle');
+  const isPublic = btn.dataset.isPublic === 'true';
+  btn.dataset.isPublic = isPublic ? 'false' : 'true';
+  btn.textContent = isPublic ? 'Private' : 'Public';
+}
+
+async function changeRole(memberId, role) {
+  try {
+    const res = await fetch('/api/v1/communities/' + communityId + '/members/' + memberId, {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ role }),
+    });
+    if (res.ok) showToast('Role updated');
+    else { const d = await res.json(); showToast(d.message || 'Error'); }
+  } catch(e) { showToast('Network error'); }
+}
+
+async function removeMember(memberId) {
+  if (!confirm('Remove this member?')) return;
+  try {
+    const res = await fetch('/api/v1/communities/' + communityId + '/members/' + memberId, { method: 'DELETE' });
+    if (res.ok) { showToast('Member removed'); loadMembers(); }
+    else showToast('Could not remove member');
+  } catch(e) { showToast('Network error'); }
+}
+
+async function handleRequest(requestId, action) {
+  try {
+    const res = await fetch('/api/v1/communities/' + communityId + '/requests/' + requestId, {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action }),
+    });
+    if (res.ok) { showToast(action === 'accept' ? 'Request accepted' : 'Request declined'); loadRequests(); loadMembers(); }
+    else showToast('Error handling request');
+  } catch(e) { showToast('Network error'); }
+}
+
+function openInviteModal() { document.getElementById('inviteModal').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+async function sendInvite() {
+  const input = document.getElementById('inviteInput').value.trim();
+  if (!input) { showToast('Enter a username or email'); return; }
+  const body = { message: document.getElementById('inviteMsg').value.trim() || null };
+  if (input.includes('@')) body.email = input;
+  else body.inviteeId = input;
+  try {
+    const res = await fetch('/api/v1/communities/' + communityId + '/invite', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body),
+    });
+    if (res.ok) { showToast('Invite sent!'); closeModal('inviteModal'); loadInvites(); }
+    else { const d = await res.json(); showToast(d.message || 'Error sending invite'); }
+  } catch(e) { showToast('Network error'); }
+}
+
+function confirmDelete() {
+  if (!confirm('Are you sure? This cannot be undone.')) return;
+  if (!confirm('Really delete this community?')) return;
+  fetch('/api/v1/communities/' + communityId, { method: 'DELETE' })
+    .then(r => r.ok ? (showToast('Deleted'), setTimeout(() => location.href='communities.html', 1000)) : showToast('Error deleting'))
+    .catch(() => showToast('Network error'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+ catch(e) {}
+  const i = document.getElementById('ti');
+  if (i) i.className = n === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+}
+(function() {
+  const h = document.documentElement;
+  h.setAttribute('data-theme', h.getAttribute('data-theme') || 'light');
+  const d = document.getElementById('ti');
+  if (d) d.className = h.getAttribute('data-theme') === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+})();
+
+init();
+</script>
+
+</main>
+</div>
+<div class="og-drawer-overlay" id="ogDrawerOverlay"></div>
+<aside class="og-drawer" id="ogDrawer" role="dialog" aria-label="Menu">
+<div class="og-drawer-head">
+<a class="og-brand" href="index.html"><span class="og-logo"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</a>
+<button class="og-theme-btn" id="ogDrawerClose" style="border:none;background:transparent;font-size:20px"><i class="ti ti-x"></i></button>
+</div>
+<div class="og-drawer-body">
+<div class="og-drawer-section">Navigate</div>
+<a href="index.html" class="og-drawer-link"><i class="ti ti-home"></i>Home</a>
+<a href="tasks.html" class="og-drawer-link"><i class="ti ti-briefcase"></i>Tasks</a>
+<a href="store.html" class="og-drawer-link"><i class="ti ti-discount-2"></i>Deals</a>
+<a href="communities.html" class="og-drawer-link"><i class="ti ti-users-group"></i>Communities</a>
+<a href="faq.html" class="og-drawer-link"><i class="ti ti-help-circle"></i>FAQ</a>
+<div class="og-drawer-section">Tasks</div>
+<a href="tasks.html" class="og-drawer-link"><i class="ti ti-briefcase"></i>Browse All Tasks</a>
+<a href="monitor.html" class="og-drawer-link"><i class="ti ti-eye"></i>Job Monitor</a>
+<div class="og-drawer-section">Deals</div>
+<a href="blog.html" class="og-drawer-link"><i class="ti ti-news"></i>Blog</a>
+<a href="vault.html" class="og-drawer-link"><i class="ti ti-building-bank"></i>Vault</a>
+<div class="og-drawer-section">Resources</div>
+<a href="faq.html" class="og-drawer-link"><i class="ti ti-help-circle"></i>FAQ</a>
+<a href="support.html" class="og-drawer-link"><i class="ti ti-headset"></i>Support</a>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+<a href="login.html" class="og-login-btn" style="justify-content:center;height:44px"><i class="ti ti-login"></i>Login</a>
+<a href="login.html?signup=1" class="og-cta-btn" style="justify-content:center;height:44px">Get Started <i class="ti ti-arrow-right"></i></a>
+</div>
+</div>
+</aside>
+<nav class="og-mobile-nav" aria-label="Mobile">
+<a href="index.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>Home</span></a>
+<a href="tasks.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Tasks</span></a>
+<a href="post-task.html" class="create-btn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></a>
+<a href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Deals</span></a>
+<a href="login.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Login</span></a>
+</nav>
+
+<script>
+(function(){function g(){var d=document.documentElement,t=d.getAttribute('data-theme')||'light',n=t==='dark'?'light':'dark';d.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}var i=document.getElementById('ogThemeBtn');if(i){var ic=i.querySelector('i');if(ic)ic.className=n==='dark'?'ti ti-sun':'ti ti-moon'}}var s;(function(){try{s=localStorage.getItem('ogapay-theme')}catch(e){}var t=s||document.documentElement.getAttribute('data-theme')||'light';document.documentElement.setAttribute('data-theme',t);var i=document.getElementById('ogThemeBtn');if(i){var ic=i.querySelector('i');if(ic)ic.className=t==='dark'?'ti ti-sun':'ti ti-moon'}})();document.getElementById('ogThemeBtn')?.addEventListener('click',g);document.getElementById('ogSidebarToggle')?.addEventListener('click',function(){document.getElementById('ogSidebar')?.classList.toggle('collapsed')});document.getElementById('ogMenuBtn')?.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.add('open');document.getElementById('ogDrawerOverlay')?.classList.add('show');document.body.style.overflow='hidden'});document.getElementById('ogDrawerOverlay')?.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.remove('open');document.getElementById('ogDrawerOverlay')?.classList.remove('show');document.body.style.overflow=''});document.getElementById('ogDrawerClose')?.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.remove('open');document.getElementById('ogDrawerOverlay')?.classList.remove('show');document.body.style.overflow=''});document.querySelectorAll('.og-drawer-link').forEach(function(e){e.addEventListener('click',function(){document.getElementById('ogDrawer')?.classList.remove('open');document.getElementById('ogDrawerOverlay')?.classList.remove('show');document.body.style.overflow=''})});document.querySelector('.og-skip')?.addEventListener('click',function(e){e.preventDefault();var m=document.getElementById('og-main-content');if(m){m.setAttribute('tabindex','-1');m.focus();setTimeout(function(){m.removeAttribute('tabindex')},100)}});
+})();
+</script>
+
+</body>
+</html>
