@@ -49,8 +49,9 @@ app.use(helmet({
 app.use(cors({
   origin: [
     process.env.FRONTEND_URL,
-    'https://ogapay-five.vercel.app',
+    'https://ogapay.vercel.app',
     'https://ogapay.io',
+    'https://ogapay-five.vercel.app',
     'http://localhost:3000',
     'http://localhost:5173',
   ].filter(Boolean),

@@ -39,14 +39,14 @@ router.get('/google', async (req, res) => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${process.env.FRONTEND_URL || 'https://ogapay-five.vercel.app'}/auth-callback.html`,
+        redirectTo: `${process.env.FRONTEND_URL || 'https://ogapay.vercel.app'}/auth/callback`,
         queryParams: { access_type: 'offline', prompt: 'consent' },
       },
     });
     if (error) throw error;
     res.redirect(data.url);
   } catch (err) {
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login.html?error=google_auth_failed`);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=google_auth_failed`);
   }
 });
 
