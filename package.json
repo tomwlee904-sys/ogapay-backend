@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "generate": "prisma generate",
+    "generate": "npx prisma generate",
     "start": "node src/index.js",
     "dev": "vite",
     "build": "vite build && node scripts/copy-static.mjs",
