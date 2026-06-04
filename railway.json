@@ -5,7 +5,7 @@
     "buildCommand": "npm run generate"
   },
   "deploy": {
-    "startCommand": "npm start",
+    "startCommand": "node src/index.js",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
