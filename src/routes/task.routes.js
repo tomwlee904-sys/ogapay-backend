@@ -117,4 +117,32 @@ router.get('/:id', async (req, res) => {
   const data = await taskService.getTask(req.params.id, userId);
   successResponse(res, data, 'Task fetched');
 });
+// GET /api/v1/tasks/:id/submissions — Poster views submissions for their task
+router.get('/:id/submissions', authenticate, authorize('POSTER', 'ADMIN'), async (req, res) => {
+  const { page = 1, limit = 50 } = req.query;
+  const { prisma } = require('../config/database');
+  
+  // Verify the task belongs to this poster
+  const task = await prisma.task.findUnique({ where: { id: req.params.id }, select: { posterId: true } });
+  if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
+  if (task.posterId !== req.user.id && req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Not authorized' });
+  }
+  
+  const [submissions, total] = await Promise.all([
+    prisma.taskSubmission.findMany({
+      where: { taskId: req.params.id },
+      skip: (page - 1) * limit, take: parseInt(limit),
+      orderBy: { createdAt: 'desc' },
+      include: {
+        worker: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
+      },
+    }),
+    prisma.taskSubmission.count({ where: { taskId: req.params.id } }),
+  ]);
+  
+  const { paginatedResponse, paginate } = require('../utils/apiResponse');
+  paginatedResponse(res, submissions, paginate(page, limit, total));
+});
+
 module.exports = router;
