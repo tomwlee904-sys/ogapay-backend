@@ -12,9 +12,25 @@ const missingClient = (name) => new Proxy({}, {
   },
 });
 
+// Use ws package for Node < 22 (no native WebSocket)
+let wsTransport = undefined;
+try {
+  const ws = require('ws');
+  if (ws && typeof ws === 'function') {
+    wsTransport = ws;
+  }
+} catch (e) {
+  // ws not available, rely on native WebSocket (Node 22+)
+}
+
 const commonOptions = {
   auth: { persistSession: false },
 };
+
+// Only add transport if ws was successfully loaded
+if (wsTransport) {
+  commonOptions.transport = wsTransport;
+}
 
 const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey, commonOptions)
