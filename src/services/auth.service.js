@@ -18,6 +18,8 @@ const generateReferralCode = () => {
 // ── Register ────────────────────────────────────
 
 const register = async ({ firstName, lastName, email, password, username, role, referralCode, phone }) => {
+  const { supabaseAdmin } = require('../config/supabase');
+
   const [existingEmail, existingUsername] = await Promise.all([
     prisma.user.findUnique({ where: { email } }),
     prisma.user.findUnique({ where: { username } }),
@@ -34,6 +36,28 @@ const register = async ({ firstName, lastName, email, password, username, role, 
     referredById = referrer.id;
   }
 
+  // ── Create Supabase Auth user — triggers verification email automatically ──
+  const { data: supabaseData, error: supabaseError } = await supabaseAdmin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: false,
+    user_metadata: {
+      first_name: firstName,
+      last_name: lastName,
+      full_name: `${firstName} ${lastName}`,
+    },
+  });
+
+  if (supabaseError) {
+    if (supabaseError.message?.toLowerCase().includes('already')) {
+      throw ApiError.conflict('Email already registered');
+    }
+    logger.error('Supabase user creation error:', supabaseError);
+    throw ApiError.internal('Could not create account. Please try again.');
+  }
+
+  const supabaseId = supabaseData.user.id;
+
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
   const myReferralCode = generateReferralCode();
 
@@ -49,6 +73,8 @@ const register = async ({ firstName, lastName, email, password, username, role, 
         phone,
         referralCode: myReferralCode,
         referredById,
+        supabaseId,
+        isEmailVerified: false,
       },
     });
 
@@ -89,11 +115,14 @@ const register = async ({ firstName, lastName, email, password, username, role, 
     return newUser;
   });
 
-  logger.info(`New user registered: ${user.email} (${user.role})`);
-  const tokens = generateTokenPair(user);
-  await saveRefreshToken(user.id, tokens.refreshToken);
+  logger.info(`New user registered: ${user.email} (${user.role}) — verification email sent via Supabase`);
 
-  return { user: sanitizeUser(user), tokens };
+  // Don't return tokens yet — user must verify email first
+  return {
+    user: sanitizeUser(user),
+    message: 'Account created. Please check your email to verify your account.',
+    requiresVerification: true,
+  };
 };
 
 const uniqueUsername = async (base) => {
@@ -207,6 +236,11 @@ const login = async ({ email, password }, ipAddress, userAgent) => {
   const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
   if (!isPasswordValid) throw ApiError.unauthorized('Invalid email or password');
 
+  // Block login if email not verified
+  if (!user.isEmailVerified) {
+    throw ApiError.forbidden('Please verify your email before signing in. Check your inbox for the verification link.');
+  }
+
   await prisma.user.update({
     where: { id: user.id },
     data: { lastLoginAt: new Date() },
@@ -250,8 +284,6 @@ const logout = async (userId, refreshToken) => {
   if (refreshToken) {
     await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
   }
-  // Optionally clear all sessions:
-  // await prisma.refreshToken.deleteMany({ where: { userId } });
 };
 
 // ── Helpers ─────────────────────────────────────
@@ -278,7 +310,6 @@ const sanitizeUser = (user) => ({
   createdAt: user.createdAt,
 });
 
-
 // ── Forgot Password ────────────────────────────
 
 const jwt = require('jsonwebtoken');
@@ -286,11 +317,9 @@ const jwt = require('jsonwebtoken');
 const forgotPassword = async (email) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
-    // Don't reveal whether email exists - return success either way
     return { message: 'If an account exists with that email, a reset link has been sent.' };
   }
 
-  // Generate JWT reset token (expires in 1 hour)
   const resetToken = jwt.sign(
     { sub: user.id, email: user.email, purpose: 'password_reset' },
     process.env.JWT_SECRET,
@@ -299,13 +328,11 @@ const forgotPassword = async (email) => {
 
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password.html?token=${resetToken}`;
 
-  logger.info(`Password reset requested for ${user.email} — link would be emailed. Reset URL: ${resetUrl}`);
+  logger.info(`Password reset requested for ${user.email} — Reset URL: ${resetUrl}`);
 
-  // TODO: Send email via SendGrid/Resend/etc.
-  // For now, the reset link is returned in the response for dev convenience
   return {
     message: 'If an account exists with that email, a reset link has been sent.',
-    resetUrl, // Only returned in development; remove in production
+    resetUrl,
   };
 };
 
@@ -331,7 +358,6 @@ const resetPassword = async (token, newPassword) => {
     data: { passwordHash },
   });
 
-  // Invalidate all refresh tokens for security
   await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
 
   logger.info(`Password reset completed for ${user.email}`);
