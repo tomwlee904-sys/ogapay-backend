@@ -111,12 +111,6 @@ router.get('/my/submissions', authenticate, authorize('WORKER', 'ADMIN'), async 
 });
 
 
-// GET /api/v1/tasks/:id
-router.get('/:id', async (req, res) => {
-  const userId = req.headers.authorization ? req.user?.id : null;
-  const data = await taskService.getTask(req.params.id, userId);
-  successResponse(res, data, 'Task fetched');
-});
 // GET /api/v1/tasks/:id/submissions — Poster views submissions for their task
 router.get('/:id/submissions', authenticate, authorize('POSTER', 'ADMIN'), async (req, res) => {
   const { page = 1, limit = 50 } = req.query;
@@ -145,4 +139,10 @@ router.get('/:id/submissions', authenticate, authorize('POSTER', 'ADMIN'), async
   paginatedResponse(res, submissions, paginate(page, limit, total));
 });
 
+// GET /api/v1/tasks/:id
+router.get('/:id', async (req, res) => {
+  const userId = req.headers.authorization ? req.user?.id : null;
+  const data = await taskService.getTask(req.params.id, userId);
+  successResponse(res, data, 'Task fetched');
+});
 module.exports = router;
