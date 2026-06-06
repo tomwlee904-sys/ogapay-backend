@@ -53,8 +53,8 @@ router.post('/', authenticate, async (req, res) => {
     throw ApiError.badRequest('Community name is required');
   }
   const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now().toString(36);
-  const initials = name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
-  const catMap: Record<string, { badge: string; accent: string }> = {
+  const initials = name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+  const catMap = {
     crypto: { badge: 'Crypto', accent: '#1F8CFF' },
     social: { badge: 'Social', accent: '#033CE3' },
     design: { badge: 'Design', accent: '#EC4899' },
@@ -161,7 +161,7 @@ router.post('/:id/request/:userId/approve', authenticate, async (req, res) => {
     throw ApiError.forbidden('Only the community owner can approve requests');
   }
   const requests = joinRequests.get(req.params.id) || [];
-  const idx = requests.findIndex((r: any) => r.userId === req.params.userId);
+  const idx = requests.findIndex((r) => r.userId === req.params.userId);
   if (idx === -1) {
     const { ApiError } = require('../utils/apiResponse');
     throw ApiError.notFound('Request not found');
@@ -188,7 +188,7 @@ router.patch('/:id', authenticate, async (req, res) => {
   if (name) community.name = name;
   if (description !== undefined) community.desc = description;
   if (category) {
-    const catMap: Record<string, { badge: string; accent: string }> = {
+    const catMap = {
       crypto: { badge: 'Crypto', accent: '#1F8CFF' },
       social: { badge: 'Social', accent: '#033CE3' },
       design: { badge: 'Design', accent: '#EC4899' },
