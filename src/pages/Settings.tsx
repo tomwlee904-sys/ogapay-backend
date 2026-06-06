@@ -1,20 +1,20 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-
+ 
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
-
+ 
 function getToken() {
   return localStorage.getItem('token') || sessionStorage.getItem('token') || ''
 }
-
+ 
 function authHeaders() {
   return {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${getToken()}`,
   }
 }
-
+ 
 /* ─── Types ─── */
 interface ProfileForm {
   fullName: string
@@ -24,7 +24,7 @@ interface ProfileForm {
   location: string
   bio: string
 }
-
+ 
 interface PrefsForm {
   emailNotifications: boolean
   smsNotifications: boolean
@@ -32,13 +32,13 @@ interface PrefsForm {
   publicProfile: boolean
   showEarnings: boolean
 }
-
+ 
 interface PasswordForm {
   current: string
   next: string
   confirm: string
 }
-
+ 
 /* ─── Toggle Switch ─── */
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -61,7 +61,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
     </button>
   )
 }
-
+ 
 /* ─── Field ─── */
 function Field({
   label, type = 'text', value, onChange, placeholder, disabled, textarea, hint
@@ -96,7 +96,7 @@ function Field({
     </div>
   )
 }
-
+ 
 /* ─── Card ─── */
 function Card({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
   return (
@@ -118,7 +118,7 @@ function Card({ title, icon, children }: { title: string; icon: string; children
     </div>
   )
 }
-
+ 
 /* ─── Toast ─── */
 function Toast({ message, type, visible }: { message: string; type: 'success' | 'error'; visible: boolean }) {
   return (
@@ -137,13 +137,13 @@ function Toast({ message, type, visible }: { message: string; type: 'success' | 
     </div>
   )
 }
-
+ 
 /* ─── Avatar Upload ─── */
 function AvatarUpload({ name }: { name: string }) {
   const [preview, setPreview] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const ref = useRef<HTMLInputElement>(null)
-
+ 
   const handle = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -155,9 +155,9 @@ function AvatarUpload({ name }: { name: string }) {
     await new Promise(r => setTimeout(r, 1200))
     setUploading(false)
   }
-
+ 
   const initials = name ? name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'U'
-
+ 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
       <div style={{ position: 'relative' }}>
@@ -200,46 +200,46 @@ function AvatarUpload({ name }: { name: string }) {
     </div>
   )
 }
-
+ 
 /* ─── Main Component ─── */
 export default function Settings() {
   const navigate = useNavigate()
-
+ 
   // ── profile state ──
   const [profile, setProfile] = useState<ProfileForm>({
     fullName: '', username: '', email: '', phone: '', location: '', bio: '',
   })
   const [profileLoading, setProfileLoading] = useState(true)
   const [profileSaving, setProfileSaving] = useState(false)
-
+ 
   // ── prefs state ──
   const [prefs, setPrefs] = useState<PrefsForm>({
     emailNotifications: true, smsNotifications: false,
     pushNotifications: true, publicProfile: true, showEarnings: false,
   })
   const [prefsSaving, setPrefsSaving] = useState(false)
-
+ 
   // ── password state ──
   const [pwd, setPwd] = useState<PasswordForm>({ current: '', next: '', confirm: '' })
   const [pwdSaving, setPwdSaving] = useState(false)
   const [showPwd, setShowPwd] = useState(false)
-
+ 
   // ── 2FA state ──
   const [twoFA, setTwoFA] = useState(false)
   const [twoFASaving, setTwoFASaving] = useState(false)
-
+ 
   // ── delete state ──
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [deleteModal, setDeleteModal] = useState(false)
-
+ 
   // ── toast ──
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' })
-
+ 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ visible: true, message, type })
     setTimeout(() => setToast(t => ({ ...t, visible: false })), 3000)
   }
-
+ 
   /* ─── Load profile on mount ─── */
   useEffect(() => {
     const load = async () => {
@@ -278,7 +278,7 @@ export default function Settings() {
     }
     load()
   }, [])
-
+ 
   /* ─── Save profile ─── */
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -306,7 +306,7 @@ export default function Settings() {
     }
     setProfileSaving(false)
   }
-
+ 
   /* ─── Save preferences ─── */
   const savePrefs = async () => {
     setPrefsSaving(true)
@@ -327,7 +327,7 @@ export default function Settings() {
     }
     setPrefsSaving(false)
   }
-
+ 
   /* ─── Change password ─── */
   const changePassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -359,7 +359,7 @@ export default function Settings() {
     }
     setPwdSaving(false)
   }
-
+ 
   /* ─── Toggle 2FA ─── */
   const toggle2FA = async () => {
     setTwoFASaving(true)
@@ -381,7 +381,7 @@ export default function Settings() {
     }
     setTwoFASaving(false)
   }
-
+ 
   /* ─── Delete account ─── */
   const deleteAccount = async () => {
     if (deleteConfirm.toLowerCase() !== 'delete') return
@@ -403,14 +403,14 @@ export default function Settings() {
       showToast('Network error', 'error')
     }
   }
-
+ 
   /* ─── Logout ─── */
   const logout = () => {
     localStorage.clear()
     sessionStorage.clear()
     navigate('/login')
   }
-
+ 
   if (profileLoading) {
     return (
       <Layout>
@@ -421,7 +421,7 @@ export default function Settings() {
       </Layout>
     )
   }
-
+ 
   return (
     <Layout>
       {/* ─── Hero ─── */}
@@ -433,14 +433,14 @@ export default function Settings() {
           Manage your account preferences and personal information
         </p>
       </div>
-
+ 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 40 }}>
-
+ 
         {/* ─── PROFILE ─── */}
         <form onSubmit={saveProfile}>
           <Card title="Profile Information" icon="ti-user">
             <AvatarUpload name={profile.fullName} />
-
+ 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
               <Field label="Full Name" value={profile.fullName}
                 onChange={v => setProfile(p => ({ ...p, fullName: v }))} placeholder="Your full name" />
@@ -461,7 +461,7 @@ export default function Settings() {
               <Field label="Bio" textarea value={profile.bio}
                 onChange={v => setProfile(p => ({ ...p, bio: v }))} placeholder="Tell us about yourself..." />
             </div>
-
+ 
             <button type="submit" disabled={profileSaving} style={{
               height: 40, padding: '0 20px', borderRadius: 10, border: 'none',
               background: '#121566', color: '#fff', fontWeight: 700, fontSize: 13,
@@ -475,7 +475,7 @@ export default function Settings() {
             </button>
           </Card>
         </form>
-
+ 
         {/* ─── PREFERENCES ─── */}
         <Card title="Notifications & Privacy" icon="ti-bell">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -514,7 +514,7 @@ export default function Settings() {
             </button>
           </div>
         </Card>
-
+ 
         {/* ─── SECURITY ─── */}
         <Card title="Security" icon="ti-shield-lock">
           {/* 2FA */}
@@ -547,7 +547,7 @@ export default function Settings() {
               {twoFASaving ? '...' : twoFA ? 'Disable' : 'Enable'}
             </button>
           </div>
-
+ 
           {/* Change Password */}
           <div style={{ padding: '14px 0', borderBottom: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showPwd ? 16 : 0 }}>
@@ -590,7 +590,7 @@ export default function Settings() {
               </form>
             )}
           </div>
-
+ 
           {/* Active Sessions */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0' }}>
             <div>
@@ -608,7 +608,7 @@ export default function Settings() {
             </button>
           </div>
         </Card>
-
+ 
         {/* ─── BANK / PAYOUT ─── */}
         <Card title="Payout Details" icon="ti-building-bank">
           <p style={{ fontSize: 13, color: 'var(--text2)', margin: '0 0 16px' }}>
@@ -624,7 +624,7 @@ export default function Settings() {
             Manage Payout Methods
           </button>
         </Card>
-
+ 
         {/* ─── DANGER ZONE ─── */}
         <div style={{
           background: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.2)',
@@ -656,9 +656,9 @@ export default function Settings() {
             </button>
           </div>
         </div>
-
+ 
       </div>
-
+ 
       {/* ─── DELETE MODAL ─── */}
       {deleteModal && (
         <div style={{
@@ -710,7 +710,7 @@ export default function Settings() {
           </div>
         </div>
       )}
-
+ 
       <Toast visible={toast.visible} message={toast.message} type={toast.type} />
     </Layout>
   )
