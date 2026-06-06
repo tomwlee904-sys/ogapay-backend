@@ -284,7 +284,7 @@ export default function Settings() {
     e.preventDefault()
     setProfileSaving(true)
     try {
-      const res = await fetch(`${API_BASE}/auth/update-profile`, {
+      const res = await fetch(`${API_BASE}/profile`, {
         method: 'PUT',
         headers: authHeaders(),
         body: JSON.stringify({
