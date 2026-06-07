@@ -14,10 +14,14 @@ const formatAmount = (amount, currency) => {
 };
 
 const lockFundsForTask = async (userId, taskId, amount, currency) => {
-  const wallet = await prisma.wallet.findUnique({
+  let wallet = await prisma.wallet.findUnique({
     where: { userId_currency: { userId, currency } },
   });
-  if (!wallet) throw ApiError.notFound('Wallet not found');
+  if (!wallet) {
+    wallet = await prisma.wallet.create({
+      data: { userId, currency, balance: 0, lockedBalance: 0 },
+    });
+  }
 
   const available = parseFloat(wallet.balance) - parseFloat(wallet.lockedBalance);
   const platformFee = (amount * PLATFORM_FEE_PERCENT) / 100;

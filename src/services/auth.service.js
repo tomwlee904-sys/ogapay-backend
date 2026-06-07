@@ -193,6 +193,15 @@ const googleExchange = async ({ supabaseAccessToken, role }, ipAddress, userAgen
       create: { userId: user.id, status: 'APPROVED' },
       update: { status: 'APPROVED' },
     });
+    const existingWallets = await prisma.wallet.findMany({ where: { userId: user.id }, select: { currency: true } });
+    const existingCurrencies = existingWallets.map(w => w.currency);
+    const neededCurrencies = ['NGN', 'USDC', 'USDT', 'SOL'];
+    const missing = neededCurrencies.filter(c => !existingCurrencies.includes(c));
+    if (missing.length > 0) {
+      await prisma.wallet.createMany({
+        data: missing.map(currency => ({ userId: user.id, currency, balance: 0, lockedBalance: 0 })),
+      });
+    }
   } else {
     user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
