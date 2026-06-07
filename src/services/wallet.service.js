@@ -23,10 +23,14 @@ const initiateDeposit = async (userId, { amount, currency, provider, callbackUrl
     throw ApiError.badRequest('Non-NGN deposits must use CRYPTO provider');
   }
 
-  const wallet = await prisma.wallet.findUnique({
+  let wallet = await prisma.wallet.findUnique({
     where: { userId_currency: { userId, currency } },
   });
-  if (!wallet) throw ApiError.notFound('Wallet not found');
+  if (!wallet) {
+    wallet = await prisma.wallet.create({
+      data: { userId, currency, balance: 0, lockedBalance: 0 },
+    });
+  }
 
   const reference = `OGA-DEP-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
 
