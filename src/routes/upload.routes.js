@@ -23,4 +23,20 @@ router.post('/proof', authenticate, upload.single('file'), async (req, res) => {
   createdResponse(res, { url: data.publicUrl, path: key }, 'Proof uploaded');
 });
 
+// POST /uploads/store — Upload product image for store
+router.post('/store', authenticate, upload.single('file'), async (req, res) => {
+  if (!req.file) throw ApiError.badRequest('No file uploaded');
+  const safeName = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '-');
+  const key = `store/${req.user.id}/${Date.now()}-${safeName}`;
+  const bucket = process.env.SUPABASE_STORE_BUCKET || 'task-proofs';
+  const { error } = await supabaseAdmin.storage
+    .from(bucket)
+    .upload(key, req.file.buffer, { contentType: req.file.mimetype, upsert: false });
+  if (error) throw ApiError.internal('Failed to upload image');
+  const { data } = supabaseAdmin.storage
+    .from(bucket)
+    .getPublicUrl(key);
+  createdResponse(res, { url: data.publicUrl, path: key }, 'Image uploaded');
+});
+
 module.exports = router;

@@ -136,6 +136,8 @@ model User {
   notifications     Notification[]
   refreshTokens     RefreshToken[]
   storePurchases    StorePurchase[]
+  storeItems        StoreItem[]       @relation("StoreSeller")
+  storeReviews      StoreReview[]
   disputesAsWorker  Dispute[]         @relation("DisputeWorker")
   disputesAsPoster  Dispute[]         @relation("DisputePoster")
 
@@ -344,6 +346,7 @@ model Dispute {
 
 model StoreItem {
   id              String    @id @default(uuid())
+  sellerId        String?   @map("seller_id")
   name            String
   description     String
   price           Decimal   @db.Decimal(20, 8)
@@ -356,7 +359,9 @@ model StoreItem {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
+  seller          User?     @relation("StoreSeller", fields: [sellerId], references: [id])
   purchases       StorePurchase[]
+  reviews         StoreReview[]
 
   @@map("store_items")
 }
@@ -375,6 +380,21 @@ model StorePurchase {
   item        StoreItem @relation(fields: [itemId], references: [id])
 
   @@map("store_purchases")
+}
+
+model StoreReview {
+  id        String   @id @default(uuid())
+  itemId    String   @map("item_id")
+  userId    String   @map("user_id")
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User      @relation(fields: [userId], references: [id])
+  item      StoreItem @relation(fields: [itemId], references: [id])
+
+  @@unique([itemId, userId])
+  @@map("store_reviews")
 }
 
 model Notification {
