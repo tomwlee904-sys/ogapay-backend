@@ -21,6 +21,7 @@ import Leaderboard from './pages/Leaderboard'
 import Campaigns from './pages/Campaigns'
 import Support from './pages/Support'
 import NotFound from './pages/NotFound'
+import CreateTask from './pages/CreateJobPage'
 
 export default function App() {
   return (
@@ -33,6 +34,8 @@ export default function App() {
           <Route path="/tasks/:id" element={<Tasks />} />
           <Route path="/tasks/new" element={<Dashboard />} />
           <Route path="/my-tasks" element={<MyTasks />} />
+          <Route path="/create" element={<CreateTask />} />
+          <Route path="/create-job" element={<CreateTask />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/worker-portal" element={<WorkerPortal />} />
