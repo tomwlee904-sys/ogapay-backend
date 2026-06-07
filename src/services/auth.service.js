@@ -3,6 +3,7 @@
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const { prisma } = require('../config/database');
+const { supabaseAdmin } = require('../config/supabase');
 const { generateTokenPair, verifyRefreshToken } = require('../utils/jwt');
 const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
@@ -148,6 +149,83 @@ const refreshTokens = async (token) => {
   return { tokens };
 };
 
+// ── Google Exchange ────────────────────────────
+
+const googleExchange = async ({ supabaseAccessToken, role }, ipAddress, userAgent) => {
+  if (!supabaseAccessToken) throw ApiError.badRequest('Missing Supabase access token');
+
+  let supabaseUser;
+  try {
+    const { data, error } = await supabaseAdmin.auth.getUser(supabaseAccessToken);
+    if (error) throw error;
+    supabaseUser = data.user;
+  } catch (err) {
+    logger.error(`Supabase token verification failed: ${err.message}`);
+    throw ApiError.unauthorized('Invalid or expired Supabase session');
+  }
+
+  if (!supabaseUser?.email) throw ApiError.badRequest('No email returned from Google');
+
+  const { email, user_metadata, id: supabaseId } = supabaseUser;
+  const meta = user_metadata || {};
+  const fullName = meta.full_name || meta.name || email.split('@')[0];
+  const parts = fullName.trim().split(/\s+/);
+  const firstName = meta.given_name || parts[0] || '';
+  const lastName = meta.family_name || parts.slice(1).join(' ') || '';
+  const avatarUrl = meta.avatar_url || meta.picture || null;
+
+  let user = await prisma.user.findUnique({ where: { email } });
+
+  if (user) {
+    if (user.isBanned) throw ApiError.forbidden('Account has been banned. Contact support.');
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date(), avatarUrl: avatarUrl || undefined },
+    });
+  } else {
+    user = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          firstName: firstName || email.split('@')[0],
+          lastName,
+          email,
+          username: email.split('@')[0] + '_' + supabaseId.slice(0, 6),
+          role: role || 'WORKER',
+          isEmailVerified: true,
+          avatarUrl,
+          referralCode: generateReferralCode(),
+        },
+      });
+
+      const currencies = ['NGN', 'USDC', 'USDT', 'SOL'];
+      await tx.wallet.createMany({
+        data: currencies.map((currency) => ({
+          userId: newUser.id,
+          currency,
+          balance: 0,
+          lockedBalance: 0,
+        })),
+      });
+
+      if (newUser.role === 'WORKER') {
+        await tx.workerProfile.create({ data: { userId: newUser.id } });
+      } else if (newUser.role === 'POSTER') {
+        await tx.posterProfile.create({ data: { userId: newUser.id } });
+      }
+
+      await tx.kycVerification.create({ data: { userId: newUser.id } });
+
+      logger.info(`New user from Google: ${newUser.email} (${newUser.role})`);
+      return newUser;
+    });
+  }
+
+  const tokens = generateTokenPair(user);
+  await saveRefreshToken(user.id, tokens.refreshToken, ipAddress, userAgent);
+
+  return { user: sanitizeUser(user), tokens };
+};
+
 // ── Logout ─────────────────────────────────────
 
 const logout = async (userId, refreshToken) => {
@@ -182,4 +260,4 @@ const sanitizeUser = (user) => ({
   createdAt: user.createdAt,
 });
 
-module.exports = { register, login, refreshTokens, logout };
+module.exports = { register, login, googleExchange, refreshTokens, logout };
