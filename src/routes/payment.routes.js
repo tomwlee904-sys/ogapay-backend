@@ -128,7 +128,7 @@ router.post('/create', authenticate, async (req, res) => {
   await prisma.transaction.update({
     where: { id: payment.id },
     data: {
-      metadata: { ...(paymentData || {}), ...((payment.metadata as any) || {}) },
+      metadata: { ...(paymentData || {}), ...(payment.metadata || {}) },
     },
   });
 
