@@ -50,14 +50,18 @@ const createTaskSchema = z.object({
     'SOCIAL_MEDIA', 'DATA_ENTRY', 'CONTENT_WRITING', 'APP_TESTING',
     'SURVEY', 'DESIGN', 'TRANSLATION', 'WEB_RESEARCH', 'VIDEO_REVIEW', 'OTHER',
   ]),
-  reward: z.number().positive().min(50),  // Min ₦50
-  currency: z.enum(['NGN', 'USDC', 'USDT']).default('NGN'),
+  reward: z.number().positive(),
+  currency: z.enum(['NGN', 'USDC', 'USDT', 'SOL', 'ETH', 'MATIC']).default('NGN'),
   maxWorkers: z.number().int().min(1).max(1000).default(1),
   deadline: z.string().datetime().optional(),
   instructions: z.string().optional(),
   proofRequired: z.string().optional(),
   tags: z.array(z.string()).max(5).optional(),
   estimatedTime: z.number().int().min(1).max(1440).optional(),
+}).superRefine((data, ctx) => {
+  if (data.currency === 'NGN' && data.reward < 50) {
+    ctx.addIssue({ code: 'custom', message: 'Minimum reward is 50 NGN', path: ['reward'] });
+  }
 });
 
 const submitTaskSchema = z.object({
