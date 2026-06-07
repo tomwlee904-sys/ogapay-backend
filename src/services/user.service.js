@@ -27,10 +27,30 @@ const getProfile = async (userId) => {
 // ── Update profile ─────────────────────────────
 
 const updateProfile = async (userId, updates) => {
-  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl'];
+  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'role'];
   const data = Object.fromEntries(
     Object.entries(updates).filter(([k]) => allowed.includes(k))
   );
+
+  // Handle role upgrade (WORKER → POSTER)
+  if (updates.role === 'POSTER') {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    if (user && user.role === 'WORKER') {
+      await prisma.posterProfile.upsert({
+        where: { userId },
+        create: { userId },
+        update: {},
+      });
+      await prisma.kycVerification.upsert({
+        where: { userId },
+        create: { userId },
+        update: {},
+      });
+    }
+  }
 
   // Worker-specific updates
   if (updates.bio !== undefined || updates.skills !== undefined || updates.isAvailable !== undefined) {
