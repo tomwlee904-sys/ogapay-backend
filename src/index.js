@@ -41,6 +41,7 @@ const escrowRoutes = require('./routes/escrow.routes');
 const paymentRoutes = require('./routes/payment.routes');
 
 const app = express();
+app.set('trust proxy', 1);
 const API = `/api/${process.env.API_VERSION || 'v1'}`;
 const API_ALIAS = `/${process.env.API_VERSION || 'v1'}`;
 
