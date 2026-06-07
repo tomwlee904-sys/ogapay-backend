@@ -3,7 +3,7 @@
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const { prisma } = require('../config/database');
-const { supabaseAdmin } = require('../config/supabase');
+const { supabase, supabaseAdmin } = require('../config/supabase');
 const { generateTokenPair, verifyRefreshToken } = require('../utils/jwt');
 const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
@@ -156,12 +156,18 @@ const googleExchange = async ({ supabaseAccessToken, role }, ipAddress, userAgen
 
   let supabaseUser;
   try {
-    const { data, error } = await supabaseAdmin.auth.getUser(supabaseAccessToken);
+    const { data, error } = await supabase.auth.getUser(supabaseAccessToken);
     if (error) throw error;
     supabaseUser = data.user;
   } catch (err) {
-    logger.error(`Supabase token verification failed: ${err.message}`);
-    throw ApiError.unauthorized('Invalid or expired Supabase session');
+    try {
+      const { data, error } = await supabaseAdmin.auth.getUser(supabaseAccessToken);
+      if (error) throw error;
+      supabaseUser = data.user;
+    } catch (err2) {
+      logger.error(`Supabase token verification failed (anon: ${err.message}, admin: ${err2.message})`);
+      throw ApiError.unauthorized('Invalid or expired Supabase session');
+    }
   }
 
   if (!supabaseUser?.email) throw ApiError.badRequest('No email returned from Google');
