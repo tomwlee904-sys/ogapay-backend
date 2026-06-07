@@ -37,6 +37,8 @@ const bookmarkRoutes = require('./routes/bookmark.routes');
 const reportRoutes = require('./routes/report.routes');
 const editrequestRoutes = require('./routes/editrequest.routes');
 const communityV2Routes = require('./routes/community-v2.routes');
+const escrowRoutes = require('./routes/escrow.routes');
+const paymentRoutes = require('./routes/payment.routes');
 
 const app = express();
 const API = `/api/${process.env.API_VERSION || 'v1'}`;
@@ -118,6 +120,8 @@ function mountRoutes(base) {
   app.use(`${base}/ai`, aiRoutes);
   app.use(`${base}/webhooks`, webhookRoutes);
   app.use(`${base}/notifications`, notificationRoutes);
+  app.use(`${base}/escrow`, escrowRoutes);
+  app.use(`${base}/payments`, paymentRoutes);
 }
 
 mountRoutes(API);
