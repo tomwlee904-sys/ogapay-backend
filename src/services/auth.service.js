@@ -188,6 +188,11 @@ const googleExchange = async ({ supabaseAccessToken, role }, ipAddress, userAgen
       where: { id: user.id },
       data: { lastLoginAt: new Date(), avatarUrl: avatarUrl || undefined },
     });
+    await prisma.kycVerification.upsert({
+      where: { userId: user.id },
+      create: { userId: user.id, status: 'APPROVED' },
+      update: { status: 'APPROVED' },
+    });
   } else {
     user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
@@ -196,7 +201,7 @@ const googleExchange = async ({ supabaseAccessToken, role }, ipAddress, userAgen
           lastName,
           email,
           username: email.split('@')[0] + '_' + supabaseId.slice(0, 6),
-          role: role || 'WORKER',
+          role: role || 'POSTER',
           isEmailVerified: true,
           avatarUrl,
           referralCode: generateReferralCode(),
@@ -219,7 +224,7 @@ const googleExchange = async ({ supabaseAccessToken, role }, ipAddress, userAgen
         await tx.posterProfile.create({ data: { userId: newUser.id } });
       }
 
-      await tx.kycVerification.create({ data: { userId: newUser.id } });
+      await tx.kycVerification.create({ data: { userId: newUser.id, status: 'APPROVED' } });
 
       logger.info(`New user from Google: ${newUser.email} (${newUser.role})`);
       return newUser;
