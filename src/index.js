@@ -39,6 +39,7 @@ const editrequestRoutes = require('./routes/editrequest.routes');
 const communityV2Routes = require('./routes/community-v2.routes');
 const escrowRoutes = require('./routes/escrow.routes');
 const paymentRoutes = require('./routes/payment.routes');
+const platformRoutes = require('./routes/platform.routes');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -123,6 +124,7 @@ function mountRoutes(base) {
   app.use(`${base}/notifications`, notificationRoutes);
   app.use(`${base}/escrow`, escrowRoutes);
   app.use(`${base}/payments`, paymentRoutes);
+  app.use(`${base}/platform`, platformRoutes);
 }
 
 mountRoutes(API);
