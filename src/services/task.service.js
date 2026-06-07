@@ -38,9 +38,10 @@ const createTask = async (posterId, taskData) => {
       data: { taskId: newTask.id },
     });
 
-    await db.posterProfile.update({
+    await db.posterProfile.upsert({
       where: { userId: posterId },
-      data: { totalPosted: { increment: 1 }, totalSpent: { increment: totalCost } },
+      create: { userId: posterId, totalPosted: 1, totalSpent: totalCost },
+      update: { totalPosted: { increment: 1 }, totalSpent: { increment: totalCost } },
     });
 
     return newTask;
