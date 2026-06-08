@@ -230,6 +230,7 @@ router.get('/my-products', authenticate, async (req, res) => {
     const ratings = item.reviews.map(r => r.rating);
     const sales = item.purchases.reduce((sum, p) => sum + p.quantity, 0);
     const revenue = item.purchases.reduce((sum, p) => sum + parseFloat(p.totalPrice), 0);
+    const meta = (item.metadata || {});
     return {
       id: item.id,
       name: item.name,
@@ -238,6 +239,7 @@ router.get('/my-products', authenticate, async (req, res) => {
       currency: item.currency,
       imageUrl: item.imageUrl,
       category: item.category,
+      subcategory: meta.subcategory || '',
       stock: item.stock,
       isActive: item.isActive,
       sales,
@@ -245,6 +247,9 @@ router.get('/my-products', authenticate, async (req, res) => {
       avgRating: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0,
       reviewsCount: ratings.length,
       status: item.isActive ? 'Active' : 'Draft',
+      revisions: meta.revisions || 3,
+      delivery: meta.delivery || '3 days',
+      tags: meta.tags || [],
       createdAt: item.createdAt,
     };
   });
@@ -254,8 +259,11 @@ router.get('/my-products', authenticate, async (req, res) => {
 
 // POST /api/v1/store/products — Create product
 router.post('/products', authenticate, async (req, res) => {
-  const { name, description, price, currency, category, imageUrl, stock } = req.body;
+  const { name, description, price, currency, category, imageUrl, stock, subcategory, revisions, delivery, tags, ...rest } = req.body;
   if (!name || !description || !price || !category) throw ApiError.badRequest('Name, description, price, and category are required');
+
+  const extra = { subcategory, revisions, delivery, tags, ...rest };
+  const metadata = Object.fromEntries(Object.entries(extra).filter(([, v]) => v !== undefined && v !== null));
 
   const item = await prisma.storeItem.create({
     data: {
@@ -263,10 +271,11 @@ router.post('/products', authenticate, async (req, res) => {
       name,
       description,
       price: parseFloat(price),
-      currency: currency || 'NGN',
+      currency: currency || 'SOL',
       category,
       imageUrl,
       stock: stock ? parseInt(stock) : null,
+      metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
     },
   });
 
@@ -279,9 +288,26 @@ router.patch('/products/:id', authenticate, async (req, res) => {
   if (!item) throw ApiError.notFound('Product not found');
   if (item.sellerId !== req.user.id) throw ApiError.forbidden('Not your product');
 
+  const { name, description, price, currency, category, imageUrl, stock, status, subcategory, revisions, delivery, tags, ...rest } = req.body;
+  const data = {};
+  if (name !== undefined) data.name = name;
+  if (description !== undefined) data.description = description;
+  if (price !== undefined) data.price = parseFloat(price);
+  if (currency !== undefined) data.currency = currency;
+  if (category !== undefined) data.category = category;
+  if (imageUrl !== undefined) data.imageUrl = imageUrl;
+  if (stock !== undefined) data.stock = stock ? parseInt(stock) : null;
+  if (status !== undefined) data.isActive = status === 'ACTIVE';
+
+  const extra = { subcategory, revisions, delivery, tags, ...rest };
+  const newMeta = Object.fromEntries(Object.entries(extra).filter(([, v]) => v !== undefined && v !== null));
+  if (Object.keys(newMeta).length > 0) {
+    data.metadata = { ...(item.metadata || {}), ...newMeta };
+  }
+
   const updated = await prisma.storeItem.update({
     where: { id: req.params.id },
-    data: req.body,
+    data,
   });
 
   successResponse(res, updated, 'Product updated');
