@@ -102,4 +102,11 @@ router.get("/:username", async (req, res) => {
   successResponse(res, data, 'Profile fetched');
 });
 
+
+// GET /api/v1/users/me/earnings
+router.get('/me/earnings', authenticate, async (req, res) => {
+  const result = await userService.getEarnings(req.user.id);
+  successResponse(res, result, 'Earnings fetched');
+});
+
 module.exports = router;

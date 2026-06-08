@@ -28,7 +28,6 @@ router.post(
   '/',
   authenticate,
   authorize('POSTER', 'ADMIN'),
-  requireKyc,
   validate(createTaskSchema),
   async (req, res) => {
     const task = await taskService.createTask(req.user.id, req.body);
@@ -83,7 +82,7 @@ router.patch(
 );
 
 // GET /api/v1/tasks/my/created — Poster's tasks
-router.get('/my/created', authenticate, authorize('POSTER', 'ADMIN'), async (req, res) => {
+router.get('/my/created', authenticate, async (req, res) => {
   const { page = 1, limit = 20, status } = req.query;
   const { prisma } = require('../config/database');
   const where = { posterId: req.user.id, ...(status && { status }) };

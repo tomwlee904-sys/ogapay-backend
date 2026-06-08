@@ -169,7 +169,27 @@ const getReferralStats = async (userId) => {
   };
 };
 
+
+
+const getEarnings = async (userId) => {
+  const transactions = await prisma.transaction.findMany({
+    where: { userId, type: { in: ['EARNING', 'REFERRAL_BONUS', 'TASK_REWARD'] } },
+    select: { amount: true, currency: true, type: true, status: true, createdAt: true, description: true },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const totals = await prisma.transaction.groupBy({
+    by: ['currency'],
+    where: { userId, type: { in: ['EARNING', 'REFERRAL_BONUS', 'TASK_REWARD'] }, status: 'COMPLETED' },
+    _sum: { amount: true },
+  });
+
+  return { transactions, totals, totalEarnings: totals.reduce((sum, t) => sum + Number(t._sum.amount || 0), 0) };
+};
+
+
 module.exports = {
+  getEarnings,
   getProfile,
   updateProfile,
   uploadAvatar,
