@@ -236,7 +236,9 @@ const googleExchange = async ({ supabaseAccessToken, role }, ipAddress, userAgen
       await tx.kycVerification.create({ data: { userId: newUser.id, status: 'APPROVED' } });
 
       logger.info(`New user from Google: ${newUser.email} (${newUser.role})`);
-      return newUser;
+      const newTokens = generateTokenPair(newUser);
+      await saveRefreshToken(newUser.id, newTokens.refreshToken, ipAddress, userAgent);
+      return { user: sanitizeUser(newUser), tokens: newTokens };
     });
   }
 
