@@ -116,4 +116,86 @@ router.post('/generate-description', authenticate, async (req, res) => {
   successResponse(res, { description: parsed.description, fallback: false }, 'Description generated');
 });
 
+router.post('/suggest', authenticate, async (req, res) => {
+  const { name, category } = req.body || {};
+  if (!name) throw ApiError.badRequest('Product name is required');
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    const tagPools = {
+      'Web & App Build': ['responsive', 'react', 'nextjs', 'frontend', 'backend', 'api', 'full-stack', 'modern', 'scalable'],
+      'Bots & Automations': ['bot', 'automation', 'discord', 'telegram', 'scraping', 'workflow', 'pipeline', 'efficiency'],
+      'Blockchain & Crypto Dev': ['blockchain', 'solana', 'ethereum', 'smart-contract', 'web3', 'defi', 'nft', 'solidity'],
+      'Data & Dashboards': ['analytics', 'dashboard', 'visualization', 'excel', 'sql', 'reporting', 'insights'],
+      'AI & Machine Learning': ['ai', 'machine-learning', 'chatbot', 'gpt', 'llm', 'neural', 'deep-learning', 'automation'],
+      'Graphics & Design': ['logo', 'branding', 'ui', 'ux', 'figma', 'photoshop', 'illustration', 'creative'],
+      'Video & Animation': ['video', 'animation', 'motion', 'editing', 'after-effects', 'premiere', 'mograph'],
+      'Music & Audio': ['audio', 'mixing', 'mastering', 'sound-design', 'voiceover', 'production', 'podcast'],
+      'Writing & Translation': ['writing', 'translation', 'copywriting', 'seo', 'proofreading', 'content', 'blog'],
+      'Social & Growth Web3': ['growth', 'social-media', 'community', 'twitter', 'discord', 'engagement', 'web3'],
+      'Marketing & Ads': ['marketing', 'ads', 'seo', 'campaign', 'conversion', 'audience', 'cpm', 'cpc'],
+      'Community Raids & Engagement': ['raids', 'engagement', 'community', 'telegram', 'discord', 'organic', 'growth'],
+      'Product & Operations': ['product', 'operations', 'project-management', 'agile', 'qa', 'testing', 'process'],
+      'Consulting & Advisory': ['consulting', 'advisory', 'strategy', 'mentorship', 'roadmap', 'planning', 'guidance'],
+    };
+    const tags = (tagPools[category] || tagPools['Web & App Build']).slice(0, 6);
+
+    const priceRanges = {
+      'Web & App Build': { min: 50, max: 500 },
+      'Bots & Automations': { min: 30, max: 300 },
+      'Blockchain & Crypto Dev': { min: 100, max: 1000 },
+      'Data & Dashboards': { min: 20, max: 200 },
+      'AI & Machine Learning': { min: 50, max: 500 },
+      'Graphics & Design': { min: 10, max: 150 },
+      'Video & Animation': { min: 30, max: 300 },
+      'Music & Audio': { min: 15, max: 150 },
+      'Writing & Translation': { min: 10, max: 100 },
+      'Social & Growth Web3': { min: 20, max: 200 },
+      'Marketing & Ads': { min: 30, max: 300 },
+      'Community Raids & Engagement': { min: 10, max: 100 },
+      'Product & Operations': { min: 50, max: 400 },
+      'Consulting & Advisory': { min: 80, max: 600 },
+    };
+    const range = priceRanges[category] || { min: 20, max: 200 };
+    const price = +(range.min + Math.random() * (range.max - range.min)).toFixed(2);
+
+    successResponse(res, {
+      tags,
+      priceSuggestion: price,
+      priceRange: range,
+      fallback: true,
+    }, 'Suggestions generated');
+    return;
+  }
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': process.env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-latest',
+      max_tokens: 500,
+      messages: [{
+        role: 'user',
+        content: `You are a marketplace assistant for OgaPay. A user is listing a product called "${name}" in the "${category}" category. Return JSON with three fields (no markdown, no code fences):
+1. "tags" — an array of 4-6 relevant tags (lowercase, single words or short phrases)
+2. "priceSuggestion" — a recommended price in SOL (a number)
+3. "priceRange" — an object { min, max } with a reasonable price range in SOL
+
+Base the suggestions on the product name and category. Return ONLY the JSON object.`,
+      }],
+    }),
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw ApiError.internal(json.error?.message || 'AI suggestion failed');
+  const text = json.content?.[0]?.text || '{}';
+  const clean = text.replace(/```json?/gi, '').replace(/```/g, '').trim();
+  const parsed = JSON.parse(clean.match(/\{[\s\S]*\}/)?.[0] || '{}');
+  if (!parsed.tags || !parsed.priceSuggestion) throw ApiError.internal('AI returned an empty result');
+  successResponse(res, { ...parsed, fallback: false }, 'Suggestions generated');
+});
+
 module.exports = router;
