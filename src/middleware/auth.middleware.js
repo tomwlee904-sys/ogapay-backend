@@ -4,7 +4,22 @@ const { verifyAccessToken } = require('../utils/jwt');
 const { ApiError } = require('../utils/apiResponse');
 const { prisma } = require('../config/database');
 
-// Authenticate — requires valid JWT
+// Try to verify with Supabase (for Google OAuth tokens from frontend)
+const { supabaseAdmin } = require('../config/supabase');
+
+async function findUserByIdentity(identity) {
+  return prisma.user.findUnique({
+    where: { id: identity.sub || identity.id },
+    select: {
+      id: true, email: true, role: true,
+      firstName: true, lastName: true, username: true,
+      avatarUrl: true, isBanned: true, isEmailVerified: true,
+      kyc: { select: { status: true } },
+    },
+  });
+}
+
+// Authenticate — requires valid JWT (backend JWT or Supabase session token)
 const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -12,25 +27,45 @@ const authenticate = async (req, res, next) => {
   }
 
   const token = authHeader.split(' ')[1];
-  const decoded = verifyAccessToken(token);
+  let user = null;
 
-  const user = await prisma.user.findUnique({
-    where: { id: decoded.sub },
-    select: {
-      id: true,
-      email: true,
-      role: true,
-      firstName: true,
-      lastName: true,
-      username: true,
-      avatarUrl: true,
-      isBanned: true,
-      isEmailVerified: true,
-      kyc: { select: { status: true } },
-    },
-  });
+  // Try 1: Verify as backend JWT
+  try {
+    const decoded = verifyAccessToken(token);
+    user = await prisma.user.findUnique({
+      where: { id: decoded.sub },
+      select: {
+        id: true, email: true, role: true,
+        firstName: true, lastName: true, username: true,
+        avatarUrl: true, isBanned: true, isEmailVerified: true,
+        kyc: { select: { status: true } },
+      },
+    });
+  } catch {
+    // Not a valid backend JWT — try Supabase
+  }
 
-  if (!user) throw ApiError.unauthorized('User not found');
+  // Try 2: Verify as Supabase session token
+  if (!user) {
+    try {
+      const { data, error } = await supabaseAdmin.auth.getUser(token);
+      if (!error && data?.user?.email) {
+        user = await prisma.user.findFirst({
+          where: { email: data.user.email.toLowerCase() },
+          select: {
+            id: true, email: true, role: true,
+            firstName: true, lastName: true, username: true,
+            avatarUrl: true, isBanned: true, isEmailVerified: true,
+            kyc: { select: { status: true } },
+          },
+        });
+      }
+    } catch {
+      // Supabase verification also failed
+    }
+  }
+
+  if (!user) throw ApiError.unauthorized('Invalid access token');
   if (user.isBanned) throw ApiError.forbidden('Account has been banned');
 
   req.user = user;
@@ -68,10 +103,13 @@ const optionalAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) return next();
 
+  const token = authHeader.split(' ')[1];
+  let user = null;
+
+  // Try backend JWT
   try {
-    const token = authHeader.split(' ')[1];
     const decoded = verifyAccessToken(token);
-    const user = await prisma.user.findUnique({
+    user = await prisma.user.findUnique({
       where: { id: decoded.sub },
       select: {
         id: true, email: true, role: true,
@@ -80,8 +118,27 @@ const optionalAuth = async (req, res, next) => {
         kyc: { select: { status: true } },
       },
     });
-    if (user && !user.isBanned) req.user = user;
-  } catch { /* token invalid or expired — continue without auth */ }
+  } catch { /* not a backend JWT */ }
+
+  // Try Supabase token
+  if (!user) {
+    try {
+      const { data, error } = await supabaseAdmin.auth.getUser(token);
+      if (!error && data?.user?.email) {
+        user = await prisma.user.findFirst({
+          where: { email: data.user.email.toLowerCase() },
+          select: {
+            id: true, email: true, role: true,
+            firstName: true, lastName: true, username: true,
+            avatarUrl: true, isBanned: true, isEmailVerified: true,
+            kyc: { select: { status: true } },
+          },
+        });
+      }
+    } catch { /* supabase also failed */ }
+  }
+
+  if (user && !user.isBanned) req.user = user;
   next();
 };
 
