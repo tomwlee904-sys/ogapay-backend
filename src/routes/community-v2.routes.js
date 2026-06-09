@@ -61,7 +61,7 @@ router.get('/:id', async (req, res) => {
           user: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
         },
         take: 20,
-        orderBy: { joinedAt: 'desc' },
+    orderBy: { createdAt: 'desc' },
       },
     },
   });
@@ -181,7 +181,7 @@ router.get('/:id/members', async (req, res) => {
     include: {
       user: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
     },
-    orderBy: [{ role: 'asc' }, { joinedAt: 'desc' }],
+    orderBy: [{ role: 'asc' }, { createdAt: 'desc' }],
   });
 
   successResponse(res, members.map(m => ({
@@ -192,7 +192,7 @@ router.get('/:id/members', async (req, res) => {
     lastName: m.user.lastName,
     avatarUrl: m.user.avatarUrl,
     role: m.role,
-    joinedAt: m.joinedAt,
+    joinedAt: m.createdAt,
   })));
 });
 
@@ -315,7 +315,7 @@ router.get('/mine/list', authenticate, async (req, res) => {
     iconUrl: m.community.iconUrl,
     role: m.role,
     memberCount: m.community._count.members,
-    joinedAt: m.joinedAt,
+    joinedAt: m.createdAt,
   })));
 });
 
