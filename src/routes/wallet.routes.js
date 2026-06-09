@@ -113,7 +113,7 @@ router.get('/balance', async (req, res) => {
     acc[wallet.currency] = {
       balance: Number(wallet.balance),
       lockedBalance: Number(wallet.lockedBalance),
-      available: Number(wallet.balance) - Number(wallet.lockedBalance),
+      available: Math.max(0, Number(wallet.balance) - Number(wallet.lockedBalance)),
     };
     return acc;
   }, {});
