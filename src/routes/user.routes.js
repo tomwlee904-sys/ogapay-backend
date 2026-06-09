@@ -96,12 +96,23 @@ router.get('/directory/list', async (req, res) => {
   paginatedResponse(res, users, paginate(page, limit, total));
 });
 
+// GET /api/v1/users/public/:username/blogs
+router.get('/public/:username/blogs', async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { username: req.params.username } });
+  if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+  const posts = await prisma.blogPost.findMany({
+    where: { authorId: user.id, isPublished: true },
+    orderBy: { publishedAt: 'desc' },
+    select: { id: true, title: true, excerpt: true, slug: true, coverImage: true, tags: true, publishedAt: true, createdAt: true },
+  });
+  successResponse(res, posts);
+});
+
 // GET /api/v1/users/:username
 router.get("/:username", async (req, res) => {
   const data = await userService.getWorkerPublicProfile(req.params.username);
   successResponse(res, data, 'Profile fetched');
 });
-
 
 // GET /api/v1/users/me/earnings
 router.get('/me/earnings', authenticate, async (req, res) => {

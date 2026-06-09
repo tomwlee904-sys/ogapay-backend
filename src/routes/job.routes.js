@@ -49,4 +49,17 @@ router.get('/monitor', authenticate, authorize('POSTER', 'ADMIN'), async (req, r
   successResponse(res, { summary, jobs });
 });
 
+// GET /api/v1/jobs/:id — Single job detail (fallback for frontend)
+router.get('/:id', async (req, res) => {
+  const task = await prisma.task.findUnique({
+    where: { id: req.params.id },
+    include: {
+      poster: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } },
+      _count: { select: { submissions: true } },
+    },
+  });
+  if (!task) return res.status(404).json({ success: false, message: 'Job not found' });
+  successResponse(res, task);
+});
+
 module.exports = router;

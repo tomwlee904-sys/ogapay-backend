@@ -43,6 +43,8 @@ const platformRoutes = require('./routes/platform.routes');
 const jobRoutes = require('./routes/job.routes');
 const pricesRoutes = require('./routes/prices.routes');
 const messageRoutes = require('./routes/message.routes');
+const vaultRoutes = require('./routes/vault.routes');
+const blogRoutes = require('./routes/blog.routes');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -132,8 +134,30 @@ function mountRoutes(base) {
   app.use(`${base}/jobs`, jobRoutes);
   app.use(`${base}/prices`, pricesRoutes);
   app.use(`${base}/messages`, messageRoutes);
+  app.use(`${base}/vault`, vaultRoutes);
+  app.use(`${base}/blog`, blogRoutes);
 }
+mountRoutes(API);
 mountRoutes(API_ALIAS);
+
+// GET /api/v1/rates — Currency rates for frontend
+const axios = require('axios');
+app.get(`${API}/rates`, async (req, res) => {
+  try {
+    const { data } = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=solana,usd-coin&vs_currencies=usd,ngn', { timeout: 5000 });
+    res.json({ success: true, data: { SOL: data.solana.usd, USDC: data['usd-coin'].usd, NGN: data['usd-coin'].ngn, updatedAt: new Date().toISOString() } });
+  } catch {
+    res.json({ success: true, data: { SOL: 145, USDC: 1, NGN: 1580, updatedAt: new Date().toISOString() } });
+  }
+});
+app.get(`${API_ALIAS}/rates`, async (req, res) => {
+  try {
+    const { data } = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=solana,usd-coin&vs_currencies=usd,ngn', { timeout: 5000 });
+    res.json({ success: true, data: { SOL: data.solana.usd, USDC: data['usd-coin'].usd, NGN: data['usd-coin'].ngn, updatedAt: new Date().toISOString() } });
+  } catch {
+    res.json({ success: true, data: { SOL: 145, USDC: 1, NGN: 1580, updatedAt: new Date().toISOString() } });
+  }
+});
 
 // Serve the website from the same deployment as the API.
 // API routes above keep `/v1/*` and `/api/v1/*` live; everything else can be static HTML.
