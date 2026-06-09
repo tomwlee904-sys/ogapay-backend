@@ -31,7 +31,7 @@ router.get('/summary', authenticate, async (req, res) => {
       activeTasks: activePostedTasks + (submissions - approvedSubmissions),
       completedTasks: completedPostedTasks + approvedSubmissions,
       totalSpent: Number(posterProfile?.totalSpent || 0) + Number(workerProfile?.totalEarned || 0),
-      walletConnected: wallets.length > 0 || !!userWallet?.walletAddress,
+      walletConnected: wallets.some(w => w.currency === 'SOL' && w.walletAddress) || !!userWallet?.walletAddress,
       unreadNotifications,
     },
   }, 'Dashboard summary fetched');
