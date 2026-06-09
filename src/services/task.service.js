@@ -38,16 +38,40 @@ const createTask = async (posterId, taskData) => {
       data: { taskId: newTask.id },
     });
 
-    await db.posterProfile.upsert({
+    await db.posterProfile.update({
       where: { userId: posterId },
-      create: { userId: posterId, totalPosted: 1, totalSpent: totalCost },
-      update: { totalPosted: { increment: 1 }, totalSpent: { increment: totalCost } },
+      data: { totalPosted: { increment: 1 }, totalSpent: { increment: totalCost } },
     });
 
     return newTask;
   });
 
   logger.info(`Task created: ${task.id} by poster ${posterId}`);
+
+  // Notify workers whose categories match this task
+  try {
+    const category = task.category;
+    if (category) {
+      const matchingWorkers = await prisma.workerProfile.findMany({
+        where: { categories: { has: category }, isAvailable: true },
+        select: { userId: true },
+      });
+      await Promise.all(matchingWorkers.map(w =>
+        prisma.notification.create({
+          data: {
+            userId: w.userId,
+            type: 'NEW_TASK',
+            title: 'New task available in your category',
+            body: `"${task.title}" — ₦${Number(task.reward).toLocaleString()} · ${category}`,
+            data: { taskId: task.id, category },
+          },
+        })
+      ));
+    }
+  } catch (err) {
+    logger.warn(`Failed to notify workers about new task ${task.id}: ${err.message}`);
+  }
+
   return task;
 };
 
@@ -183,10 +207,10 @@ const submitTask = async (workerId, taskId, { proof, workerNotes, attachments })
   if (!submission) throw ApiError.notFound('Submission not found. Apply to the task first.');
   if (submission.status !== 'PENDING') throw ApiError.badRequest(`Submission already ${submission.status.toLowerCase()}`);
 
-  const updated = await prisma.$transaction(async (db) => {
+const updated = await prisma.$transaction(async (db) => {
     const sub = await db.taskSubmission.update({
       where: { id: submission.id },
-      data: { proof, workerNotes, attachments, submittedAt: new Date() },
+      data: { proof, workerNotes, attachments, submittedAt: new Date(), status: 'SUBMITTED' },
     });
 
     await db.notification.create({
@@ -215,7 +239,7 @@ const reviewSubmission = async (posterId, submissionId, { status, posterNotes, r
 
   if (!submission) throw ApiError.notFound('Submission not found');
   if (submission.task.posterId !== posterId) throw ApiError.forbidden('Not your task');
-  if (submission.status !== 'PENDING') throw ApiError.badRequest('Submission already reviewed');
+  if (submission.status !== 'SUBMITTED') throw ApiError.badRequest('Submission not ready for review');
   if (!submission.submittedAt) throw ApiError.badRequest('Worker has not submitted yet');
 
   return prisma.$transaction(async (db) => {
@@ -285,6 +309,39 @@ const reviewSubmission = async (posterId, submissionId, { status, posterNotes, r
           data: { taskId: submission.taskId, submissionId, reason: posterNotes },
         },
       });
+    }
+
+    // Check if all slots filled and all submissions resolved → mark task COMPLETED, refund remaining escrow
+    if (submission.task.maxWorkers <= submission.task.currentWorkers) {
+      const resolvedCount = await db.taskSubmission.count({
+        where: { taskId: submission.taskId, status: { in: ['APPROVED', 'REJECTED'] } },
+      });
+      if (resolvedCount >= submission.task.maxWorkers) {
+        const totalLocked = parseFloat(submission.task.reward) * submission.task.maxWorkers;
+        const approvedCount = await db.taskSubmission.count({
+          where: { taskId: submission.taskId, status: 'APPROVED' },
+        });
+        const paidAmount = parseFloat(submission.task.reward) * approvedCount;
+        const remaining = totalLocked - paidAmount;
+
+        if (remaining > 0) {
+          const posterWallet = await db.wallet.findUnique({
+            where: { userId_currency: { userId: submission.task.posterId, currency: submission.task.currency } },
+          });
+          await db.wallet.update({
+            where: { id: posterWallet.id },
+            data: {
+              lockedBalance: { decrement: remaining },
+              balance: { increment: remaining },
+            },
+          });
+        }
+
+        await db.task.update({
+          where: { id: submission.taskId },
+          data: { status: 'COMPLETED', escrowed: false },
+        });
+      }
     }
 
     return updated;
