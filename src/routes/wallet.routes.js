@@ -8,7 +8,9 @@ const { authenticate, requireKyc } = require('../middleware/auth.middleware');
 const { validate, depositSchema, withdrawSchema } = require('../middleware/validate');
 const { prisma } = require('../config/database');
 const walletService = require('../services/wallet.service');
+const solanaService = require('../services/solana.service');
 const { successResponse, createdResponse, ApiError } = require('../utils/apiResponse');
+const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
 
@@ -95,6 +97,128 @@ router.post('/status', authenticate, async (req, res) => {
       ? await prisma.wallet.findUnique({ where: { userId_currency: { userId: req.user.id, currency: 'SOL' } } })
       : null,
   });
+});
+
+// ─── x402: Estimate funding ──────────────────────────────────
+router.post('/fund/estimate', authenticate, async (req, res) => {
+  const { amount, userWallet } = req.body;
+  if (!amount || amount <= 0) throw ApiError.badRequest('Valid amount required');
+  if (!userWallet) throw ApiError.badRequest('userWallet required');
+
+  const usdcMint = solanaService.USDC_MINT.toString();
+  const usdcBalance = await solanaService.getTokenBalance(userWallet, usdcMint);
+  const solBalance = await solanaService.getSolBalance(userWallet);
+  const targetAmount = Math.round(amount * 1_000_000);
+
+  let quote = null;
+  let needsSwap = usdcBalance < targetAmount;
+
+  if (needsSwap && solBalance > 0.001) {
+    const jupQuote = await solanaService.getJupiterQuote(
+      solanaService.SOL_MINT.toString(),
+      usdcMint,
+      Math.round(targetAmount - usdcBalance)
+    );
+    quote = jupQuote;
+  }
+
+  successResponse(res, {
+    usdcBalance,
+    solBalance,
+    targetAmount,
+    needsSwap,
+    quote,
+    platformAta: (await solanaService.getPlatformUsdcATA()).toString(),
+    usdcMint,
+  });
+});
+
+// ─── x402: Submit funded transaction ─────────────────────────
+router.post('/fund/submit', authenticate, async (req, res) => {
+  const { signedTx, expectedAmount } = req.body;
+  if (!signedTx || !expectedAmount) throw ApiError.badRequest('signedTx and expectedAmount required');
+
+  const result = await solanaService.verifyAndCreditDeposit(req.user.id, signedTx, expectedAmount);
+
+  const wallet = await prisma.wallet.upsert({
+    where: { userId_currency: { userId: req.user.id, currency: 'USDC' } },
+    update: { balance: { increment: result.amount } },
+    create: { userId: req.user.id, currency: 'USDC', balance: result.amount, isActive: true },
+  });
+
+  await prisma.transaction.create({
+    data: {
+      userId: req.user.id,
+      walletId: wallet.id,
+      type: 'DEPOSIT',
+      status: 'COMPLETED',
+      amount: result.amount,
+      currency: 'USDC',
+      reference: `OGA-X402-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`,
+      externalRef: result.signature,
+      balanceBefore: Number(wallet.balance) - result.amount,
+      balanceAfter: Number(wallet.balance),
+      description: 'USDC deposit via x402',
+    },
+  });
+
+  successResponse(res, { ...result, newBalance: Number(wallet.balance) });
+});
+
+// ─── x402: Swap SOL → USDC (get swap tx to sign) ────────────
+router.post('/fund/swap', authenticate, async (req, res) => {
+  const { quoteResponse, userWallet } = req.body;
+  if (!quoteResponse || !userWallet) throw ApiError.badRequest('quoteResponse and userWallet required');
+
+  const swapData = await solanaService.getJupiterSwapTx(quoteResponse, userWallet);
+  successResponse(res, { swapTransaction: swapData.swapTransaction });
+});
+
+// ─── Crypto withdrawal ───────────────────────────────────────
+router.post('/withdraw/crypto', authenticate, requireKyc, async (req, res) => {
+  const { amount, currency, toAddress } = req.body;
+  if (!amount || amount <= 0) throw ApiError.badRequest('Valid amount required');
+  if (!toAddress) throw ApiError.badRequest('toAddress required');
+  if (!currency || !['USDC', 'SOL'].includes(currency)) throw ApiError.badRequest('Currency must be USDC or SOL');
+
+  const wallet = await prisma.wallet.findUnique({
+    where: { userId_currency: { userId: req.user.id, currency } },
+  });
+  if (!wallet) throw ApiError.notFound('Wallet not found');
+  if (Number(wallet.balance) - Number(wallet.lockedBalance) < amount) {
+    throw ApiError.badRequest('Insufficient available balance');
+  }
+
+  let txSig;
+  if (currency === 'USDC') {
+    txSig = await solanaService.sendUsdc(toAddress, amount);
+  } else {
+    txSig = await solanaService.sendSol(toAddress, amount);
+  }
+
+  await prisma.wallet.update({
+    where: { id: wallet.id },
+    data: { balance: { decrement: amount } },
+  });
+
+  const ref = `OGA-WIT-CRYPTO-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
+  await prisma.transaction.create({
+    data: {
+      userId: req.user.id,
+      walletId: wallet.id,
+      type: 'WITHDRAWAL',
+      status: 'COMPLETED',
+      amount,
+      currency,
+      reference: ref,
+      externalRef: txSig,
+      balanceBefore: Number(wallet.balance) + amount,
+      balanceAfter: Number(wallet.balance),
+      description: `${currency} withdrawal to ${toAddress}`,
+    },
+  });
+
+  successResponse(res, { signature: txSig, reference: ref });
 });
 
 // All remaining wallet routes require auth
