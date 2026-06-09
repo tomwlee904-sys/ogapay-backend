@@ -117,6 +117,8 @@ model User {
   telegram          String?   @map("telegram")
   discord           String?   @map("discord")
   website           String?   @map("website")
+  twitterId         String?   @map("twitter_id")
+  twitterUsername   String?   @map("twitter_username")
   isPublic           Boolean  @default(true) @map("is_public")
   emailNotifications  Boolean  @default(true) @map("email_notifications")
   pushNotifications   Boolean  @default(true) @map("push_notifications")
@@ -564,6 +566,16 @@ model WalletNonce {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("wallet_nonces")
+}
+
+model TwitterOAuthState {
+  id            String   @id
+  userId        String   @map("user_id")
+  codeVerifier  String   @map("code_verifier")
+  expiresAt     DateTime @map("expires_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("twitter_oauth_states")
 }
 
 model CommunityRequest {

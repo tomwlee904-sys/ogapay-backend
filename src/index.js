@@ -45,6 +45,7 @@ const pricesRoutes = require('./routes/prices.routes');
 const messageRoutes = require('./routes/message.routes');
 const vaultRoutes = require('./routes/vault.routes');
 const blogRoutes = require('./routes/blog.routes');
+const twitterRoutes = require('./routes/twitter.routes');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -136,6 +137,7 @@ function mountRoutes(base) {
   app.use(`${base}/messages`, messageRoutes);
   app.use(`${base}/vault`, vaultRoutes);
   app.use(`${base}/blog`, blogRoutes);
+  app.use(`${base}/twitter`, twitterRoutes);
 }
 mountRoutes(API);
 mountRoutes(API_ALIAS);
