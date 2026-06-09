@@ -42,7 +42,6 @@ const paymentRoutes = require('./routes/payment.routes');
 const platformRoutes = require('./routes/platform.routes');
 const jobRoutes = require('./routes/job.routes');
 const pricesRoutes = require('./routes/prices.routes');
-const imagekitRoutes = require('./routes/imagekit.routes');
 const messageRoutes = require('./routes/message.routes');
 
 const app = express();
@@ -132,7 +131,6 @@ function mountRoutes(base) {
   app.use(`${base}/platform`, platformRoutes);
   app.use(`${base}/jobs`, jobRoutes);
   app.use(`${base}/prices`, pricesRoutes);
-  app.use(`${base}/imagekit`, imagekitRoutes);
   app.use(`${base}/messages`, messageRoutes);
 }
 mountRoutes(API_ALIAS);
