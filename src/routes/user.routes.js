@@ -111,6 +111,18 @@ router.get('/me/earnings', authenticate, async (req, res) => {
 
 module.exports = router;
 
+
+// DELETE /api/v1/users/me
+router.delete('/me', authenticate, async (req, res) => {
+  const { prisma } = require('../config/database');
+  const { successResponse } = require('../utils/apiResponse');
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: { isBanned: true, email: 'deleted_' + req.user.id + '@ogapay.com' },
+  });
+  successResponse(res, null, 'Account deleted successfully');
+});
+
 // GET /api/v1/users/search — Simple user search for messaging (returns flat array)
 router.get('/search', authenticate, async (req, res) => {
   const { q } = req.query;

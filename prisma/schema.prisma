@@ -113,6 +113,12 @@ model User {
   lastName          String    @map("last_name")
   username          String    @unique
   avatarUrl         String?   @map("avatar_url")
+  twitter           String?   @map("twitter")
+  telegram          String?   @map("telegram")
+  discord           String?   @map("discord")
+  website           String?   @map("website")
+  isPublic          Boolean   @default(true) @map("is_public")
+  emailNotifications Boolean  @default(true) @map("email_notifications")
   role              UserRole  @default(WORKER)
   isEmailVerified   Boolean   @default(false) @map("is_email_verified")
   isPhoneVerified   Boolean   @default(false) @map("is_phone_verified")

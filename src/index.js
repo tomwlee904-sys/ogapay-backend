@@ -40,6 +40,7 @@ const communityV2Routes = require('./routes/community-v2.routes');
 const escrowRoutes = require('./routes/escrow.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const platformRoutes = require('./routes/platform.routes');
+const pricesRoutes = require('./routes/prices.routes');
 const imagekitRoutes = require('./routes/imagekit.routes');
 const messageRoutes = require('./routes/message.routes');
 
@@ -127,6 +128,7 @@ function mountRoutes(base) {
   app.use(`${base}/escrow`, escrowRoutes);
   app.use(`${base}/payments`, paymentRoutes);
   app.use(`${base}/platform`, platformRoutes);
+  app.use(`${base}/prices`, pricesRoutes);
   app.use(`${base}/imagekit`, imagekitRoutes);
   app.use(`${base}/messages`, messageRoutes);
 }

@@ -103,4 +103,14 @@ router.post('/reset-password', async (req, res) => {
   successResponse(res, result);
 });
 
+// POST /api/v1/auth/change-password
+router.post("/change-password", authenticate, async (req, res) => {
+  const result = await authService.changePassword(
+    req.user.id,
+    req.body.currentPassword,
+    req.body.newPassword,
+  );
+  successResponse(res, result, result.message);
+});
+
 module.exports = router;

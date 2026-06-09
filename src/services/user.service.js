@@ -27,7 +27,7 @@ const getProfile = async (userId) => {
 // ── Update profile ─────────────────────────────
 
 const updateProfile = async (userId, updates) => {
-  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'role'];
+  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'role', 'twitter', 'telegram', 'discord', 'website', 'isPublic', 'emailNotifications'];
   const data = Object.fromEntries(
     Object.entries(updates).filter(([k]) => allowed.includes(k))
   );
@@ -53,13 +53,13 @@ const updateProfile = async (userId, updates) => {
   }
 
   // Worker-specific updates
-  if (updates.bio !== undefined || updates.skills !== undefined || updates.isAvailable !== undefined) {
+  if (updates.bio !== undefined || updates.skills !== undefined || updates.isAvailable !== undefined || updates.nickname !== undefined || updates.description !== undefined || updates.categories !== undefined || updates.tags !== undefined) {
     await prisma.workerProfile.updateMany({
       where: { userId },
       data: {
         ...(updates.bio !== undefined && { bio: updates.bio }),
         ...(updates.skills !== undefined && { skills: updates.skills }),
-        ...(updates.isAvailable !== undefined && { isAvailable: updates.isAvailable }),
+        ...(updates.isAvailable !== undefined && { isAvailable: updates.isAvailable }),                    ...(updates.nickname !== undefined && { nickname: updates.nickname }),                    ...(updates.description !== undefined && { description: updates.description }),                    ...(updates.categories !== undefined && { categories: updates.categories }),                    ...(updates.tags !== undefined && { tags: updates.tags }),
       },
     });
   }
