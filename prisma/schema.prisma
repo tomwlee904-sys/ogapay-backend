@@ -117,9 +117,11 @@ model User {
   telegram          String?   @map("telegram")
   discord           String?   @map("discord")
   website           String?   @map("website")
-  isPublic          Boolean   @default(true) @map("is_public")
-  emailNotifications Boolean  @default(true) @map("email_notifications")
-  role              UserRole  @default(WORKER)
+  isPublic           Boolean  @default(true) @map("is_public")
+  emailNotifications  Boolean  @default(true) @map("email_notifications")
+  pushNotifications   Boolean  @default(true) @map("push_notifications")
+  currency            String   @default("NGN")
+  role               UserRole  @default(WORKER)
   isEmailVerified   Boolean   @default(false) @map("is_email_verified")
   isPhoneVerified   Boolean   @default(false) @map("is_phone_verified")
   isBanned          Boolean   @default(false) @map("is_banned")
@@ -150,6 +152,9 @@ model User {
   disputesAsPoster  Dispute[]         @relation("DisputePoster")
   vaultDocuments    VaultDocument[]
   blogPosts         BlogPost[]
+  ownedCommunities  Community[]       @relation("CommunityOwner")
+  communityMemberships CommunityMember[]
+  communityRequests CommunityRequest[]
 
   @@map("users")
 }
@@ -512,4 +517,54 @@ model BlogPost {
   @@index([authorId])
   @@index([isPublished, publishedAt])
   @@map("blog_posts")
+}
+
+model Community {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  iconUrl     String?  @map("icon_url")
+  accentColor String?  @map("accent_color") @default("#7C3AED")
+  category    String?
+  isPublic    Boolean  @default(true) @map("is_public")
+  ownerId     String   @map("owner_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  owner       User              @relation("CommunityOwner", fields: [ownerId], references: [id])
+  members     CommunityMember[]
+  requests    CommunityRequest[]
+
+  @@map("communities")
+}
+
+model CommunityMember {
+  id          String   @id @default(uuid())
+  communityId String   @map("community_id")
+  userId      String   @map("user_id")
+  role        String   @default("MEMBER")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([communityId, userId])
+  @@map("community_members")
+}
+
+model CommunityRequest {
+  id          String    @id @default(uuid())
+  communityId String    @map("community_id")
+  userId      String    @map("user_id")
+  status      String    @default("PENDING")
+  responderId String?   @map("responder_id")
+  respondedAt DateTime? @map("responded_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([communityId, userId])
+  @@map("community_requests")
 }
