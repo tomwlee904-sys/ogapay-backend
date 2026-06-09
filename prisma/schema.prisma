@@ -121,6 +121,7 @@ model User {
   emailNotifications  Boolean  @default(true) @map("email_notifications")
   pushNotifications   Boolean  @default(true) @map("push_notifications")
   currency            String   @default("NGN")
+  walletAddress       String?  @map("wallet_address")
   role               UserRole  @default(WORKER)
   isEmailVerified   Boolean   @default(false) @map("is_email_verified")
   isPhoneVerified   Boolean   @default(false) @map("is_phone_verified")
@@ -551,6 +552,16 @@ model CommunityMember {
 
   @@unique([communityId, userId])
   @@map("community_members")
+}
+
+model WalletNonce {
+  id        String   @id @default(uuid())
+  wallet    String   @unique
+  nonce     String
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("wallet_nonces")
 }
 
 model CommunityRequest {
