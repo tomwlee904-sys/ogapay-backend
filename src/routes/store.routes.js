@@ -344,6 +344,51 @@ router.get('/my-stats', authenticate, async (req, res) => {
   successResponse(res, stats, 'Store stats fetched');
 });
 
+// GET /api/v1/store/:id — Single product detail
+router.get('/:id', async (req, res) => {
+  const item = await prisma.storeItem.findUnique({
+    where: { id: req.params.id },
+    include: {
+      seller: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
+      reviews: {
+        select: { id: true, rating: true, comment: true, createdAt: true, userId: true, user: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      },
+    },
+  });
+  if (!item) throw ApiError.notFound('Product not found');
+
+  const ratings = item.reviews.map(r => r.rating);
+  successResponse(res, {
+    id: item.id,
+    title: item.name,
+    name: item.name,
+    description: item.description,
+    price: parseFloat(item.price),
+    currency: item.currency,
+    seller: item.seller ? (item.seller.username || `${item.seller.firstName} ${item.seller.lastName}`) : 'OgaPay',
+    sellerId: item.seller?.id,
+    sellerAvatar: item.seller?.avatarUrl || null,
+    rating: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0,
+    reviewsCount: ratings.length,
+    reviews: item.reviews.map(r => ({
+      id: r.id,
+      userId: r.userId,
+      username: r.user.username || `${r.user.firstName} ${r.user.lastName}`,
+      avatarUrl: r.user.avatarUrl,
+      rating: r.rating,
+      comment: r.comment,
+      createdAt: r.createdAt,
+    })),
+    image: item.imageUrl || '',
+    category: item.category,
+    stock: item.stock,
+    isActive: item.isActive,
+    createdAt: item.createdAt,
+  }, 'Product fetched');
+});
+
 // POST /api/v1/store/:itemId/purchase
 router.post('/:itemId/purchase', authenticate, async (req, res) => {
   const { itemId } = req.params;

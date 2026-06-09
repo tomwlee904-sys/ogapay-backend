@@ -198,4 +198,36 @@ Base the suggestions on the product name and category. Return ONLY the JSON obje
   successResponse(res, { ...parsed, fallback: false }, 'Suggestions generated');
 });
 
+router.post('/chat', authenticate, async (req, res) => {
+  const { question } = req.body || {};
+  if (!question) throw ApiError.badRequest('Question is required');
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    successResponse(res, {
+      answer: 'AI chat is not configured. Please set ANTHROPIC_API_KEY in the environment.',
+    }, 'Fallback response');
+    return;
+  }
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': process.env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-latest',
+      max_tokens: 500,
+      system: 'You are an AI assistant for OgaPay, a task and marketplace platform. Answer concisely and helpfully. Keep responses under 3 paragraphs.',
+      messages: [{ role: 'user', content: question }],
+    }),
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw ApiError.internal(json.error?.message || 'AI chat failed');
+  const text = json.content?.[0]?.text || 'No response';
+  successResponse(res, { answer: text }, 'Chat response generated');
+});
+
 module.exports = router;
