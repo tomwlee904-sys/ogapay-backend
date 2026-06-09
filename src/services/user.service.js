@@ -78,7 +78,7 @@ const updateProfile = async (userId, updates) => {
   return prisma.user.update({
     where: { id: userId },
     data,
-    select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true, username: true, role: true },
+    select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true, username: true, role: true, twitter: true, telegram: true, discord: true, website: true, isPublic: true, emailNotifications: true },
   });
 };
 
