@@ -122,6 +122,8 @@ model User {
   pushNotifications   Boolean  @default(true) @map("push_notifications")
   currency            String   @default("NGN")
   walletAddress       String?  @map("wallet_address")
+  bankAccount         String?  @map("bank_account")
+  bankName            String?  @map("bank_name")
   role               UserRole  @default(WORKER)
   isEmailVerified   Boolean   @default(false) @map("is_email_verified")
   isPhoneVerified   Boolean   @default(false) @map("is_phone_verified")
