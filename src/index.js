@@ -131,10 +131,10 @@ function mountRoutes(base) {
   app.use(`${base}/campaigns`, campaignRoutes);
   app.use(`${base}/platform`, platformRoutes);
   app.use(`${base}/jobs`, jobRoutes);
-  app.use(`${base}/jobs`, jobRoutes);
   app.use(`${base}/prices`, pricesRoutes);
   app.use(`${base}/imagekit`, imagekitRoutes);
   app.use(`${base}/messages`, messageRoutes);
+}
 mountRoutes(API_ALIAS);
 
 // Serve the website from the same deployment as the API.
