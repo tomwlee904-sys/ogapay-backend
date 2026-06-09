@@ -445,6 +445,44 @@ router.post('/:itemId/purchase', authenticate, async (req, res) => {
   createdResponse(res, purchase, 'Purchase successful');
 });
 
+
+// GET /api/v1/store/my-products — Seller's own products
+router.get("/my-products", authenticate, async (req, res) => {
+  const items = await prisma.storeItem.findMany({
+    where: { sellerId: req.user.id },
+    orderBy: { createdAt: "desc" },
+    include: {
+      reviews: { select: { rating: true } },
+      purchases: { select: { quantity: true, totalPrice: true } },
+    },
+  });
+
+  const mapped = items.map(item => {
+    const ratings = item.reviews.map(r => r.rating);
+    const avgRating = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
+    const totalSales = item.purchases.reduce((s, p) => s + p.quantity, 0);
+    return {
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      price: parseFloat(item.price),
+      currency: item.currency,
+      imageUrl: item.imageUrl || "",
+      category: item.category,
+      isActive: item.isActive,
+      stock: item.stock,
+      status: item.isActive ? "ACTIVE" : "DRAFT",
+      sales: totalSales,
+      rating: avgRating,
+      reviewsCount: ratings.length,
+      metadata: item.metadata,
+      createdAt: item.createdAt,
+    };
+  });
+
+  successResponse(res, mapped);
+});
+
 // ── Admin: Manage store items ──────────────────
 
 // POST /api/v1/store/admin/items
