@@ -46,21 +46,14 @@ router.post(
   },
 );
 
-// POST /api/v1/tasks/:id/submit — Worker submits proof
+// POST /api/v1/tasks/:id/submit — Worker submits proof (attachments as ImageKit URLs)
 router.post(
   '/:id/submit',
   authenticate,
   authorize('WORKER', 'ADMIN'),
-  upload.array('attachments', 5),
   validate(submitTaskSchema),
   async (req, res) => {
-    const attachments = req.files?.map((f) => ({
-      name: f.originalname,
-      size: f.size,
-      mimetype: f.mimetype,
-      // In production: upload to Supabase Storage and store URLs
-      buffer: f.buffer.toString('base64'),
-    }));
+    const attachments = Array.isArray(req.body?.attachments) ? req.body.attachments : [];
     const submission = await taskService.submitTask(req.user.id, req.params.id, {
       ...req.body,
       attachments,

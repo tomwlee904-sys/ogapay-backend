@@ -67,6 +67,7 @@ const createTaskSchema = z.object({
 const submitTaskSchema = z.object({
   proof: z.string().optional(),
   workerNotes: z.string().max(1000).optional(),
+  attachments: z.array(z.string()).max(5).optional(),
 });
 
 const reviewSubmissionSchema = z.object({
