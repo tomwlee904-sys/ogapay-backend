@@ -3,7 +3,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const nacl = require('tweetnacl');
-const bs58 = require('bs58');
+const bs58 = require('bs58').default;
 const { authenticate, requireKyc } = require('../middleware/auth.middleware');
 const { validate, depositSchema, withdrawSchema } = require('../middleware/validate');
 const { prisma } = require('../config/database');

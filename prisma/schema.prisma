@@ -46,6 +46,8 @@ enum TransactionType {
   REFERRAL_BONUS
   STORE_PURCHASE
   TRANSFER
+  EARNING
+  TASK_REWARD
 }
 
 enum TransactionStatus {
