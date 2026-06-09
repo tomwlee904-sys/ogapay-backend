@@ -39,6 +39,7 @@ const authenticate = async (req, res, next) => {
         firstName: true, lastName: true, username: true,
         avatarUrl: true, isBanned: true, isEmailVerified: true,
         kyc: { select: { status: true } },
+        wallets: { select: { id: true, currency: true, walletAddress: true, isActive: true } },
       },
     });
   } catch {
@@ -58,6 +59,7 @@ const authenticate = async (req, res, next) => {
               firstName: true, lastName: true, username: true,
               avatarUrl: true, isBanned: true, isEmailVerified: true,
               kyc: { select: { status: true } },
+              wallets: { select: { id: true, currency: true, walletAddress: true, isActive: true } },
             },
           });
           if (user) break;
