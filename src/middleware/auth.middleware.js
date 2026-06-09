@@ -5,7 +5,7 @@ const { ApiError } = require('../utils/apiResponse');
 const { prisma } = require('../config/database');
 
 // Try to verify with Supabase (for Google OAuth tokens from frontend)
-const { supabaseAdmin } = require('../config/supabase');
+const { supabase, supabaseAdmin } = require('../config/supabase');
 
 async function findUserByIdentity(identity) {
   return prisma.user.findUnique({
@@ -47,21 +47,24 @@ const authenticate = async (req, res, next) => {
 
   // Try 2: Verify as Supabase session token
   if (!user) {
-    try {
-      const { data, error } = await supabaseAdmin.auth.getUser(token);
-      if (!error && data?.user?.email) {
-        user = await prisma.user.findFirst({
-          where: { email: data.user.email.toLowerCase() },
-          select: {
-            id: true, email: true, role: true,
-            firstName: true, lastName: true, username: true,
-            avatarUrl: true, isBanned: true, isEmailVerified: true,
-            kyc: { select: { status: true } },
-          },
-        });
+    for (const client of [supabaseAdmin, supabase]) {
+      try {
+        const { data, error } = await client.auth.getUser(token);
+        if (!error && data?.user?.email) {
+          user = await prisma.user.findFirst({
+            where: { email: data.user.email.toLowerCase() },
+            select: {
+              id: true, email: true, role: true,
+              firstName: true, lastName: true, username: true,
+              avatarUrl: true, isBanned: true, isEmailVerified: true,
+              kyc: { select: { status: true } },
+            },
+          });
+          if (user) break;
+        }
+      } catch {
+        // try next client
       }
-    } catch {
-      // Supabase verification also failed
     }
   }
 
