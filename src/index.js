@@ -138,6 +138,12 @@ function mountRoutes(base) {
   app.use(`${base}/vault`, vaultRoutes);
   app.use(`${base}/blog`, blogRoutes);
   app.use(`${base}/twitter`, twitterRoutes);
+  app.use(`${base}/wurker`, wurkerRoutes);
+  app.use(`${base}/apikeys`, apikeyRoutes);
+  app.use(`${base}/services`, serviceRoutes);
+  app.use(`${base}/bookmarks`, bookmarkRoutes);
+  app.use(`${base}/reports`, reportRoutes);
+  app.use(`${base}/editrequests`, editrequestRoutes);
 }
 mountRoutes(API);
 mountRoutes(API_ALIAS);
