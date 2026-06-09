@@ -27,7 +27,7 @@ const getProfile = async (userId) => {
 // ── Update profile ─────────────────────────────
 
 const updateProfile = async (userId, updates) => {
-  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'role', 'twitter', 'telegram', 'discord', 'website', 'isPublic', 'emailNotifications', 'pushNotifications', 'currency'];
+  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'role', 'twitter', 'telegram', 'discord', 'website', 'isPublic', 'emailNotifications', 'pushNotifications', 'currency', 'walletAddress'];
   const data = Object.fromEntries(
     Object.entries(updates).filter(([k]) => allowed.includes(k))
   );
