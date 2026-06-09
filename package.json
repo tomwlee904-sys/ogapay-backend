@@ -31,7 +31,7 @@
     "winston": "^3.17.0",
     "ws": "^8.18.0",
     "zod": "^3.24.0",
-    "@imagekit/nodejs": "^1.0.0"
+    "@imagekit/nodejs": "^7.7.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
