@@ -28,18 +28,22 @@ const communityRoutes = require('./routes/community.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const aiRoutes = require('./routes/ai.routes');
+// Phase 5+6 routes
+const apikeyRoutes = require('./routes/apikey.routes');
+const campaignRoutes = require('./routes/campaign.routes');
+const serviceRoutes = require('./routes/service.routes');
+const wurkerRoutes = require('./routes/wurker.routes');
+const bookmarkRoutes = require('./routes/bookmark.routes');
+const reportRoutes = require('./routes/report.routes');
+const editrequestRoutes = require('./routes/editrequest.routes');
+const communityV2Routes = require('./routes/community-v2.routes');
 const escrowRoutes = require('./routes/escrow.routes');
 const paymentRoutes = require('./routes/payment.routes');
-const messagesRoutes = require('./routes/messages.routes');
-const blogRoutes = require('./routes/blog.routes');
-const campaignRoutes = require('./routes/campaign.routes');
-const vaultRoutes = require('./routes/vault.routes');
-const analyticsRoutes = require('./routes/analytics.routes');
 const platformRoutes = require('./routes/platform.routes');
-const imagekitRoutes = require('./routes/imagekit.routes');
 const jobRoutes = require('./routes/job.routes');
 
 const app = express();
+app.set('trust proxy', 1);
 const API = `/api/${process.env.API_VERSION || 'v1'}`;
 const API_ALIAS = `/${process.env.API_VERSION || 'v1'}`;
 
@@ -113,6 +117,7 @@ function mountRoutes(base) {
   app.use(`${base}/leaderboard`, leaderboardRoutes);
   app.use(`${base}/store`, storeRoutes);
   app.use(`${base}/communities`, communityRoutes);
+  app.use(`${base}/communities`, communityV2Routes);
   app.use(`${base}/dashboard`, dashboardRoutes);
   app.use(`${base}/uploads`, uploadRoutes);
   app.use(`${base}/ai`, aiRoutes);
@@ -120,13 +125,8 @@ function mountRoutes(base) {
   app.use(`${base}/notifications`, notificationRoutes);
   app.use(`${base}/escrow`, escrowRoutes);
   app.use(`${base}/payments`, paymentRoutes);
-  app.use(`${base}/messages`, messagesRoutes);
-  app.use(`${base}/blog`, blogRoutes);
   app.use(`${base}/campaigns`, campaignRoutes);
-  app.use(`${base}/vault`, vaultRoutes);
-  app.use(`${base}/analytics`, analyticsRoutes);
   app.use(`${base}/platform`, platformRoutes);
-  app.use(`${base}/imagekit`, imagekitRoutes);
   app.use(`${base}/jobs`, jobRoutes);
 }
 
