@@ -113,6 +113,12 @@ model User {
   lastName          String    @map("last_name")
   username          String    @unique
   avatarUrl         String?   @map("avatar_url")
+  twitter           String?   @map("twitter")
+  telegram          String?   @map("telegram")
+  discord           String?   @map("discord")
+  website           String?   @map("website")
+  isPublic          Boolean   @default(true) @map("is_public")
+  emailNotifications Boolean  @default(true) @map("email_notifications")
   role              UserRole  @default(WORKER)
   isEmailVerified   Boolean   @default(false) @map("is_email_verified")
   isPhoneVerified   Boolean   @default(false) @map("is_phone_verified")
@@ -138,6 +144,8 @@ model User {
   storePurchases    StorePurchase[]
   storeItems        StoreItem[]       @relation("StoreSeller")
   storeReviews      StoreReview[]
+  conversations      ConversationParticipant[]
+  messagesSent       Message[]         @relation("MessageSender")
   disputesAsWorker  Dispute[]         @relation("DisputeWorker")
   disputesAsPoster  Dispute[]         @relation("DisputePoster")
 
@@ -425,4 +433,43 @@ model RefreshToken {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
+}
+
+model Conversation {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  userId         String       @map("user_id")
+  joinedAt       DateTime     @default(now()) @map("joined_at")
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  senderId       String       @map("sender_id")
+  content        String
+  readAt         DateTime?    @map("read_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
 }

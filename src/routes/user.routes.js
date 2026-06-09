@@ -102,4 +102,46 @@ router.get("/:username", async (req, res) => {
   successResponse(res, data, 'Profile fetched');
 });
 
+
+// GET /api/v1/users/me/earnings
+router.get('/me/earnings', authenticate, async (req, res) => {
+  const result = await userService.getEarnings(req.user.id);
+  successResponse(res, result, 'Earnings fetched');
+});
+
 module.exports = router;
+
+
+// DELETE /api/v1/users/me
+router.delete('/me', authenticate, async (req, res) => {
+  const { prisma } = require('../config/database');
+  const { successResponse } = require('../utils/apiResponse');
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: { isBanned: true, email: 'deleted_' + req.user.id + '@ogapay.com' },
+  });
+  successResponse(res, null, 'Account deleted successfully');
+});
+
+// GET /api/v1/users/search — Simple user search for messaging (returns flat array)
+router.get('/search', authenticate, async (req, res) => {
+  const { q } = req.query;
+  if (!q || q.length < 2) {
+    return res.json({ success: true, data: [] });
+  }
+
+  const users = await prisma.user.findMany({
+    where: {
+      OR: [
+        { username: { contains: q, mode: 'insensitive' } },
+        { firstName: { contains: q, mode: 'insensitive' } },
+        { lastName: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+      ],
+    },
+    select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true },
+    take: 10,
+  });
+
+  successResponse(res, users);
+});

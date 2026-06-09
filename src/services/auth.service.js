@@ -282,4 +282,90 @@ const sanitizeUser = (user) => ({
   createdAt: user.createdAt,
 });
 
-module.exports = { register, login, googleExchange, refreshTokens, logout };
+
+// ── Forgot Password ────────────────────────────
+
+const forgotPassword = async (email) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    // Don't reveal whether email exists
+    return { message: 'If that email is registered, a reset link will be sent.' };
+  }
+
+  const resetToken = uuidv4();
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + 1);
+
+  // Store reset token in DB
+  await prisma.refreshToken.create({
+    data: {
+      userId: user.id,
+      token: `reset_${resetToken}`,
+      expiresAt,
+    },
+  });
+
+  // In production, send email via SendGrid/Mailgun
+  logger.info(`Password reset requested for ${email}. Token: ${resetToken}`);
+
+  return { message: 'If that email is registered, a reset link will be sent.' };
+};
+
+// ── Reset Password ─────────────────────────────
+
+const resetPassword = async (token, newPassword) => {
+  const stored = await prisma.refreshToken.findUnique({
+    where: { token: `reset_${token}` },
+    include: { user: true },
+  });
+
+  if (!stored) throw ApiError.badRequest('Invalid or expired reset token');
+  if (stored.expiresAt < new Date()) {
+    await prisma.refreshToken.delete({ where: { id: stored.id } });
+    throw ApiError.badRequest('Reset token expired');
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: stored.userId },
+      data: { passwordHash },
+    }),
+    prisma.refreshToken.delete({ where: { id: stored.id } }),
+  ]);
+
+  return { message: 'Password reset successful' };
+};
+
+// ── Change Password (authenticated) ────────────
+
+const changePassword = async (userId, currentPassword, newPassword) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw ApiError.notFound('User not found');
+
+  if (!user.passwordHash) {
+    // User signed up with Google — set password
+    const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+    return { message: 'Password set successfully' };
+  }
+
+  const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!isValid) throw ApiError.badRequest('Current password is incorrect');
+
+  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { passwordHash },
+  });
+
+  // Invalidate all existing sessions
+  await prisma.refreshToken.deleteMany({ where: { userId } });
+
+  return { message: 'Password changed successfully' };
+};
+
+module.exports = { register, login, googleExchange, refreshTokens, logout, forgotPassword, resetPassword, changePassword };

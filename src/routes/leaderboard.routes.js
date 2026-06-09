@@ -6,6 +6,30 @@ const { successResponse, paginatedResponse, paginate } = require('../utils/apiRe
 
 const router = express.Router();
 
+// GET / — Root leaderboard (delegates to workers)
+router.get('/', async (req, res) => {
+  const workers = await prisma.workerProfile.findMany({
+    where: { tasksCompleted: { gt: 0 } },
+    select: {
+      user: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } },
+      tasksCompleted: true,
+      totalEarned: true,
+    },
+    orderBy: { totalEarned: 'desc' },
+    take: 20,
+  });
+  const mapped = workers.map((w, i) => ({
+    rank: i + 1,
+    name: (w.user?.firstName || '') + ' ' + (w.user?.lastName || ''),
+    username: w.user?.username,
+    avatarUrl: w.user?.avatarUrl,
+    earnings: Number(w.totalEarned || 0),
+    tasks: w.tasksCompleted || 0,
+  }));
+  successResponse(res, { topEarners: mapped, period: 'all_time' });
+});
+
+
 // GET /api/v1/leaderboard/workers
 // Rank workers by: earnings | tasks_completed | reputation
 router.get('/workers', async (req, res) => {

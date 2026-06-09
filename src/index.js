@@ -41,6 +41,9 @@ const escrowRoutes = require('./routes/escrow.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const platformRoutes = require('./routes/platform.routes');
 const jobRoutes = require('./routes/job.routes');
+const pricesRoutes = require('./routes/prices.routes');
+const imagekitRoutes = require('./routes/imagekit.routes');
+const messageRoutes = require('./routes/message.routes');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -128,9 +131,10 @@ function mountRoutes(base) {
   app.use(`${base}/campaigns`, campaignRoutes);
   app.use(`${base}/platform`, platformRoutes);
   app.use(`${base}/jobs`, jobRoutes);
-}
-
-mountRoutes(API);
+  app.use(`${base}/jobs`, jobRoutes);
+  app.use(`${base}/prices`, pricesRoutes);
+  app.use(`${base}/imagekit`, imagekitRoutes);
+  app.use(`${base}/messages`, messageRoutes);
 mountRoutes(API_ALIAS);
 
 // Serve the website from the same deployment as the API.
@@ -176,3 +180,4 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 module.exports = app;
+
