@@ -110,3 +110,26 @@ router.get('/me/earnings', authenticate, async (req, res) => {
 });
 
 module.exports = router;
+
+// GET /api/v1/users/search — Simple user search for messaging (returns flat array)
+router.get('/search', authenticate, async (req, res) => {
+  const { q } = req.query;
+  if (!q || q.length < 2) {
+    return res.json({ success: true, data: [] });
+  }
+
+  const users = await prisma.user.findMany({
+    where: {
+      OR: [
+        { username: { contains: q, mode: 'insensitive' } },
+        { firstName: { contains: q, mode: 'insensitive' } },
+        { lastName: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+      ],
+    },
+    select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true },
+    take: 10,
+  });
+
+  successResponse(res, users);
+});

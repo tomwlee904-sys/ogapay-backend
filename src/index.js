@@ -41,6 +41,7 @@ const escrowRoutes = require('./routes/escrow.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const platformRoutes = require('./routes/platform.routes');
 const imagekitRoutes = require('./routes/imagekit.routes');
+const messageRoutes = require('./routes/message.routes');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -127,6 +128,7 @@ function mountRoutes(base) {
   app.use(`${base}/payments`, paymentRoutes);
   app.use(`${base}/platform`, platformRoutes);
   app.use(`${base}/imagekit`, imagekitRoutes);
+  app.use(`${base}/messages`, messageRoutes);
 }
 
 mountRoutes(API);
