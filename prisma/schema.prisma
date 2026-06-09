@@ -511,9 +511,11 @@ model BlogPost {
   title           String
   content         String
   excerpt         String?
+  category        String?
   slug            String    @unique
   coverImage      String?   @map("cover_image")
   tags            String[]
+  viewCount       Int       @default(0) @map("view_count")
   isPublished     Boolean   @default(false) @map("is_published")
   publishedAt     DateTime? @map("published_at")
   createdAt       DateTime  @default(now()) @map("created_at")
@@ -524,6 +526,14 @@ model BlogPost {
   @@index([authorId])
   @@index([isPublished, publishedAt])
   @@map("blog_posts")
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("newsletter_subscribers")
 }
 
 model Community {
