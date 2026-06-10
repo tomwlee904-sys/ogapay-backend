@@ -24,12 +24,13 @@ router.get('/featured', async (req, res) => {
 
   const enriched = await Promise.all(communities.map(async (c) => {
     const jobCount = await prisma.task.count({
-      where: { communityId: c.id, status: { in: ['active', 'completed'] } },
+      where: { category: c.category, status: { in: ['OPEN', 'COMPLETED'] } },
     });
-    const payments = await prisma.payment.aggregate({
-      where: { communityId: c.id, status: 'completed' },
-      _sum: { amount: true },
+    const approvedSubs = await prisma.taskSubmission.findMany({
+      where: { status: 'APPROVED', task: { category: c.category } },
+      select: { task: { select: { reward: true } } },
     });
+    const distributed = approvedSubs.reduce((sum, s) => sum + Number(s.task.reward), 0);
     return {
       id: c.id,
       slug: c.slug,
@@ -44,7 +45,7 @@ router.get('/featured', async (req, res) => {
       isActive: c.isActive,
       memberCount: c._count.members,
       jobCount,
-      distributed: payments._sum.amount || 0,
+      distributed,
       createdAt: c.createdAt,
     };
   }));
