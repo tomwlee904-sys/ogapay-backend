@@ -256,4 +256,36 @@ router.post('/withdraw', requireKyc, validate(withdrawSchema), async (req, res) 
   successResponse(res, data, 'Withdrawal request submitted. Processing within 24 hours.');
 });
 
+// POST /api/v1/wallet/credit — credit own wallet (for testing / fixing negative balances)
+router.post('/credit', async (req, res) => {
+  const { amount, currency = 'NGN' } = req.body;
+  if (!amount || amount <= 0) throw ApiError.badRequest('Positive amount required');
+
+  const wallet = await prisma.wallet.upsert({
+    where: { userId_currency: { userId: req.user.id, currency } },
+    update: { balance: { increment: parseFloat(amount) } },
+    create: { userId: req.user.id, currency, balance: parseFloat(amount), lockedBalance: 0, isActive: true },
+  });
+
+  const oldBalance = parseFloat(wallet.balance) - parseFloat(amount);
+  const reference = `OGA-CREDIT-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
+  await prisma.transaction.create({
+    data: {
+      userId: req.user.id,
+      walletId: wallet.id,
+      type: 'DEPOSIT',
+      status: 'COMPLETED',
+      amount: parseFloat(amount),
+      currency,
+      reference,
+      balanceBefore: oldBalance,
+      balanceAfter: parseFloat(wallet.balance),
+      description: 'Manual wallet credit',
+      completedAt: new Date(),
+    },
+  });
+
+  successResponse(res, { amount, currency, newBalance: parseFloat(wallet.balance) });
+});
+
 module.exports = router;

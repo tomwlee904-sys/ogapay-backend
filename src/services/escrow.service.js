@@ -26,7 +26,10 @@ const lockFundsForTask = async (userId, taskId, amount, currency) => {
   const platformFee = (amount * PLATFORM_FEE_PERCENT) / 100;
   const totalRequired = amount + platformFee;
 
-  // ⚠️ Balance check skipped for testing
+  const availableBalance = parseFloat(wallet.balance) - parseFloat(wallet.lockedBalance);
+  if (availableBalance < totalRequired) {
+    throw ApiError.badRequest(`Insufficient balance. Need ${formatAmount(totalRequired, currency)}, available ${formatAmount(availableBalance, currency)}`);
+  }
 
   return prisma.$transaction(async (db) => {
     await db.wallet.update({
