@@ -546,14 +546,33 @@ model Community {
   category    String?
   isPublic    Boolean  @default(true) @map("is_public")
   ownerId     String   @map("owner_id")
+  twitter     String?  @map("twitter")
+  telegram    String?  @map("telegram")
+  discord     String?  @map("discord")
+  metadata    Json?
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  owner       User              @relation("CommunityOwner", fields: [ownerId], references: [id])
+  owner       User                    @relation("CommunityOwner", fields: [ownerId], references: [id])
   members     CommunityMember[]
   requests    CommunityRequest[]
+  chatMessages CommunityChatMessage[]
 
   @@map("communities")
+}
+
+model CommunityChatMessage {
+  id          String   @id @default(uuid())
+  communityId String   @map("community_id")
+  senderId    String   @map("sender_id")
+  text        String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  sender      User      @relation(fields: [senderId], references: [id])
+
+  @@index([communityId, createdAt])
+  @@map("community_chat_messages")
 }
 
 model CommunityMember {

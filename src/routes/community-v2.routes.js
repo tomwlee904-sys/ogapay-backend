@@ -8,6 +8,10 @@ const crypto = require('crypto');
 
 const router = express.Router();
 
+// ─── In-memory stores (DB schema can't be migrated live) ─────
+const communitySocials = new Map(); // communityId -> { twitter, telegram, discord }
+const communityChats = new Map();   // communityId -> [{ id, senderId, sender, text, createdAt }]
+
 // ─── List Communities ──────────────────────────────────────────
 router.get('/', async (req, res) => {
   const { category, search, sort } = req.query;
@@ -70,17 +74,38 @@ router.get('/:id', async (req, res) => {
 
   // Check if current user is a member
   let userRole = null;
+  let hasRequested = false;
   if (req.user) {
     const membership = await prisma.communityMember.findUnique({
       where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
     });
     if (membership) userRole = membership.role;
     
-    // Check pending request
     const pendingRequest = await prisma.communityRequest.findUnique({
       where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
     });
+    if (pendingRequest) hasRequested = true;
   }
+
+  // Count tasks matching this community's category
+  const openJobs = await prisma.task.count({
+    where: { category: community.category, status: 'OPEN' },
+  });
+  const completedJobs = await prisma.task.count({
+    where: { category: community.category, status: 'COMPLETED' },
+  });
+
+  // Sum earnings from completed submissions for tasks in this category
+  const completedSubmissions = await prisma.taskSubmission.findMany({
+    where: {
+      status: 'APPROVED',
+      task: { category: community.category },
+    },
+    select: { task: { select: { reward: true } } },
+  });
+  const totalDistributed = completedSubmissions.reduce((sum, s) => sum + Number(s.task.reward), 0);
+
+  const socials = communitySocials.get(community.id) || {};
 
   successResponse(res, {
     id: community.id,
@@ -92,18 +117,26 @@ router.get('/:id', async (req, res) => {
     category: community.category,
     isPublic: community.isPublic,
     owner: community.owner,
+    twitter: socials.twitter || '',
+    telegram: socials.telegram || '',
+    discord: socials.discord || '',
     memberCount: community._count.members,
     inviteCount: community._count.invites,
     requestCount: community._count.requests,
     recentMembers: community.members,
     userRole,
+    hasRequested,
+    challengeCount: openJobs + completedJobs,
+    openJobCount: openJobs,
+    completedJobCount: completedJobs,
+    totalDistributed,
     createdAt: community.createdAt,
   });
 });
 
 // ─── Create Community ─────────────────────────────────────────
 router.post('/', authenticate, async (req, res) => {
-  const { name, description, category, accentColor, isPublic } = req.body;
+  const { name, description, category, accentColor, isPublic, twitter, telegram, discord } = req.body;
   if (!name || name.trim().length < 2) throw ApiError.badRequest('Community name must be at least 2 characters');
 
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + crypto.randomBytes(3).toString('hex');
@@ -119,6 +152,15 @@ router.post('/', authenticate, async (req, res) => {
       ownerId: req.user.id,
     },
   });
+
+  // Store social links in-memory
+  if (twitter || telegram || discord) {
+    communitySocials.set(community.id, {
+      twitter: twitter || '',
+      telegram: telegram || '',
+      discord: discord || '',
+    });
+  }
 
   // Auto-join the creator as OWNER
   await prisma.communityMember.create({
@@ -144,7 +186,18 @@ router.patch('/:id', authenticate, async (req, res) => {
     throw ApiError.forbidden('Only owners and admins can update the community');
   }
 
-  const { name, description, category, accentColor, isPublic } = req.body;
+  const { name, description, category, accentColor, isPublic, twitter, telegram, discord } = req.body;
+
+  // Update social links in-memory
+  if (twitter !== undefined || telegram !== undefined || discord !== undefined) {
+    const existing = communitySocials.get(community.id) || {};
+    const updates = {};
+    if (twitter !== undefined) updates.twitter = twitter;
+    if (telegram !== undefined) updates.telegram = telegram;
+    if (discord !== undefined) updates.discord = discord;
+    communitySocials.set(community.id, { ...existing, ...updates });
+  }
+
   const updated = await prisma.community.update({
     where: { id: community.id },
     data: {
@@ -489,6 +542,251 @@ router.patch('/:id/requests/:requestId', authenticate, async (req, res) => {
     });
     successResponse(res, null, 'Request declined');
   }
+});
+
+// ─── Leaderboard ──────────────────────────────────────────────
+// GET  /:id/leaderboard?page=1&limit=20
+router.get('/:id/leaderboard', async (req, res) => {
+  const community = await prisma.community.findFirst({
+    where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
+  });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
+  const skip = (page - 1) * limit;
+
+  const members = await prisma.communityMember.findMany({
+    where: { communityId: community.id },
+    include: {
+      user: {
+        select: {
+          id: true, username: true, firstName: true, lastName: true, avatarUrl: true,
+          workerProfile: { select: { level: true, tasksCompleted: true, totalEarned: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+    skip,
+    take: limit,
+  });
+
+  const total = await prisma.communityMember.count({ where: { communityId: community.id } });
+
+  // Sort by tasksCompleted descending
+  const sorted = members
+    .map(m => ({
+      id: m.user.id,
+      username: m.user.username,
+      firstName: m.user.firstName,
+      lastName: m.user.lastName,
+      avatarUrl: m.user.avatarUrl,
+      role: m.role,
+      level: m.user.workerProfile?.level || 'BEGINNER',
+      tasksCompleted: m.user.workerProfile?.tasksCompleted || 0,
+      totalEarned: m.user.workerProfile?.totalEarned || 0,
+      joinedAt: m.createdAt,
+    }))
+    .sort((a, b) => b.tasksCompleted - a.tasksCompleted);
+
+  // Assign rank considering pagination offset
+  const ranked = sorted.map((m, i) => ({ rank: skip + i + 1, ...m }));
+
+  successResponse(res, {
+    members: ranked,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+    limit,
+  });
+});
+
+// ─── Open Jobs ────────────────────────────────────────────────
+// GET  /:id/jobs/open?page=1&limit=20
+router.get('/:id/jobs/open', async (req, res) => {
+  const community = await prisma.community.findFirst({
+    where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
+  });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
+  const skip = (page - 1) * limit;
+
+  const where = { category: community.category, status: 'OPEN' };
+
+  const [jobs, total] = await Promise.all([
+    prisma.task.findMany({
+      where,
+      select: {
+        id: true, title: true, description: true, reward: true, currency: true,
+        category: true, createdAt: true, deadline: true,
+        poster: { select: { id: true, username: true, avatarUrl: true } },
+        _count: { select: { submissions: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.task.count({ where }),
+  ]);
+
+  successResponse(res, {
+    jobs: jobs.map(j => ({
+      id: j.id,
+      title: j.title,
+      reward: Number(j.reward),
+      currency: j.currency,
+      category: j.category,
+      poster: j.poster,
+      submissionCount: j._count.submissions,
+      createdAt: j.createdAt,
+      deadline: j.deadline,
+    })),
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  });
+});
+
+// ─── Completed Jobs ───────────────────────────────────────────
+// GET  /:id/jobs/completed?page=1&limit=20
+router.get('/:id/jobs/completed', async (req, res) => {
+  const community = await prisma.community.findFirst({
+    where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
+  });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
+  const skip = (page - 1) * limit;
+
+  const where = { category: community.category, status: 'COMPLETED' };
+
+  const [jobs, total] = await Promise.all([
+    prisma.task.findMany({
+      where,
+      select: {
+        id: true, title: true, reward: true, currency: true,
+        category: true, completedAt: true,
+        poster: { select: { id: true, username: true } },
+        submissions: {
+          where: { status: 'APPROVED' },
+          select: { worker: { select: { id: true, username: true } } },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.task.count({ where }),
+  ]);
+
+  successResponse(res, {
+    jobs: jobs.map(j => ({
+      id: j.id,
+      title: j.title,
+      reward: Number(j.reward),
+      currency: j.currency,
+      rewardPaid: Number(j.reward),
+      poster: j.poster,
+      completedAt: j.submissions[0]?.completedAt || j.updatedAt,
+      workers: j.submissions.map(s => s.worker),
+    })),
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  });
+});
+
+// ─── Chat Messages ────────────────────────────────────────────
+// GET  /:id/chat — members only
+router.get('/:id/chat', authenticate, async (req, res) => {
+  const community = await prisma.community.findFirst({
+    where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
+  });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const membership = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (!membership) throw ApiError.forbidden('Only community members can view chat');
+
+  const messages = communityChats.get(community.id) || [];
+  successResponse(res, messages.slice(-100)); // last 100 messages
+});
+
+// POST /:id/chat — members only
+router.post('/:id/chat', authenticate, async (req, res) => {
+  const { text } = req.body;
+  if (!text || !text.trim()) throw ApiError.badRequest('Message text is required');
+
+  const community = await prisma.community.findFirst({
+    where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
+  });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const membership = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (!membership) throw ApiError.forbidden('Only community members can send messages');
+
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true },
+  });
+
+  const msg = {
+    id: crypto.randomBytes(8).toString('hex'),
+    communityId: community.id,
+    sender: {
+      id: user.id,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatarUrl: user.avatarUrl,
+    },
+    text: text.trim(),
+    createdAt: new Date().toISOString(),
+  };
+
+  if (!communityChats.has(community.id)) {
+    communityChats.set(community.id, []);
+  }
+  communityChats.get(community.id).push(msg);
+
+  // Keep only last 500 messages
+  const msgs = communityChats.get(community.id);
+  if (msgs.length > 500) {
+    communityChats.set(community.id, msgs.slice(-500));
+  }
+
+  createdResponse(res, msg, 'Message sent');
+});
+
+// ─── Social Links ─────────────────────────────────────────────
+// PATCH /:id/socials — owner/admins only
+router.patch('/:id/socials', authenticate, async (req, res) => {
+  const { twitter, telegram, discord } = req.body;
+
+  const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const membership = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+    throw ApiError.forbidden('Only owners and admins can update social links');
+  }
+
+  const existing = communitySocials.get(community.id) || {};
+  const updates = {};
+  if (twitter !== undefined) updates.twitter = twitter;
+  if (telegram !== undefined) updates.telegram = telegram;
+  if (discord !== undefined) updates.discord = discord;
+  communitySocials.set(community.id, { ...existing, ...updates });
+
+  successResponse(res, communitySocials.get(community.id), 'Social links updated');
 });
 
 module.exports = router;
