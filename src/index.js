@@ -10,6 +10,8 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 
+const cron = require('node-cron');
+const taskService = require('./services/task.service');
 const { logger } = require('./utils/logger');
 const { errorHandler } = require('./middleware/errorHandler');
 const { notFound } = require('./middleware/notFound');
@@ -111,6 +113,19 @@ app.get('/health', (req, res) => {
   });
 });
 
+// ── Cron: Auto-complete expired cooldowns every 15 min ──
+if (process.env.NODE_ENV !== 'test') {
+  cron.schedule('*/15 * * * *', async () => {
+    try {
+      const count = await taskService.autoCompleteExpiredCooldowns();
+      if (count > 0) logger.info(`Auto-completed ${count} expired cooldown tasks`);
+    } catch (err) {
+      logger.error(`Cooldown cron error: ${err.message}`);
+    }
+  });
+  logger.info('Cooldown cron scheduled: */15 * * * *');
+}
+
 // ── API Routes ────────────────────────────────
 function mountRoutes(base) {
   app.use(`${base}/auth`, authLimiter, authRoutes);
@@ -132,6 +147,7 @@ function mountRoutes(base) {
   app.use(`${base}/payments`, paymentRoutes);
   app.use(`${base}/campaigns`, campaignRoutes);
   app.use(`${base}/platform`, platformRoutes);
+  app.use(`${base}/stats`, platformRoutes);
   app.use(`${base}/jobs`, jobRoutes);
   app.use(`${base}/prices`, pricesRoutes);
   app.use(`${base}/messages`, messageRoutes);

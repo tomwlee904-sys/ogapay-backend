@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 800" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#191C6B"/>
+      <stop offset="100%" stop-color="#121566"/>
+    </linearGradient>
+    <radialGradient id="personGlow" cx="0.5" cy="0.35" r="0.55">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.12)"/>
+      <stop offset="50%" stop-color="rgba(255,255,255,0.04)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+  </defs>
+  <rect width="500" height="800" fill="url(#bgGrad)"/>
+  <rect x="0" y="0" width="500" height="800" fill="url(#personGlow)"/>
+
+  <!-- Desk -->
+  <rect x="20" y="670" width="460" height="10" rx="3" fill="rgba(255,255,255,0.1)"/>
+  <rect x="60" y="680" width="14" height="80" rx="3" fill="rgba(255,255,255,0.06)"/>
+  <rect x="380" y="680" width="14" height="80" rx="3" fill="rgba(255,255,255,0.06)"/>
+
+  <!-- Laptop screen -->
+  <rect x="110" y="510" width="200" height="110" rx="8" fill="rgba(255,255,255,0.06)"/>
+  <rect x="116" y="516" width="188" height="98" rx="4" fill="rgba(255,255,255,0.1)"/>
+  <rect x="120" y="520" width="180" height="90" rx="3" fill="#080826"/>
+  <rect x="128" y="528" width="164" height="5" rx="2" fill="rgba(31,140,255,0.35)"/>
+  <rect x="128" y="540" width="130" height="4" rx="2" fill="rgba(255,255,255,0.15)"/>
+  <rect x="128" y="550" width="150" height="4" rx="2" fill="rgba(255,255,255,0.1)"/>
+  <rect x="128" y="560" width="100" height="4" rx="2" fill="rgba(255,255,255,0.1)"/>
+  <rect x="128" y="570" width="140" height="4" rx="2" fill="rgba(255,255,255,0.08)"/>
+  <rect x="128" y="580" width="80" height="4" rx="2" fill="rgba(31,140,255,0.3)"/>
+  <!-- Laptop base -->
+  <rect x="105" y="618" width="210" height="8" rx="3" fill="rgba(255,255,255,0.08)"/>
+
+  <!-- Person body - flowing gown -->
+  <path d="M165 180 Q165 165 195 165 L305 165 Q335 165 335 180 L340 550 Q340 580 330 580 L170 580 Q160 580 160 550 Z" fill="rgba(255,255,255,0.13)"/>
+  <path d="M170 580 Q250 620 330 580 L335 670 Q250 710 165 670 Z" fill="rgba(255,255,255,0.08)"/>
+  
+  <!-- Blazer -->
+  <path d="M195 165 L205 200 L295 200 L305 165" fill="rgba(31,140,255,0.18)"/>
+  <path d="M235 165 L250 195 L265 165" fill="rgba(255,255,255,0.06)"/>
+
+  <!-- Neck -->
+  <rect x="240" y="140" width="20" height="25" rx="5" fill="rgba(255,190,150,0.18)"/>
+
+  <!-- Arms -->
+  <path d="M190 185 Q140 260 175 480 Q180 500 190 495" stroke="rgba(255,190,150,0.22)" stroke-width="16" fill="none" stroke-linecap="round"/>
+  <path d="M310 185 Q360 260 325 480 Q320 500 310 495" stroke="rgba(255,190,150,0.22)" stroke-width="16" fill="none" stroke-linecap="round"/>
+  <ellipse cx="190" cy="493" rx="10" ry="8" fill="rgba(255,190,150,0.22)"/>
+  <ellipse cx="310" cy="493" rx="10" ry="8" fill="rgba(255,190,150,0.22)"/>
+
+  <!-- Head -->
+  <circle cx="250" cy="95" r="55" fill="rgba(255,190,150,0.25)"/>
+  <circle cx="250" cy="95" r="53" fill="rgba(255,190,150,0.3)"/>
+
+  <!-- Hair -->
+  <ellipse cx="250" cy="62" rx="58" ry="40" fill="rgba(25,18,12,0.6)"/>
+  <path d="M192 62 Q195 20 250 14 Q305 20 308 62" fill="rgba(25,18,12,0.65)"/>
+  <circle cx="210" cy="35" r="14" fill="rgba(25,18,12,0.5)"/>
+  <circle cx="250" cy="26" r="17" fill="rgba(25,18,12,0.5)"/>
+  <circle cx="290" cy="35" r="14" fill="rgba(25,18,12,0.5)"/>
+
+  <!-- Face -->
+  <ellipse cx="236" cy="88" rx="3.5" ry="4" fill="rgba(25,18,12,0.35)"/>
+  <ellipse cx="264" cy="88" rx="3.5" ry="4" fill="rgba(25,18,12,0.35)"/>
+  <ellipse cx="250" cy="103" rx="7" ry="5" fill="rgba(200,100,70,0.18)"/>
+  <path d="M239 109 Q250 120 261 109" stroke="rgba(25,18,12,0.2)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Sparkle particles -->
+  <circle cx="70" cy="110" r="24" fill="rgba(31,140,255,0.06)"/>
+  <circle cx="440" cy="200" r="20" fill="rgba(22,163,74,0.06)"/>
+  <circle cx="55" cy="380" r="16" fill="rgba(31,140,255,0.04)"/>
+  <circle cx="450" cy="450" r="14" fill="rgba(22,163,74,0.04)"/>
+  <circle cx="80" cy="520" r="12" fill="rgba(255,255,255,0.03)"/>
+  <circle cx="420" cy="550" r="10" fill="rgba(31,140,255,0.03)"/>
+
+  <circle cx="110" cy="180" r="3.5" fill="rgba(255,255,255,0.06)"/>
+  <circle cx="390" cy="130" r="3" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="460" cy="310" r="3" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="45" cy="290" r="2.5" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="430" cy="360" r="2" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="70" cy="450" r="2" fill="rgba(255,255,255,0.03)"/>
+</svg>

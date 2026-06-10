@@ -176,7 +176,7 @@ const applyToTask = async (workerId, taskId) => {
       where: { id: taskId },
       data: {
         currentWorkers: { increment: 1 },
-        status: task.currentWorkers + 1 >= task.maxWorkers ? 'IN_PROGRESS' : 'OPEN',
+        submissionsCount: { increment: 1 },
       },
     });
 
@@ -192,6 +192,9 @@ const applyToTask = async (workerId, taskId) => {
 
     return sub;
   });
+
+  // Trigger cooldown if all slots filled
+  await triggerCooldownIfFull(task, taskId);
 
   return submission;
 };
@@ -309,6 +312,33 @@ const reviewSubmission = async (posterId, submissionId, { status, posterNotes, r
           data: { taskId: submission.taskId, submissionId, reason: posterNotes },
         },
       });
+
+      // Reopen slot: decrement filled counts, set task back to OPEN
+      await db.task.update({
+        where: { id: submission.taskId },
+        data: {
+          currentWorkers: { decrement: 1 },
+          submissionsCount: { decrement: 1 },
+          status: 'OPEN',
+        },
+      });
+
+      // Notify first waitlisted worker about the reopened slot
+      const next = await db.waitlist.findFirst({
+        where: { taskId: submission.taskId },
+        orderBy: { createdAt: 'asc' },
+      });
+      if (next) {
+        await db.notification.create({
+          data: {
+            userId: next.userId,
+            type: 'SLOT_REOPENED',
+            title: '🎯 Slot Reopened!',
+            body: `A slot opened up for "${submission.task.title}" — apply now!`,
+            data: { taskId: submission.taskId },
+          },
+        });
+      }
     }
 
     // Check if all slots filled and all submissions resolved → mark task COMPLETED, refund remaining escrow
@@ -348,6 +378,184 @@ const reviewSubmission = async (posterId, submissionId, { status, posterNotes, r
   }, { timeout: 20000 });
 };
 
+// ── Cooldown Trigger ────────────────────────────
+
+const triggerCooldownIfFull = async (task, taskId) => {
+  const pendingCount = await prisma.taskSubmission.count({
+    where: { taskId, status: { in: ['PENDING', 'SUBMITTED'] } },
+  });
+
+  if (pendingCount >= task.maxWorkers && task.status === 'OPEN') {
+    await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        status: 'COOLING_DOWN',
+        cooldownStartedAt: new Date(),
+      },
+    });
+    await prisma.notification.create({
+      data: {
+        userId: task.posterId,
+        type: 'COOLDOWN',
+        title: '⏳ Task Cooling Down',
+        body: `Your task "${task.title}" is now cooling down. Review and approve submissions.`,
+        data: { taskId, message: 'cooldown' },
+      },
+    });
+  }
+};
+
+// ── Featured Tasks ──────────────────────────────
+
+const getFeaturedTasks = async () => {
+  const tasks = await prisma.task.findMany({
+    where: {
+      status: { in: ['OPEN', 'COOLING_DOWN'] },
+      featured: true,
+    },
+    include: {
+      poster: {
+        select: {
+          id: true,
+          username: true,
+          avatarUrl: true,
+          createdAt: true,
+          posterProfile: { select: { avgRating: true, isVerified: true, totalPosted: true } },
+        },
+      },
+      _count: { select: { submissions: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 10,
+  });
+
+  return tasks;
+};
+
+// ── Join Waitlist ───────────────────────────────
+
+const joinWaitlist = async (userId, taskId) => {
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task) throw ApiError.notFound('Task not found');
+  if (task.status !== 'COOLING_DOWN') throw ApiError.badRequest('Task is not in cooldown');
+
+  const existing = await prisma.waitlist.findUnique({
+    where: { taskId_userId: { taskId, userId } },
+  });
+  if (existing) throw ApiError.conflict('Already on waitlist');
+
+  await prisma.waitlist.create({ data: { taskId, userId } });
+
+  const position = await prisma.waitlist.count({ where: { taskId } });
+
+  return { position };
+};
+
+// ── Reject Submission ───────────────────────────
+
+const rejectSubmission = async (posterId, submissionId, { posterNotes }) => {
+  const submission = await prisma.taskSubmission.findUnique({
+    where: { id: submissionId },
+    include: { task: true },
+  });
+
+  if (!submission) throw ApiError.notFound('Submission not found');
+  if (submission.task.posterId !== posterId) throw ApiError.forbidden('Not your task');
+  if (!['SUBMITTED', 'PENDING'].includes(submission.status)) throw ApiError.badRequest('Submission cannot be rejected');
+
+  return prisma.$transaction(async (db) => {
+    const updated = await db.taskSubmission.update({
+      where: { id: submissionId },
+      data: { status: 'REJECTED', reviewedAt: new Date(), posterNotes: posterNotes || undefined },
+    });
+
+    await db.workerProfile.update({
+      where: { userId: submission.workerId },
+      data: { tasksRejected: { increment: 1 } },
+    });
+
+    await db.notification.create({
+      data: {
+        userId: submission.workerId,
+        type: 'SUBMISSION_REJECTED',
+        title: '❌ Submission Rejected',
+        body: posterNotes || 'Your submission was rejected.',
+        data: { taskId: submission.taskId, submissionId, reason: posterNotes },
+      },
+    });
+
+    // Reopen slot
+    await db.task.update({
+      where: { id: submission.taskId },
+      data: {
+        currentWorkers: { decrement: 1 },
+        submissionsCount: { decrement: 1 },
+        status: 'OPEN',
+        featured: submission.task.featured,
+      },
+    });
+
+    // Notify first waitlisted worker
+    const next = await db.waitlist.findFirst({
+      where: { taskId: submission.taskId },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (next) {
+      await db.notification.create({
+        data: {
+          userId: next.userId,
+          type: 'SLOT_REOPENED',
+          title: '🎯 Slot Reopened!',
+          body: `A slot opened up for "${submission.task.title}" — apply now!`,
+          data: { taskId: submission.taskId },
+        },
+      });
+      await db.waitlist.delete({ where: { id: next.id } });
+    }
+
+    return updated;
+  });
+};
+
+// ── Auto-Complete Expired Cooldowns ─────────────
+
+const autoCompleteExpiredCooldowns = async () => {
+  const expired = await prisma.task.findMany({
+    where: {
+      status: 'COOLING_DOWN',
+      cooldownStartedAt: {
+        lte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      },
+    },
+  });
+
+  for (const task of expired) {
+    await prisma.$transaction(async (db) => {
+      await db.taskSubmission.updateMany({
+        where: { taskId: task.id, status: 'PENDING' },
+        data: { status: 'APPROVED' },
+      });
+
+      await db.task.update({
+        where: { id: task.id },
+        data: { status: 'COMPLETED' },
+      });
+
+      await db.notification.create({
+        data: {
+          userId: task.posterId,
+          type: 'COOLDOWN_EXPIRED',
+          title: '⏰ Cooldown Expired',
+          body: `Cooldown expired for "${task.title}". Pending submissions auto-approved.`,
+          data: { taskId: task.id },
+        },
+      });
+    });
+  }
+
+  return expired.length;
+};
+
 // ── Helpers ────────────────────────────────────
 
 const calculateReputation = (avgRating, successRate, tasksCompleted) => {
@@ -372,4 +580,9 @@ module.exports = {
   applyToTask,
   submitTask,
   reviewSubmission,
+  triggerCooldownIfFull,
+  getFeaturedTasks,
+  joinWaitlist,
+  rejectSubmission,
+  autoCompleteExpiredCooldowns,
 };

@@ -62,7 +62,7 @@ router.post(
   },
 );
 
-// PATCH /api/v1/tasks/submissions/:submissionId/review — Poster reviews
+// PATCH /api/v1/tasks/submissions/:submissionId/review — Poster approves/rejects
 router.patch(
   '/submissions/:submissionId/review',
   authenticate,
@@ -71,6 +71,17 @@ router.patch(
   async (req, res) => {
     const result = await taskService.reviewSubmission(req.user.id, req.params.submissionId, req.body);
     successResponse(res, result, `Submission ${req.body.status.toLowerCase()}`);
+  },
+);
+
+// PATCH /api/v1/tasks/submissions/:submissionId/reject — Poster rejects + reopens slot
+router.patch(
+  '/submissions/:submissionId/reject',
+  authenticate,
+  authorize('POSTER', 'ADMIN'),
+  async (req, res) => {
+    const result = await taskService.rejectSubmission(req.user.id, req.params.submissionId, req.body);
+    successResponse(res, result, 'Submission rejected, slot reopened');
   },
 );
 
@@ -130,6 +141,38 @@ router.get('/:id/submissions', authenticate, authorize('POSTER', 'ADMIN'), async
   const { paginatedResponse, paginate } = require('../utils/apiResponse');
   paginatedResponse(res, submissions, paginate(page, limit, total));
 });
+
+// GET /api/v1/tasks/featured — Featured tasks
+router.get('/featured', async (req, res) => {
+  const tasks = await taskService.getFeaturedTasks();
+  successResponse(res, tasks, 'Featured tasks fetched');
+});
+
+// POST /api/v1/tasks/:id/waitlist — Join cooldown waitlist
+router.post(
+  '/:id/waitlist',
+  authenticate,
+  authorize('WORKER', 'ADMIN'),
+  async (req, res) => {
+    const result = await taskService.joinWaitlist(req.user.id, req.params.id);
+    createdResponse(res, result, `You are number ${result.position} on the waitlist`);
+  },
+);
+
+// PATCH /api/v1/tasks/:id/feature — Admin feature/unfeature a task
+router.patch(
+  '/:id/feature',
+  authenticate,
+  authorize('ADMIN'),
+  async (req, res) => {
+    const { prisma } = require('../config/database');
+    await prisma.task.update({
+      where: { id: req.params.id },
+      data: { featured: req.body.featured ?? true },
+    });
+    successResponse(res, null, `Task ${req.body.featured ? 'featured' : 'unfeatured'}`);
+  },
+);
 
 // GET /api/v1/tasks/:id
 router.get('/:id', async (req, res) => {

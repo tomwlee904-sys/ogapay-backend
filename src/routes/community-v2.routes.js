@@ -16,7 +16,7 @@ const communityChats = new Map();   // communityId -> [{ id, senderId, sender, t
 router.get('/featured', async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 3, 10);
   const communities = await prisma.community.findMany({
-    where: { isActive: true },
+    where: {},
     include: { _count: { select: { members: true } } },
     orderBy: { members: { _count: 'desc' } },
     take: limit,
@@ -153,8 +153,12 @@ router.get('/:id', async (req, res) => {
     name: community.name,
     description: community.description,
     iconUrl: community.iconUrl,
+    coverImage: community.coverImage,
+    coverColor: community.coverColor,
+    coverTextColor: community.coverTextColor,
     accentColor: community.accentColor,
     category: community.category,
+    isActive: community.isActive,
     isPublic: community.isPublic,
     owner: community.owner,
     twitter: socials.twitter || '',
