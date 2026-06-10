@@ -162,6 +162,7 @@ model User {
   ownedCommunities  Community[]       @relation("CommunityOwner")
   communityMemberships CommunityMember[]
   communityRequests CommunityRequest[]
+  communityChatMessagesSent CommunityChatMessage[] @relation("CommunityChatMessageSender")
 
   @@map("users")
 }
@@ -569,7 +570,7 @@ model CommunityChatMessage {
   createdAt   DateTime @default(now()) @map("created_at")
 
   community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  sender      User      @relation(fields: [senderId], references: [id])
+  sender      User      @relation("CommunityChatMessageSender", fields: [senderId], references: [id])
 
   @@index([communityId, createdAt])
   @@map("community_chat_messages")
