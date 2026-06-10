@@ -12,6 +12,46 @@ const router = express.Router();
 const communitySocials = new Map(); // communityId -> { twitter, telegram, discord }
 const communityChats = new Map();   // communityId -> [{ id, senderId, sender, text, createdAt }]
 
+// ─── Featured Communities (with real stats) ────────────────────
+router.get('/featured', async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 3, 10);
+  const communities = await prisma.community.findMany({
+    where: { isActive: true },
+    include: { _count: { select: { members: true } } },
+    orderBy: { members: { _count: 'desc' } },
+    take: limit,
+  });
+
+  const enriched = await Promise.all(communities.map(async (c) => {
+    const jobCount = await prisma.task.count({
+      where: { communityId: c.id, status: { in: ['active', 'completed'] } },
+    });
+    const payments = await prisma.payment.aggregate({
+      where: { communityId: c.id, status: 'completed' },
+      _sum: { amount: true },
+    });
+    return {
+      id: c.id,
+      slug: c.slug,
+      name: c.name,
+      description: c.description,
+      coverImage: c.coverImage,
+      coverColor: c.coverColor,
+      coverTextColor: c.coverTextColor,
+      iconUrl: c.iconUrl,
+      accentColor: c.accentColor,
+      category: c.category,
+      isActive: c.isActive,
+      memberCount: c._count.members,
+      jobCount,
+      distributed: payments._sum.amount || 0,
+      createdAt: c.createdAt,
+    };
+  }));
+
+  successResponse(res, enriched);
+});
+
 // ─── List Communities ──────────────────────────────────────────
 router.get('/', async (req, res) => {
   const { category, search, sort } = req.query;
@@ -136,7 +176,8 @@ router.get('/:id', async (req, res) => {
 
 // ─── Create Community ─────────────────────────────────────────
 router.post('/', authenticate, async (req, res) => {
-  const { name, description, category, accentColor, isPublic, twitter, telegram, discord } = req.body;
+  const { name, description, category, accentColor, coverColor, coverTextColor, isActive, isPublic, twitter, telegram, discord } = req.body;
+
   if (!name || name.trim().length < 2) throw ApiError.badRequest('Community name must be at least 2 characters');
 
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + crypto.randomBytes(3).toString('hex');
@@ -148,11 +189,13 @@ router.post('/', authenticate, async (req, res) => {
       description: description?.trim(),
       category,
       accentColor: accentColor || '#7C3AED',
+      coverColor,
+      coverTextColor,
+      ...(isActive !== undefined && { isActive }),
       isPublic: isPublic !== false,
       ownerId: req.user.id,
     },
   });
-
   // Store social links in-memory
   if (twitter || telegram || discord) {
     communitySocials.set(community.id, {
@@ -174,6 +217,41 @@ router.post('/', authenticate, async (req, res) => {
   createdResponse(res, community, 'Community created');
 });
 
+// ─── Cover Image Upload ──────────────────────────────────────────
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+const { supabaseAdmin } = require('../config/supabase');
+
+router.post('/:id/cover', authenticate, upload.single('cover'), async (req, res) => {
+  const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const membership = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+    throw ApiError.forbidden('Only owners and admins can upload a cover image');
+  }
+  if (!req.file) throw ApiError.badRequest('No file uploaded');
+
+  const safeName = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '-');
+  const key = `communities/${community.id}/${Date.now()}-${safeName}`;
+  const bucket = process.env.SUPABASE_STORE_BUCKET || 'ogapay-uploads';
+  const { error } = await supabaseAdmin.storage
+    .from(bucket)
+    .upload(key, req.file.buffer, { contentType: req.file.mimetype, upsert: false });
+  if (error) throw ApiError.internal('Failed to upload cover image');
+
+  const { data } = supabaseAdmin.storage.from(bucket).getPublicUrl(key);
+
+  await prisma.community.update({
+    where: { id: community.id },
+    data: { coverImage: data.publicUrl },
+  });
+
+  successResponse(res, { coverImage: data.publicUrl }, 'Cover image uploaded');
+});
+
 // ─── Update Community ─────────────────────────────────────────
 router.patch('/:id', authenticate, async (req, res) => {
   const community = await prisma.community.findUnique({ where: { id: req.params.id } });
@@ -186,7 +264,7 @@ router.patch('/:id', authenticate, async (req, res) => {
     throw ApiError.forbidden('Only owners and admins can update the community');
   }
 
-  const { name, description, category, accentColor, isPublic, twitter, telegram, discord } = req.body;
+  const { name, description, category, accentColor, coverColor, coverTextColor, isActive, isPublic, twitter, telegram, discord } = req.body;
 
   // Update social links in-memory
   if (twitter !== undefined || telegram !== undefined || discord !== undefined) {
@@ -205,6 +283,9 @@ router.patch('/:id', authenticate, async (req, res) => {
       ...(description !== undefined && { description: description?.trim() }),
       ...(category && { category }),
       ...(accentColor && { accentColor }),
+      ...(coverColor && { coverColor }),
+      ...(coverTextColor && { coverTextColor }),
+      ...(isActive !== undefined && { isActive }),
       ...(isPublic !== undefined && { isPublic }),
     },
   });

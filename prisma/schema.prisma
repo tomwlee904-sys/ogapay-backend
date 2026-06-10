@@ -75,6 +75,7 @@ enum TaskStatus {
   DRAFT
   OPEN
   IN_PROGRESS
+  COOLING_DOWN
   COMPLETED
   DISPUTED
   CANCELLED
@@ -163,6 +164,7 @@ model User {
   communityMemberships CommunityMember[]
   communityRequests CommunityRequest[]
   communityChatMessagesSent CommunityChatMessage[] @relation("CommunityChatMessageSender")
+  waitlistEntries           Waitlist[]
 
   @@map("users")
 }
@@ -304,6 +306,13 @@ model Task {
   views           Int           @default(0)
   isRemote        Boolean       @default(true) @map("is_remote")
   estimatedTime   Int?          @map("estimated_time") // minutes
+  submissionsCount Int          @default(0) @map("submissions_count")
+  featured        Boolean       @default(false)
+  cooldownStartedAt DateTime?   @map("cooldown_started_at")
+  cooldownDurationHours Int     @default(24) @map("cooldown_duration_hours")
+  minSorsaScore   Int           @default(0) @map("min_sorsa_score")
+  requiresLinkedin Boolean      @default(false) @map("requires_linkedin")
+  requiresWallet  Boolean       @default(false) @map("requires_wallet")
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
   expiresAt       DateTime?     @map("expires_at")
@@ -311,6 +320,7 @@ model Task {
   poster          User          @relation("TaskPoster", fields: [posterId], references: [id])
   submissions     TaskSubmission[]
   disputes        Dispute[]
+  waitlistEntries Waitlist[]
 
   @@index([status])
   @@index([category])
@@ -342,6 +352,19 @@ model TaskSubmission {
 
   @@unique([taskId, workerId])
   @@map("task_submissions")
+}
+
+model Waitlist {
+  id        String   @id @default(uuid())
+  taskId    String   @map("task_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@map("waitlist_entries")
 }
 
 model Dispute {
@@ -538,21 +561,25 @@ model NewsletterSubscriber {
 }
 
 model Community {
-  id          String   @id @default(uuid())
-  name        String
-  slug        String   @unique
-  description String?
-  iconUrl     String?  @map("icon_url")
-  accentColor String?  @map("accent_color") @default("#7C3AED")
-  category    String?
-  isPublic    Boolean  @default(true) @map("is_public")
-  ownerId     String   @map("owner_id")
-  twitter     String?  @map("twitter")
-  telegram    String?  @map("telegram")
-  discord     String?  @map("discord")
-  metadata    Json?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(uuid())
+  name          String
+  slug          String   @unique
+  description   String?
+  iconUrl       String?  @map("icon_url")
+  coverImage    String?  @map("cover_image")
+  coverColor    String?  @map("cover_color") @default("#EBF0FF")
+  coverTextColor String? @map("cover_text_color") @default("#3B5BDB")
+  accentColor   String?  @map("accent_color") @default("#7C3AED")
+  category      String?
+  isActive      Boolean  @default(false) @map("is_active")
+  isPublic      Boolean  @default(true) @map("is_public")
+  ownerId       String   @map("owner_id")
+  twitter       String?  @map("twitter")
+  telegram      String?  @map("telegram")
+  discord       String?  @map("discord")
+  metadata      Json?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   owner       User                    @relation("CommunityOwner", fields: [ownerId], references: [id])
   members     CommunityMember[]
