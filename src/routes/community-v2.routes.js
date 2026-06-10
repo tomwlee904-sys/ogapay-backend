@@ -13,6 +13,20 @@ const communitySocials = new Map(); // communityId -> { twitter, telegram, disco
 const communityChats = new Map();   // communityId -> [{ id, senderId, sender, text, createdAt }]
 
 // ─── Featured Communities (with real stats) ────────────────────
+// Map community-style category names to TaskCategory enum values
+const TASK_CATEGORY_MAP = {
+  'social': 'SOCIAL_MEDIA',
+  'crypto': 'OTHER',
+  'business': 'OTHER',
+  'content': 'CONTENT_WRITING',
+  'design': 'DESIGN',
+  'marketing': 'OTHER',
+  'technology': 'WEB_RESEARCH',
+  'gaming': 'OTHER',
+  'education': 'OTHER',
+  'other': 'OTHER',
+};
+
 router.get('/featured', async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 3, 10);
   const communities = await prisma.community.findMany({
@@ -23,31 +37,54 @@ router.get('/featured', async (req, res) => {
   });
 
   const enriched = await Promise.all(communities.map(async (c) => {
-    const jobCount = await prisma.task.count({
-      where: { category: c.category, status: { in: ['OPEN', 'COMPLETED'] } },
-    });
-    const approvedSubs = await prisma.taskSubmission.findMany({
-      where: { status: 'APPROVED', task: { category: c.category } },
-      select: { task: { select: { reward: true } } },
-    });
-    const distributed = approvedSubs.reduce((sum, s) => sum + Number(s.task.reward), 0);
-    return {
-      id: c.id,
-      slug: c.slug,
-      name: c.name,
-      description: c.description,
-      coverImage: c.coverImage,
-      coverColor: c.coverColor,
-      coverTextColor: c.coverTextColor,
-      iconUrl: c.iconUrl,
-      accentColor: c.accentColor,
-      category: c.category,
-      isActive: c.isActive,
-      memberCount: c._count.members,
-      jobCount,
-      distributed,
-      createdAt: c.createdAt,
-    };
+    const taskCat = TASK_CATEGORY_MAP[c.category?.toLowerCase()] || 'OTHER';
+    try {
+      const [jobCount, approvedSubs] = await Promise.all([
+        prisma.task.count({
+          where: { category: taskCat, status: { in: ['OPEN', 'COMPLETED'] } },
+        }),
+        prisma.taskSubmission.findMany({
+          where: { status: 'APPROVED', task: { category: taskCat } },
+          select: { task: { select: { reward: true } } },
+        }),
+      ]);
+      const distributed = approvedSubs.reduce((sum, s) => sum + Number(s.task.reward), 0);
+      return {
+        id: c.id,
+        slug: c.slug,
+        name: c.name,
+        description: c.description,
+        coverImage: c.coverImage,
+        coverColor: c.coverColor,
+        coverTextColor: c.coverTextColor,
+        iconUrl: c.iconUrl,
+        accentColor: c.accentColor,
+        category: c.category,
+        isActive: c.isActive,
+        memberCount: c._count.members,
+        jobCount,
+        distributed,
+        createdAt: c.createdAt,
+      };
+    } catch {
+      return {
+        id: c.id,
+        slug: c.slug,
+        name: c.name,
+        description: c.description,
+        coverImage: c.coverImage,
+        coverColor: c.coverColor,
+        coverTextColor: c.coverTextColor,
+        iconUrl: c.iconUrl,
+        accentColor: c.accentColor,
+        category: c.category,
+        isActive: c.isActive,
+        memberCount: c._count.members,
+        jobCount: 0,
+        distributed: 0,
+        createdAt: c.createdAt,
+      };
+    }
   }));
 
   successResponse(res, enriched);
@@ -68,7 +105,7 @@ router.get('/', async (req, res) => {
   const communities = await prisma.community.findMany({
     where,
     include: {
-      _count: { select: { members: true, invites: true } },
+      _count: { select: { members: true } },
     },
     orderBy: sort === 'newest' 
       ? { createdAt: 'desc' }
@@ -100,7 +137,7 @@ router.get('/:id', async (req, res) => {
     },
     include: {
       owner: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
-      _count: { select: { members: true, invites: true, requests: true } },
+      _count: { select: { members: true, requests: true } },
       members: {
         include: {
           user: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
@@ -129,18 +166,19 @@ router.get('/:id', async (req, res) => {
   }
 
   // Count tasks matching this community's category
+  const taskCat = TASK_CATEGORY_MAP[community.category?.toLowerCase()] || 'OTHER';
   const openJobs = await prisma.task.count({
-    where: { category: community.category, status: 'OPEN' },
+    where: { category: taskCat, status: 'OPEN' },
   });
   const completedJobs = await prisma.task.count({
-    where: { category: community.category, status: 'COMPLETED' },
+    where: { category: taskCat, status: 'COMPLETED' },
   });
 
   // Sum earnings from completed submissions for tasks in this category
   const completedSubmissions = await prisma.taskSubmission.findMany({
     where: {
       status: 'APPROVED',
-      task: { category: community.category },
+      task: { category: taskCat },
     },
     select: { task: { select: { reward: true } } },
   });
@@ -699,7 +737,8 @@ router.get('/:id/jobs/open', async (req, res) => {
   const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
   const skip = (page - 1) * limit;
 
-  const where = { category: community.category, status: 'OPEN' };
+  const taskCat = TASK_CATEGORY_MAP[community.category?.toLowerCase()] || 'OTHER';
+  const where = { category: taskCat, status: 'OPEN' };
 
   const [jobs, total] = await Promise.all([
     prisma.task.findMany({
@@ -747,7 +786,8 @@ router.get('/:id/jobs/completed', async (req, res) => {
   const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
   const skip = (page - 1) * limit;
 
-  const where = { category: community.category, status: 'COMPLETED' };
+  const taskCat = TASK_CATEGORY_MAP[community.category?.toLowerCase()] || 'OTHER';
+  const where = { category: taskCat, status: 'COMPLETED' };
 
   const [jobs, total] = await Promise.all([
     prisma.task.findMany({
