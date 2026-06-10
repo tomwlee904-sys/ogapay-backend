@@ -517,6 +517,7 @@ model Message {
   @@map("messages")
 }
 
+<<<<<<< HEAD
 model VaultDocument {
   id              String    @id @default(uuid())
   userId          String    @map("user_id")
@@ -741,4 +742,43 @@ model VaultRevenueLog {
 
   @@index([recordedAt])
   @@map("vault_revenue_log")
+}
+=======
+
+model Community {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  iconUrl     String?
+  coverUrl    String?
+  accentColor String   @default("#191C6B")
+  category    String   @default("social")
+  isPublic    Boolean  @default(true)
+  trending    Boolean  @default(false)
+  ownerId     String?
+  owner       User?    @relation(fields: [ownerId], references: [id])
+  memberCount Int      @default(1)
+  taskCount   Int      @default(0)
+  weeklyRewards Float  @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([isPublic])
+  @@map("communities")
+}
+
+model CommunityMember {
+  id          String   @id @default(cuid())
+  communityId String
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        String   @default("member") // member, admin, owner
+  joinedAt    DateTime @default(now())
+
+  @@unique([communityId, userId])
+  @@index([userId])
+  @@map("community_members")
 }

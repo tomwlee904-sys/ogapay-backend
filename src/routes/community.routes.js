@@ -78,6 +78,14 @@ router.post('/', authenticate, async (req, res) => {
   createdResponse(res, newCommunity, 'Community created');
 });
 
+// GET /featured - Return trending communities for homepage
+router.get("/featured", async (req, res) => {
+  const featured = communities
+    .filter(c => c.trending || c.members > 1000)
+    .slice(0, 6);
+  successResponse(res, featured);
+});
+
 router.get('/:id', async (req, res) => {
   const { ApiError } = require('../utils/apiResponse');
   const community = communities.find(c => c.id === req.params.id);
