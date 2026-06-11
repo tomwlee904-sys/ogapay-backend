@@ -2,7 +2,7 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "bash scripts/build.sh"
+    "buildCommand": "npm install --omit=dev && npx prisma db execute --stdin <<< 'ALTER TABLE IF EXISTS public.job_listings DROP CONSTRAINT IF EXISTS job_listings_employer_id_fkey;' 2>/dev/null; npx prisma db push --accept-data-loss && npx prisma generate && node prisma/seed.js"
   },
   "deploy": {
     "startCommand": "node src/index.js",
