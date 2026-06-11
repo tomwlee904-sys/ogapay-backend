@@ -154,8 +154,8 @@ function mountRoutes(base) {
   app.use(`${base}/jobs`, jobRoutes);
   app.use(`${base}/prices`, pricesRoutes);
   app.use(`${base}/messages`, messageRoutes);
-  app.use(`${base}/vault`, vaultRoutes);
   app.use(`${base}/vault/admin`, vaultAdminRoutes);
+  app.use(`${base}/vault`, vaultRoutes);
   app.use(`${base}/blog`, blogRoutes);
   app.use(`${base}/twitter`, twitterRoutes);
   app.use(`${base}/wurker`, wurkerRoutes);
