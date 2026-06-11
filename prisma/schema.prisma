@@ -10,19 +10,21 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public", "auth"]
   directUrl = env("DIRECT_URL")
+  schemas  = ["public", "auth"]
 }
 
 // ── ENUMS ─────────────────────────────────────
 
 enum UserRole {
+  @@schema("public")
   WORKER
   POSTER
   ADMIN
 }
 
 enum KycStatus {
+  @@schema("public")
   PENDING
   SUBMITTED
   APPROVED
@@ -30,6 +32,7 @@ enum KycStatus {
 }
 
 enum WalletCurrency {
+  @@schema("public")
   NGN
   USDC
   USDT
@@ -40,6 +43,7 @@ enum WalletCurrency {
 }
 
 enum TransactionType {
+  @@schema("public")
   DEPOSIT
   WITHDRAWAL
   TASK_PAYMENT
@@ -53,6 +57,7 @@ enum TransactionType {
 }
 
 enum TransactionStatus {
+  @@schema("public")
   PENDING
   PROCESSING
   COMPLETED
@@ -61,6 +66,7 @@ enum TransactionStatus {
 }
 
 enum TaskCategory {
+  @@schema("public")
   SOCIAL_MEDIA
   DATA_ENTRY
   CONTENT_WRITING
@@ -74,6 +80,7 @@ enum TaskCategory {
 }
 
 enum TaskStatus {
+  @@schema("public")
   DRAFT
   OPEN
   IN_PROGRESS
@@ -85,6 +92,7 @@ enum TaskStatus {
 }
 
 enum TaskSubmissionStatus {
+  @@schema("public")
   PENDING
   APPROVED
   REJECTED
@@ -92,6 +100,7 @@ enum TaskSubmissionStatus {
 }
 
 enum WorkerLevel {
+  @@schema("public")
   BEGINNER
   INTERMEDIATE
   ADVANCED
@@ -100,6 +109,7 @@ enum WorkerLevel {
 }
 
 enum PaymentProvider {
+  @@schema("public")
   PAYSTACK
   FLUTTERWAVE
   CRYPTO
@@ -109,6 +119,7 @@ enum PaymentProvider {
 // ── MODELS ────────────────────────────────────
 
 model User {
+  @@schema("public")
   id                String    @id @default(uuid())
   supabaseId        String?   @unique @map("supabase_id")
   email             String    @unique
@@ -176,6 +187,7 @@ model User {
 }
 
 model KycVerification {
+  @@schema("public")
   id                String    @id @default(uuid())
   userId            String    @unique @map("user_id")
   status            KycStatus @default(PENDING)
@@ -203,6 +215,7 @@ model KycVerification {
 }
 
 model Wallet {
+  @@schema("public")
   id              String         @id @default(uuid())
   userId          String         @map("user_id")
   currency        WalletCurrency
@@ -221,6 +234,7 @@ model Wallet {
 }
 
 model Transaction {
+  @@schema("public")
   id              String            @id @default(uuid())
   userId          String            @map("user_id")
   walletId        String            @map("wallet_id")
@@ -251,6 +265,7 @@ model Transaction {
 }
 
 model WorkerProfile {
+  @@schema("public")
   id              String      @id @default(uuid())
   userId          String      @unique @map("user_id")
   level           WorkerLevel @default(BEGINNER)
@@ -273,6 +288,7 @@ model WorkerProfile {
 }
 
 model PosterProfile {
+  @@schema("public")
   id              String    @id @default(uuid())
   userId          String    @unique @map("user_id")
   companyName     String?   @map("company_name")
@@ -291,6 +307,7 @@ model PosterProfile {
 }
 
 model Task {
+  @@schema("public")
   id              String        @id @default(uuid())
   posterId        String        @map("poster_id")
   title           String
@@ -335,6 +352,7 @@ model Task {
 }
 
 model TaskSubmission {
+  @@schema("public")
   id              String               @id @default(uuid())
   taskId          String               @map("task_id")
   workerId        String               @map("worker_id")
@@ -361,6 +379,7 @@ model TaskSubmission {
 }
 
 model Waitlist {
+  @@schema("public")
   id        String   @id @default(uuid())
   taskId    String   @map("task_id")
   userId    String   @map("user_id")
@@ -374,6 +393,7 @@ model Waitlist {
 }
 
 model Dispute {
+  @@schema("public")
   id              String    @id @default(uuid())
   taskId          String    @map("task_id")
   submissionId    String    @unique @map("submission_id")
@@ -397,6 +417,7 @@ model Dispute {
 }
 
 model StoreItem {
+  @@schema("public")
   id              String    @id @default(uuid())
   sellerId        String?   @map("seller_id")
   name            String
@@ -419,6 +440,7 @@ model StoreItem {
 }
 
 model StorePurchase {
+  @@schema("public")
   id          String    @id @default(uuid())
   userId      String    @map("user_id")
   itemId      String    @map("item_id")
@@ -435,6 +457,7 @@ model StorePurchase {
 }
 
 model StoreReview {
+  @@schema("public")
   id        String   @id @default(uuid())
   itemId    String   @map("item_id")
   userId    String   @map("user_id")
@@ -450,6 +473,7 @@ model StoreReview {
 }
 
 model Notification {
+  @@schema("public")
   id          String    @id @default(uuid())
   userId      String    @map("user_id")
   type        String
@@ -466,6 +490,7 @@ model Notification {
 }
 
 model RefreshToken {
+  @@schema("public")
   id          String    @id @default(uuid())
   userId      String    @map("user_id")
   token       String    @unique
@@ -480,6 +505,7 @@ model RefreshToken {
 }
 
 model Conversation {
+  @@schema("public")
   id          String    @id @default(uuid())
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
@@ -491,6 +517,7 @@ model Conversation {
 }
 
 model ConversationParticipant {
+  @@schema("public")
   id             String       @id @default(uuid())
   conversationId String       @map("conversation_id")
   userId         String       @map("user_id")
@@ -504,6 +531,7 @@ model ConversationParticipant {
 }
 
 model Message {
+  @@schema("public")
   id             String       @id @default(uuid())
   conversationId String       @map("conversation_id")
   senderId       String       @map("sender_id")
@@ -519,6 +547,7 @@ model Message {
 }
 
 model VaultDocument {
+  @@schema("public")
   id              String    @id @default(uuid())
   userId          String    @map("user_id")
   name            String
@@ -536,6 +565,7 @@ model VaultDocument {
 }
 
 model BlogPost {
+  @@schema("public")
   id              String    @id @default(uuid())
   authorId        String    @map("author_id")
   title           String
@@ -559,6 +589,7 @@ model BlogPost {
 }
 
 model NewsletterSubscriber {
+  @@schema("public")
   id        String   @id @default(uuid())
   email     String   @unique
   createdAt DateTime @default(now()) @map("created_at")
@@ -567,6 +598,7 @@ model NewsletterSubscriber {
 }
 
 model Community {
+  @@schema("public")
   id            String   @id @default(uuid())
   name          String
   slug          String   @unique
@@ -596,6 +628,7 @@ model Community {
 }
 
 model CommunityChatMessage {
+  @@schema("public")
   id          String   @id @default(uuid())
   communityId String   @map("community_id")
   senderId    String   @map("sender_id")
@@ -610,6 +643,7 @@ model CommunityChatMessage {
 }
 
 model CommunityMember {
+  @@schema("public")
   id          String   @id @default(uuid())
   communityId String   @map("community_id")
   userId      String   @map("user_id")
@@ -624,6 +658,7 @@ model CommunityMember {
 }
 
 model WalletNonce {
+  @@schema("public")
   id        String   @id @default(uuid())
   wallet    String   @unique
   nonce     String
@@ -634,6 +669,7 @@ model WalletNonce {
 }
 
 model TwitterOAuthState {
+  @@schema("public")
   id            String   @id
   userId        String   @map("user_id")
   codeVerifier  String   @map("code_verifier")
@@ -644,6 +680,7 @@ model TwitterOAuthState {
 }
 
 model CommunityRequest {
+  @@schema("public")
   id          String    @id @default(uuid())
   communityId String    @map("community_id")
   userId      String    @map("user_id")
@@ -662,7 +699,31 @@ model CommunityRequest {
 // ── Vault Revenue Distribution Models ─────────
 // $PAY token holder revenue sharing (WURK-style vault)
 
+
+
+model JobListing {
+  id                String    @id @default(uuid())
+  employerId        String    @map("employer_id")
+  jobTitle          String    @map("job_title")
+  companyName       String    @map("company_name")
+  companyLogoUrl    String?   @map("company_logo_url")
+  jobType           String    @map("job_type")
+  location          String?
+  salaryRange       String?   @map("salary_range")
+  jobDescription    String    @map("job_description")
+  requirements      String?
+  applicationLink   String?   @map("application_link")
+  applicationDeadline DateTime? @map("application_deadline")
+  status            String    @default("active")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  @@schema("public")
+  @@map("job_listings")
+}
+
 model VaultPool {
+  @@schema("public")
   id                  String    @id @default(uuid())
   totalNgp            Decimal   @default(0) @db.Decimal(20, 2) @map("total_ngn")
   totalPay            Decimal   @default(0) @db.Decimal(20, 8) @map("total_pay")
@@ -677,6 +738,7 @@ model VaultPool {
 }
 
 model VaultDistribution {
+  @@schema("public")
   id              String           @id @default(uuid())
   poolId          String           @map("pool_id")
   totalNgp        Decimal          @default(0) @db.Decimal(20, 2) @map("total_ngn")
@@ -693,6 +755,7 @@ model VaultDistribution {
 }
 
 model VaultPayout {
+  @@schema("public")
   id              String           @id @default(uuid())
   distributionId  String           @map("distribution_id")
   userId          String           @map("user_id")
@@ -713,6 +776,7 @@ model VaultPayout {
 }
 
 model VaultUserStats {
+  @@schema("public")
   userId              String           @id
   totalEarnedNgp      Decimal          @default(0) @db.Decimal(20, 2) @map("total_earned_ngn")
   totalEarnedPay      Decimal          @default(0) @db.Decimal(20, 8) @map("total_earned_pay")
@@ -728,6 +792,7 @@ model VaultUserStats {
 }
 
 model VaultRevenueLog {
+  @@schema("public")
   id              String    @id @default(uuid())
   source          String    // task_fee | store_commission | service_cut | other
   sourceId        String?   @map("source_id")
