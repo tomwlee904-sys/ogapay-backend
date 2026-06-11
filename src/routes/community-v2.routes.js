@@ -112,21 +112,65 @@ router.get('/', async (req, res) => {
       : { members: { _count: 'desc' } },
   });
 
-  successResponse(res, communities.map(c => ({
+  const catBadge = (cat) => {
+    const m = { crypto: 'Crypto', social: 'Social', design: 'Design', content: 'Content', marketing: 'Marketing', business: 'Business', technology: 'Technology', gaming: 'Gaming', education: 'Education' };
+    return (cat && m[cat.toLowerCase()]) || 'General';
+  };
+
+  const mapped = communities.map(c => ({
     id: c.id,
     slug: c.slug,
     name: c.name,
+    desc: c.description,
     description: c.description,
     iconUrl: c.iconUrl,
+    coverImage: c.coverImage,
     accentColor: c.accentColor,
+    accent: c.accentColor,
     category: c.category,
+    badge: catBadge(c.category || ''),
+    isPublic: c.isPublic,
+    isActive: c.isActive,
+    trending: c.isActive,
+    initials: (c.name || '?').split(' ').map(w => w[0]).filter(Boolean).join('').slice(0, 2).toUpperCase(),
+    members: c._count.members,
+    tasks: 0,
+    rewards: 0,
     memberCount: c._count.members,
-    taskCount: 0, // placeholder - join with tasks later
+    taskCount: 0,
     createdAt: c.createdAt,
-  })));
+  }));
+
+  const totalMembers = mapped.reduce((s, c) => s + (c.members || 0), 0);
+  const totalTasks = mapped.reduce((s, c) => s + (c.tasks || 0), 0);
+  const trending = mapped.filter(c => c.trending);
+
+  // Return frontend-expected format
+  res.json({
+    success: true,
+    data: {
+      communities: mapped,
+      stats: { total: mapped.length, members: totalMembers, tasks: totalTasks },
+      trending,
+    },
+  });
 });
 
 // ─── Get Single Community ─────────────────────────────────────
+// ─── My Invites ───────────────────────────────────────────────
+router.get('/invites/mine', authenticate, async (req, res) => {
+  const invites = await prisma.communityInvite.findMany({
+    where: { inviteeId: req.user.id, status: 'PENDING' },
+    include: {
+      community: { select: { id: true, slug: true, name: true, description: true, accentColor: true, iconUrl: true } },
+      inviter: { select: { id: true, username: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  successResponse(res, invites);
+});
+
 router.get('/:id', async (req, res) => {
   const community = await prisma.community.findFirst({
     where: {
@@ -260,7 +304,29 @@ router.post('/', authenticate, async (req, res) => {
   createdResponse(res, community, 'Community created');
 });
 
-// ─── Cover Image Upload ──────────────────────────────────────────
+
+// ─── Cover Image Upload (JSON body) ──────────────────────────────
+router.post('/:id/cover', authenticate, async (req, res, next) => {
+  // Only handle if JSON body with coverUrl is sent
+  if (!req.body || !req.body.coverUrl) return next();
+  try {
+    const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+    if (!community) throw ApiError.notFound('Community not found');
+    const membership = await prisma.communityMember.findUnique({
+      where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+    });
+    if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+      throw ApiError.forbidden('Only owners and admins can update the cover image');
+    }
+    await prisma.community.update({
+      where: { id: community.id },
+      data: { coverImage: req.body.coverUrl },
+    });
+    successResponse(res, { coverImage: req.body.coverUrl }, 'Cover image updated');
+  } catch (e) { next(e); }
+});
+
+// ─── Cover Image Upload (Multipart) ──────────────────────────────
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const { supabaseAdmin } = require('../config/supabase');
@@ -592,20 +658,6 @@ router.patch('/invites/:inviteId', authenticate, async (req, res) => {
     });
     successResponse(res, null, 'Invite declined');
   }
-});
-
-// ─── My Invites ───────────────────────────────────────────────
-router.get('/invites/mine', authenticate, async (req, res) => {
-  const invites = await prisma.communityInvite.findMany({
-    where: { inviteeId: req.user.id, status: 'PENDING' },
-    include: {
-      community: { select: { id: true, slug: true, name: true, description: true, accentColor: true, iconUrl: true } },
-      inviter: { select: { id: true, username: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  successResponse(res, invites);
 });
 
 // ─── Join Requests (for community) ────────────────────────────
