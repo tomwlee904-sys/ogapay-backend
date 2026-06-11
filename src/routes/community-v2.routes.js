@@ -361,6 +361,26 @@ router.post('/:id/cover', authenticate, upload.single('cover'), async (req, res)
   successResponse(res, { coverImage: data.publicUrl }, 'Cover image uploaded');
 });
 
+// ─── Avatar Image Upload ──────────────────────────────
+router.post('/:id/avatar', authenticate, async (req, res, next) => {
+  if (!req.body || !req.body.avatarUrl) return next();
+  try {
+    const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+    if (!community) throw ApiError.notFound('Community not found');
+    const membership = await prisma.communityMember.findUnique({
+      where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+    });
+    if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+      throw ApiError.forbidden('Only owners and admins can update the avatar');
+    }
+    await prisma.community.update({
+      where: { id: community.id },
+      data: { iconUrl: req.body.avatarUrl },
+    });
+    successResponse(res, { iconUrl: req.body.avatarUrl }, 'Avatar image updated');
+  } catch (e) { next(e); }
+});
+
 // ─── Update Community ─────────────────────────────────────────
 router.patch('/:id', authenticate, async (req, res) => {
   const community = await prisma.community.findUnique({ where: { id: req.params.id } });
