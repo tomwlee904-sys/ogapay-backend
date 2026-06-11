@@ -35,6 +35,7 @@ enum WalletCurrency {
   ETH
   MATIC
   SOL
+  PAY
 }
 
 enum TransactionType {
@@ -166,6 +167,8 @@ model User {
   communityMemberships CommunityMember[]
   communityRequests CommunityRequest[]
   communityChatMessagesSent CommunityChatMessage[] @relation("CommunityChatMessageSender")
+  vaultPayouts    VaultPayout[]
+  vaultStats     VaultUserStats?
   waitlistEntries           Waitlist[]
 
   @@map("users")
@@ -653,4 +656,85 @@ model CommunityRequest {
 
   @@unique([communityId, userId])
   @@map("community_requests")
+}
+
+// ── Vault Revenue Distribution Models ─────────
+// $PAY token holder revenue sharing (WURK-style vault)
+
+model VaultPool {
+  id                  String    @id @default(uuid())
+  totalNgp            Decimal   @default(0) @db.Decimal(20, 2) @map("total_ngn")
+  totalPay            Decimal   @default(0) @db.Decimal(20, 8) @map("total_pay")
+  lastDistributionAt  DateTime? @map("last_distribution_at")
+  nextDistributionAt  DateTime? @map("next_distribution_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  distributions       VaultDistribution[]
+
+  @@map("vault_pool")
+}
+
+model VaultDistribution {
+  id              String           @id @default(uuid())
+  poolId          String           @map("pool_id")
+  totalNgp        Decimal          @default(0) @db.Decimal(20, 2) @map("total_ngn")
+  totalPay        Decimal          @default(0) @db.Decimal(20, 8) @map("total_pay")
+  eligibleCount   Int              @default(0) @map("eligible_count")
+  totalPayWeight  Decimal          @default(0) @db.Decimal(30, 8) @map("total_pay_weight")
+  distributedAt   DateTime         @default(now()) @map("distributed_at")
+
+  pool            VaultPool        @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  payouts         VaultPayout[]
+
+  @@index([distributedAt])
+  @@map("vault_distributions")
+}
+
+model VaultPayout {
+  id              String           @id @default(uuid())
+  distributionId  String           @map("distribution_id")
+  userId          String           @map("user_id")
+  payHolding      Decimal          @default(0) @db.Decimal(30, 8) @map("pay_holding")
+  payWeight       Decimal          @default(0) @db.Decimal(30, 8) @map("pay_weight")
+  shareNgp        Decimal          @default(0) @db.Decimal(20, 2) @map("share_ngn")
+  sharePay        Decimal          @default(0) @db.Decimal(20, 8) @map("share_pay")
+  status          String           @default("pending")  // pending | paid | failed
+  paidAt          DateTime?        @map("paid_at")
+  createdAt       DateTime         @default(now()) @map("created_at")
+
+  distribution    VaultDistribution @relation(fields: [distributionId], references: [id], onDelete: Cascade)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([distributionId])
+  @@map("vault_payouts")
+}
+
+model VaultUserStats {
+  userId              String           @id
+  totalEarnedNgp      Decimal          @default(0) @db.Decimal(20, 2) @map("total_earned_ngn")
+  totalEarnedPay      Decimal          @default(0) @db.Decimal(20, 8) @map("total_earned_pay")
+  distributionsReceived Int           @default(0) @map("distributions_received")
+  payBalance           Decimal         @default(0) @db.Decimal(30, 8) @map("pay_balance")
+  isEligible           Boolean         @default(false) @map("is_eligible")
+  lastActiveAt         DateTime?       @map("last_active_at")
+  updatedAt            DateTime        @updatedAt @map("updated_at")
+
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("vault_user_stats")
+}
+
+model VaultRevenueLog {
+  id              String    @id @default(uuid())
+  source          String    // task_fee | store_commission | service_cut | other
+  sourceId        String?   @map("source_id")
+  amountNgp       Decimal   @default(0) @db.Decimal(20, 2) @map("amount_ngn")
+  amountPay       Decimal   @default(0) @db.Decimal(20, 8) @map("amount_pay")
+  description     String?
+  recordedAt      DateTime  @default(now()) @map("recorded_at")
+
+  @@index([recordedAt])
+  @@map("vault_revenue_log")
 }

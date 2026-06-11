@@ -46,6 +46,7 @@ const jobRoutes = require('./routes/job.routes');
 const pricesRoutes = require('./routes/prices.routes');
 const messageRoutes = require('./routes/message.routes');
 const vaultRoutes = require('./routes/vault.routes');
+const vaultAdminRoutes = require('./routes/vault-admin.routes');
 const blogRoutes = require('./routes/blog.routes');
 const twitterRoutes = require('./routes/twitter.routes');
 
@@ -124,6 +125,8 @@ if (process.env.NODE_ENV !== 'test') {
     }
   });
   logger.info('Cooldown cron scheduled: */15 * * * *');
+  const { scheduleVaultDistribution } = require('./services/vault.cron');
+  scheduleVaultDistribution();
 }
 
 // ── API Routes ────────────────────────────────
@@ -152,6 +155,7 @@ function mountRoutes(base) {
   app.use(`${base}/prices`, pricesRoutes);
   app.use(`${base}/messages`, messageRoutes);
   app.use(`${base}/vault`, vaultRoutes);
+  app.use(`${base}/vault/admin`, vaultAdminRoutes);
   app.use(`${base}/blog`, blogRoutes);
   app.use(`${base}/twitter`, twitterRoutes);
   app.use(`${base}/wurker`, wurkerRoutes);

@@ -1,4 +1,5 @@
 'use strict';
+const vaultService = require('./vault.service');
 
 const { v4: uuidv4 } = require('uuid');
 const { prisma } = require('../config/database');
@@ -31,7 +32,7 @@ const lockFundsForTask = async (userId, taskId, amount, currency) => {
     throw ApiError.badRequest(`Insufficient balance. Need ${formatAmount(totalRequired, currency)}, available ${formatAmount(availableBalance, currency)}`);
   }
 
-  return prisma.$transaction(async (db) => {
+  const escrowResult = await prisma.$transaction(async (db) => {
     await db.wallet.update({
       where: { id: wallet.id },
       data: {
@@ -60,6 +61,16 @@ const lockFundsForTask = async (userId, taskId, amount, currency) => {
 
     return { txId: tx.id, escrowed: totalRequired, fee: platformFee };
   });
+
+  // Log platform fee to vault for distribution
+  vaultService.logRevenue({
+    source: 'task_fee',
+    sourceId: taskId,
+    amountNgp: platformFee,
+    description: `Platform fee for task ${taskId}`,
+  }).catch(err => console.error('Vault revenue log failed:', err.message));
+
+  return escrowResult;
 };
 
 const releaseEscrow = async (taskId, workerId, amount, currency) => {
@@ -78,7 +89,7 @@ const releaseEscrow = async (taskId, workerId, amount, currency) => {
 
   const reference = `OGA-PAY-${uuidv4().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
 
-  return prisma.$transaction(async (db) => {
+  const escrowResult = await prisma.$transaction(async (db) => {
     await db.wallet.update({
       where: { id: posterWallet.id },
       data: {
@@ -140,7 +151,7 @@ const refundEscrow = async (taskId, reason = 'TASK_CANCELLED') => {
 
   const totalLocked = parseFloat(task.reward) * task.maxWorkers;
 
-  return prisma.$transaction(async (db) => {
+  const escrowResult = await prisma.$transaction(async (db) => {
     const posterWallet = await db.wallet.findUnique({
       where: { userId_currency: { userId: task.posterId, currency: task.currency } },
     });
