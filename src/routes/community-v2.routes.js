@@ -520,6 +520,37 @@ router.post('/:id/join', authenticate, async (req, res) => {
   }
 });
 
+
+// ─── Request to Join (with message) ────────────────────────────
+router.post('/:id/request', authenticate, async (req, res) => {
+  const { message, attachments } = req.body;
+  const community = await prisma.community.findFirst({
+    where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
+  });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const existing = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (existing) throw ApiError.conflict('Already a member');
+
+  const existingRequest = await prisma.communityRequest.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (existingRequest) throw ApiError.conflict('Join request already exists');
+
+  const request = await prisma.communityRequest.create({
+    data: {
+      communityId: community.id,
+      userId: req.user.id,
+      message: message?.trim() || '',
+      attachments: attachments || [],
+    },
+  });
+
+  createdResponse(res, { requestId: request.id }, 'Join request submitted');
+});
+
 // ─── Leave Community ──────────────────────────────────────────
 router.post('/:id/leave', authenticate, async (req, res) => {
   const community = await prisma.community.findFirst({

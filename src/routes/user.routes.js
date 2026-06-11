@@ -108,6 +108,36 @@ router.get('/public/:username/blogs', async (req, res) => {
   successResponse(res, posts);
 });
 
+
+// GET /api/v1/users/public/:username/communities
+router.get('/public/:username/communities', async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { username: req.params.username } });
+  if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+  const memberships = await prisma.communityMember.findMany({
+    where: { userId: user.id },
+    include: {
+      community: {
+        include: { _count: { select: { members: true } } },
+      },
+    },
+    orderBy: { joinedAt: 'desc' },
+  });
+
+  successResponse(res, memberships.map(m => ({
+    id: m.community.id,
+    slug: m.community.slug,
+    name: m.community.name,
+    description: m.community.description,
+    coverImage: m.community.coverImage,
+    accentColor: m.community.accentColor,
+    memberCount: m.community._count.members,
+    role: m.role,
+    owner: { username: user.username },
+    initials: (m.community.name || '?').split(' ').map(w => w[0]).filter(Boolean).join('').slice(0, 2).toUpperCase(),
+  })));
+});
+
 // GET /api/v1/users/:username
 router.get("/:username", async (req, res) => {
   const data = await userService.getWorkerPublicProfile(req.params.username);
