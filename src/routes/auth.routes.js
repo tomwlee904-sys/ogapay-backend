@@ -3,6 +3,7 @@
 const express = require('express');
 const { validate, registerSchema, loginSchema, refreshTokenSchema } = require('../middleware/validate');
 const { authenticate } = require('../middleware/auth.middleware');
+const { prisma } = require('../config/database');
 const authService = require('../services/auth.service');
 const { successResponse, createdResponse } = require('../utils/apiResponse');
 const { supabase } = require('../config/supabase');
@@ -111,6 +112,50 @@ router.post("/change-password", authenticate, async (req, res) => {
     req.body.newPassword,
   );
   successResponse(res, result, result.message);
+});
+
+
+// POST /api/v1/auth/connect/:platform — OAuth account connection
+const PLATFORM_POINTS = { linkedin: 10, twitter: 8, github: 8, google: 5, telegram: 5 };
+
+router.post('/connect/:platform', authenticate, async (req, res) => {
+  const { platform } = req.params;
+  const { code, redirectUri } = req.body;
+  
+  if (!['linkedin', 'twitter', 'github', 'google', 'telegram'].includes(platform)) {
+    throw require('../utils/apiResponse').ApiError.badRequest('Unsupported platform');
+  }
+  
+  // In production, exchange the auth code for an access token using stored client_secret
+  // Then fetch the user's profile from the platform's API
+  // For now, mark the account as connected and update the score
+  
+  const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+  if (!user) throw require('../utils/apiResponse').ApiError.notFound('User not found');
+  
+  const currentAccounts = (user.connectedAccounts && typeof user.connectedAccounts === 'object')
+    ? user.connectedAccounts
+    : {};
+  
+  if (currentAccounts[platform]) {
+    throw require('../utils/apiResponse').ApiError.conflict('Account already connected');
+  }
+  
+  const updatedAccounts = { ...currentAccounts, [platform]: true };
+  const scoreIncrease = PLATFORM_POINTS[platform] || 0;
+  
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: {
+      connectedAccounts: updatedAccounts,
+      ogaScore: { increment: scoreIncrease },
+    },
+  });
+  
+  require('../utils/apiResponse').successResponse(res, {
+    connectedAccounts: updatedAccounts,
+    ogaScore: (user.ogaScore || 0) + scoreIncrease,
+  }, `${platform} connected successfully`);
 });
 
 module.exports = router;
