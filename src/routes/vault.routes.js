@@ -282,3 +282,143 @@ router.post('/claim', async (req, res) => {
     walletAddress: user.walletAddress,
   }, `Claimed $${totalClaimed.toLocaleString()} to your Solana wallet from ${pendingPayouts.length} payout(s)`);
 });
+
+// ── GET /vault/history/batches — Paginated batch list ──
+router.get('/history/batches', async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = 10;
+  const skip = (page - 1) * limit;
+
+  const [batches, total] = await Promise.all([
+    prisma.vaultDistribution.findMany({
+      orderBy: { distributedAt: 'desc' },
+      skip,
+      take: limit,
+      select: {
+        id: true,
+        totalNgp: true,
+        totalPay: true,
+        eligibleCount: true,
+        distributedAt: true,
+        _count: { select: { payouts: true } },
+      },
+    }),
+    prisma.vaultDistribution.count(),
+  ]);
+
+  successResponse(res, {
+    batches: batches.map(b => ({
+      id: b.id,
+      batchNumber: b.distributedAt ? Math.floor(new Date(b.distributedAt).getTime() / 1000) % 100000 : 0,
+      distributedAt: b.distributedAt,
+      totalPay: Number(b.totalPay || b.totalNgp || 0),
+      status: 'COMPLETED',
+      payoutCount: b._count?.payouts || 0,
+    })),
+    page,
+    totalPages: Math.ceil(total / limit),
+    totalBatches: total,
+  });
+});
+
+// ── GET /vault/history/batches/:batchId — Per-wallet breakdown for a batch ──
+router.get('/history/batches/:batchId', async (req, res) => {
+  const { batchId } = req.params;
+
+  const payouts = await prisma.vaultPayout.findMany({
+    where: { distributionId: batchId },
+    orderBy: { shareNgp: 'desc' },
+    take: 50,
+    select: {
+      userId: true,
+      payHolding: true,
+      shareNgp: true,
+      status: true,
+      user: { select: { walletAddress: true, username: true } },
+    },
+  });
+
+  const totalWeight = payouts.reduce((s, p) => s + Number(p.payHolding), 0);
+
+  successResponse(res, {
+    wallets: payouts.map(p => ({
+      wallet: p.user?.walletAddress || `user_${p.userId?.slice(0, 8)}`,
+      username: p.user?.username || null,
+      amount: Number(p.shareNgp),
+      vaultSharePct: totalWeight > 0 ? (Number(p.payHolding) / totalWeight) * 100 : 0,
+      status: p.status,
+    })),
+    batchId,
+  });
+});
+
+// ── GET /vault/lookup/rewards — Wallet rewards history ──
+router.get('/lookup/rewards', async (req, res) => {
+  const { wallet, range = '7d' } = req.query;
+  if (!wallet) {
+    return successResponse(res, null, 'Wallet address required');
+  }
+
+  const user = await prisma.user.findFirst({
+    where: { walletAddress: wallet },
+    select: { id: true },
+  });
+
+  if (!user) {
+    return successResponse(res, {
+      totalReceivedPay: 0,
+      completedDistributions: 0,
+      otherEntries: 0,
+      receivedInPeriodPay: 0,
+      currentUsdEstimate: 0,
+      chartData: [],
+    });
+  }
+
+  let dateFrom;
+  switch (range) {
+    case '7d': dateFrom = new Date(Date.now() - 7 * 86400000); break;
+    case '30d': dateFrom = new Date(Date.now() - 30 * 86400000); break;
+    case '1y': dateFrom = new Date(Date.now() - 365 * 86400000); break;
+    default: dateFrom = new Date(Date.now() - 7 * 86400000);
+  }
+
+  // Get all paid payouts for this user
+  const allPayouts = await prisma.vaultPayout.findMany({
+    where: { userId: user.id, status: 'paid' },
+    orderBy: { paidAt: 'desc' },
+    include: { distribution: { select: { distributedAt: true } } },
+  });
+
+  const completedDistributions = allPayouts.length;
+  const totalReceivedPay = allPayouts.reduce((s, p) => s + Number(p.shareNgp || p.sharePay || 0), 0);
+
+  // Payouts within the selected time range
+  const periodPayouts = allPayouts.filter(p => {
+    const d = p.paidAt || p.updatedAt || p.distribution?.distributedAt;
+    return d && new Date(d) >= dateFrom;
+  });
+
+  const receivedInPeriodPay = periodPayouts.reduce((s, p) => s + Number(p.shareNgp || p.sharePay || 0), 0);
+
+  // Chart data grouped by day
+  const chartMap = new Map();
+  for (const p of periodPayouts) {
+    const d = p.paidAt || p.updatedAt || p.distribution?.distributedAt;
+    if (!d) continue;
+    const day = new Date(d).toISOString().slice(0, 10);
+    chartMap.set(day, (chartMap.get(day) || 0) + Number(p.shareNgp || p.sharePay || 0));
+  }
+  const chartData = Array.from(chartMap.entries())
+    .map(([date, amount]) => ({ date, amount: Math.round(amount * 100) / 100 }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  successResponse(res, {
+    totalReceivedPay: Math.round(totalReceivedPay * 100) / 100,
+    completedDistributions,
+    otherEntries: 0,
+    receivedInPeriodPay: Math.round(receivedInPeriodPay * 100) / 100,
+    currentUsdEstimate: 0,
+    chartData,
+  });
+});
