@@ -2,7 +2,7 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "bash scripts/prebuild.sh && npm install --omit=dev && npx prisma db push --accept-data-loss && npx prisma generate && node prisma/seed.js"
+    "buildCommand": "npm install --omit=dev && bash scripts/prebuild.sh && npx prisma db push --accept-data-loss && npx prisma generate && node prisma/seed.js"
   },
   "deploy": {
     "startCommand": "node src/index.js",
