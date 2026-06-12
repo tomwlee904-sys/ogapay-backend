@@ -14,7 +14,7 @@ const scheduleVaultDistribution = () => {
     try {
       const result = await vaultService.runDistribution();
       if (result.distributed) {
-        logger.info(`✅ Vault distribution: ₦${result.totalNgp} to ${result.recipients} holders. Next: ${result.nextDistributionAt}`);
+        logger.info(`✅ Vault distribution: $${result.totalNgp} to ${result.recipients} holders. Next: ${result.nextDistributionAt}`);
       } else {
         logger.info(`⏸ Vault distribution skipped: ${result.reason}`);
       }

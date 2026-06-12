@@ -29,7 +29,7 @@ const logRevenue = async ({ source, sourceId, amountNgp, description }) => {
       });
     }
 
-    logger.info(`Revenue logged: ${source} — ₦${amountNgp}`);
+    logger.info(`Revenue logged: ${source} — $${amountNgp}`);
   } catch (err) {
     logger.error(`Failed to log revenue: ${err.message}`);
   }
@@ -119,7 +119,7 @@ const runDistribution = async () => {
     const userWeight = Number(holder.balance);
     const shareNgp = (userWeight / totalPayWeight) * poolTotal;
 
-    if (shareNgp < 1) continue; // Skip dust (< ₦1)
+    if (shareNgp < 1) continue; // Skip dust (< $1)
 
     payouts.push({
       distributionId: distribution.id,
@@ -167,7 +167,7 @@ const runDistribution = async () => {
     },
   });
 
-  logger.info(`Vault distribution completed: ₦${poolTotal} distributed to ${payouts.length} holders`);
+  logger.info(`Vault distribution completed: $${poolTotal} distributed to ${payouts.length} holders`);
 
   return {
     distributed: true,

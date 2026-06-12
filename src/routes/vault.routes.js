@@ -36,6 +36,53 @@ router.get('/', async (req, res) => {
   });
 });
 
+// ── Public: Lookup any user's vault eligibility ──
+router.get('/lookup', async (req, res) => {
+  const { username } = req.query;
+  if (!username) {
+    return successResponse(res, null, 'Username required');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { username: username.toLowerCase() },
+    select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true },
+  });
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+
+  // Get vault stats
+  const stats = await prisma.vaultUserStats.findUnique({
+    where: { userId: user.id },
+  });
+
+  // Get $PAY balance
+  const payWallet = await prisma.wallet.findUnique({
+    where: { userId_currency: { userId: user.id, currency: 'PAY' } },
+  });
+
+  const payBalance = Number(payWallet?.balance || 0);
+  const totalEarnedNgp = Number(stats?.totalEarnedNgp || 0);
+  const distributionsReceived = stats?.distributionsReceived || 0;
+  const isEligible = (stats?.isEligible || payBalance > 0) && payBalance > 0;
+
+  successResponse(res, {
+    user: {
+      username: user.username,
+      name: `${user.firstName} ${user.lastName}`,
+      avatarUrl: user.avatarUrl,
+    },
+    vault: {
+      payBalance,
+      totalEarned: totalEarnedNgp,
+      distributionsReceived,
+      isEligible,
+      estimatedNextPayout: 0, // Simplified without calculating
+    },
+  });
+});
+
 // ── Auth required for user-specific vault data ──
 router.use(authenticate);
 
@@ -206,7 +253,7 @@ router.post('/claim', async (req, res) => {
 
   let totalClaimed = 0;
   for (const payout of pendingPayouts) {
-    // Credit to user's NGN wallet
+    // Credit to user's wallet
     await vaultService.creditPayoutToWallet(userId, Number(payout.shareNgp));
 
     // Mark as paid
@@ -221,5 +268,5 @@ router.post('/claim', async (req, res) => {
   successResponse(res, {
     claimed: pendingPayouts.length,
     totalNgp: totalClaimed,
-  }, `Claimed ₦${totalClaimed.toLocaleString()} from ${pendingPayouts.length} payout(s)`);
+  }, `Claimed $${totalClaimed.toLocaleString()} from ${pendingPayouts.length} payout(s)`);
 });

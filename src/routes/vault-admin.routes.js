@@ -85,7 +85,7 @@ router.post('/add-revenue', requireAdmin, async (req, res) => {
     description: description || 'Manual admin revenue entry',
   });
 
-  successResponse(res, { amountNgp }, `₦${amountNgp} added to vault pool`);
+  successResponse(res, { amountNgp }, `$${amountNgp} added to vault pool (USD)`);
 });
 
 module.exports = router;
