@@ -41,6 +41,19 @@ router.post('/avatar', authenticate, upload.single('avatar'), async (req, res) =
   successResponse(res, data, 'Avatar updated');
 });
 
+// POST /api/v1/users/wallet — Save wallet connection (for non-Solana wallets)
+router.post('/wallet', authenticate, async (req, res) => {
+  const { walletAddress, provider } = req.body;
+  if (!walletAddress) {
+    throw require('../utils/apiResponse').ApiError.badRequest('Wallet address required');
+  }
+  const updated = await prisma.user.update({
+    where: { id: req.user.id },
+    data: { walletAddress, walletProvider: provider || 'phantom', walletConnectedAt: new Date() },
+  });
+  res.json({ success: true, walletAddress: updated.walletAddress });
+});
+
 // GET /api/v1/users/transactions/history
 router.get('/transactions/history', authenticate, async (req, res) => {
   const { page = 1, limit = 20, type, currency } = req.query;

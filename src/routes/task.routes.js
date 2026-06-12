@@ -98,19 +98,32 @@ router.get('/my/created', authenticate, async (req, res) => {
 });
 
 // GET /api/v1/tasks/my/submissions — Worker's submissions
-router.get('/my/submissions', authenticate, authorize('WORKER', 'ADMIN'), async (req, res) => {
-  const { page = 1, limit = 20, status } = req.query;
+router.get('/my/submissions', authenticate, async (req, res) => {
   const { prisma } = require('../config/database');
-  const where = { workerId: req.user.id, ...(status && { status }) };
-  const [submissions, total] = await Promise.all([
-    prisma.taskSubmission.findMany({
-      where, skip: (page - 1) * limit, take: parseInt(limit),
-      orderBy: { createdAt: 'desc' },
-      include: { task: { select: { id: true, title: true, reward: true, currency: true, category: true } } },
-    }),
-    prisma.taskSubmission.count({ where }),
-  ]);
-  paginatedResponse(res, submissions, paginate(page, limit, total));
+  const submissions = await prisma.taskSubmission.findMany({
+    where: { workerId: req.user.id },
+    include: {
+      task: {
+        select: { id: true, title: true, description: true, reward: true, currency: true, category: true, status: true,
+          poster: { select: { username: true, avatarUrl: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+  const active = submissions.filter(s => s.status === 'PENDING');
+  const completed = submissions.filter(s => s.status === 'APPROVED');
+  const rejected = submissions.filter(s => s.status === 'REJECTED');
+  const { successResponse } = require('../utils/apiResponse');
+  successResponse(res, {
+    submissions,
+    buckets: { active, completed, rejected },
+    stats: {
+      totalEarned: completed.reduce((sum, s) => sum + Number(s.task?.reward || 0), 0),
+      totalCompleted: completed.length,
+      totalPending: active.length,
+    },
+  });
 });
 
 

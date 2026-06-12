@@ -88,7 +88,51 @@ router.post('/logout', authenticate, async (req, res) => {
 
 // GET /api/v1/auth/me
 router.get('/me', authenticate, async (req, res) => {
-  successResponse(res, req.user, 'User fetched');
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: {
+        kyc: { select: { status: true } },
+        wallets: {
+          select: { balance: true, currency: true, lockedBalance: true, isActive: true },
+        },
+        _count: {
+          select: { taskSubmissions: true, tasksCreated: true, referrals: true },
+        },
+      },
+    });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const walletMap = {};
+    if (user.wallets) {
+      for (const w of user.wallets) {
+        walletMap[w.currency] = { balance: Number(w.balance), pendingWithdrawals: Number(w.lockedBalance) };
+      }
+    }
+    const bankAccount = user.bankAccount ? { accountNumber: user.bankAccount, bankName: user.bankName } : null;
+    const onboarding = {
+      profileComplete: !!(user.firstName && user.lastName && user.avatarUrl),
+      emailVerified: user.isEmailVerified,
+      walletConnected: !!user.walletAddress,
+      bankAdded: !!user.bankAccount,
+      allComplete: !!(user.firstName && user.lastName && user.isEmailVerified && user.walletAddress),
+    };
+    const { wallets, kyc, passwordHash, ...safeUser } = user;
+    const response = {
+      id: safeUser.id, email: safeUser.email, firstName: safeUser.firstName,
+      lastName: safeUser.lastName, username: safeUser.username,
+      avatar: safeUser.avatarUrl, displayName: safeUser.firstName + ' ' + safeUser.lastName,
+      bio: safeUser.workerProfileBio || null, role: safeUser.role,
+      walletAddress: safeUser.walletAddress || null, walletProvider: safeUser.walletProvider || null,
+      walletConnectedAt: safeUser.walletConnectedAt ? safeUser.walletConnectedAt.toISOString() : null,
+      referralCode: safeUser.referralCode, isEmailVerified: safeUser.isEmailVerified,
+      kycStatus: kyc?.status || null, onboardingComplete: safeUser.onboardingComplete || false,
+      wallet: walletMap, bankAccount, onboarding, _count: user._count, createdAt: safeUser.createdAt,
+    };
+    return res.json({ success: true, user: response });
+  } catch (err) {
+    console.error('[auth/me]', err);
+    return res.status(500).json({ error: 'Failed to fetch user' });
+  }
 });
 
 
