@@ -158,4 +158,33 @@ router.post('/connect/:platform', authenticate, async (req, res) => {
   }, `${platform} connected successfully`);
 });
 
+// POST /api/v1/auth/wallet/connect — Connect Solana wallet address
+router.post('/wallet/connect', authenticate, async (req, res) => {
+  const { walletAddress, provider } = req.body;
+  
+  if (!walletAddress) {
+    throw require('../utils/apiResponse').ApiError.badRequest('Wallet address is required');
+  }
+  
+  // Check if wallet address is already used by another user
+  const existing = await prisma.user.findFirst({
+    where: { walletAddress, id: { not: req.user.id } },
+  });
+  
+  if (existing) {
+    throw require('../utils/apiResponse').ApiError.conflict('This wallet address is already connected to another account');
+  }
+  
+  // Update user's wallet address
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: { walletAddress },
+  });
+  
+  require('../utils/apiResponse').successResponse(res, {
+    walletAddress,
+    provider: provider || 'phantom',
+  }, 'Wallet connected successfully');
+});
+
 module.exports = router;

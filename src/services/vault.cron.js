@@ -5,12 +5,12 @@ const vaultService = require('./vault.service');
 const { logger } = require('../utils/logger');
 
 // ── Schedule vault distribution ─────────────────
-// Runs every day at 00:00 UTC
+// Runs every 12 hours (00:00 and 12:00 UTC) — matching WURK.fun schedule
 const scheduleVaultDistribution = () => {
   if (process.env.NODE_ENV === 'test') return;
 
-  cron.schedule('0 0 * * *', async () => {
-    logger.info('⏰ Vault distribution cron triggered');
+  cron.schedule('0 */12 * * *', async () => {
+    logger.info('⏰ Vault distribution cron triggered (12-hour cycle)');
     try {
       const result = await vaultService.runDistribution();
       if (result.distributed) {
@@ -23,7 +23,7 @@ const scheduleVaultDistribution = () => {
     }
   });
 
-  logger.info('📅 Vault distribution cron scheduled: 0 0 * * * (daily midnight UTC)');
+  logger.info('📅 Vault distribution cron scheduled: 0 */12 * * * (every 12 hours)');
 };
 
 module.exports = { scheduleVaultDistribution };

@@ -100,8 +100,8 @@ const runDistribution = async () => {
   // Calculate total weight (sum of all $PAY balances)
   const totalPayWeight = eligible.reduce((sum, u) => sum + Number(u.balance), 0);
 
-  // Schedule next distribution (24 hours from now)
-  const nextDistAt = new Date(Date.now() + 86400000);
+  // Schedule next distribution (12 hours from now)
+  const nextDistAt = new Date(Date.now() + 43200000);
 
   // Create distribution record
   const distribution = await prisma.vaultDistribution.create({
@@ -204,6 +204,36 @@ const creditPayoutToWallet = async (userId, amountNgp) => {
   });
 };
 
+// ── Credit user's Solana wallet with USDC payout ──
+// Records the payout to user's USDC wallet (Solana wallet transfer handled by external worker)
+const creditPayoutToSolana = async (userId, walletAddress, amountUsd) => {
+  // Credit to user's USDC wallet
+  const usdcWallet = await prisma.wallet.upsert({
+    where: { userId_currency: { userId, currency: 'USDC' } },
+    update: { balance: { increment: amountUsd } },
+    create: { userId, currency: 'USDC', balance: amountUsd, lockedBalance: 0, isActive: true },
+  });
+
+  const reference = `OGA-VAULT-SOL-${require('uuid').v4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
+
+  await prisma.transaction.create({
+    data: {
+      userId,
+      walletId: usdcWallet.id,
+      type: 'TASK_REWARD',
+      status: 'COMPLETED',
+      amount: amountUsd,
+      currency: 'USDC',
+      reference,
+      balanceBefore: Number(usdcWallet.balance) - amountUsd,
+      balanceAfter: Number(usdcWallet.balance),
+      description: `Vault distribution payout to Solana: ${walletAddress}`,
+    },
+  });
+
+  logger.info(`Solana payout credited: $${amountUsd} to ${walletAddress} (user ${userId})`);
+};
+
 module.exports = {
   logRevenue,
   getUserPayBalance,
@@ -211,4 +241,5 @@ module.exports = {
   seedPayTokens,
   runDistribution,
   creditPayoutToWallet,
+  creditPayoutToSolana,
 };

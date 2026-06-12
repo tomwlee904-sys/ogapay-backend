@@ -36,20 +36,21 @@ router.get('/', async (req, res) => {
   });
 });
 
-// ── Public: Lookup any user's vault eligibility ──
+// ── Public: Lookup vault eligibility by Solana wallet address ──
 router.get('/lookup', async (req, res) => {
-  const { username } = req.query;
-  if (!username) {
-    return successResponse(res, null, 'Username required');
+  const { wallet } = req.query;
+  if (!wallet) {
+    return successResponse(res, null, 'Solana wallet address required');
   }
 
-  const user = await prisma.user.findUnique({
-    where: { username: username.toLowerCase() },
-    select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true },
+  // Find user by their connected Solana wallet address
+  const user = await prisma.user.findFirst({
+    where: { walletAddress: wallet },
+    select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true, walletAddress: true },
   });
 
   if (!user) {
-    return res.status(404).json({ success: false, message: 'User not found' });
+    return res.status(404).json({ success: false, message: 'Wallet not found on OgaPay' });
   }
 
   // Get vault stats
@@ -63,11 +64,12 @@ router.get('/lookup', async (req, res) => {
   });
 
   const payBalance = Number(payWallet?.balance || 0);
-  const totalEarnedNgp = Number(stats?.totalEarnedNgp || 0);
+  const totalEarned = Number(stats?.totalEarnedNgp || 0);
   const distributionsReceived = stats?.distributionsReceived || 0;
-  const isEligible = (stats?.isEligible || payBalance > 0) && payBalance > 0;
+  const isEligible = payBalance > 0;
 
   successResponse(res, {
+    wallet: user.walletAddress,
     user: {
       username: user.username,
       name: `${user.firstName} ${user.lastName}`,
@@ -75,10 +77,9 @@ router.get('/lookup', async (req, res) => {
     },
     vault: {
       payBalance,
-      totalEarned: totalEarnedNgp,
+      totalEarned,
       distributionsReceived,
       isEligible,
-      estimatedNextPayout: 0, // Simplified without calculating
     },
   });
 });
@@ -242,6 +243,16 @@ router.post('/claim', async (req, res) => {
   const vaultService = require('../services/vault.service');
   const userId = req.user.id;
 
+  // Check if user has a connected Solana wallet
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { walletAddress: true },
+  });
+
+  if (!user?.walletAddress) {
+    return successResponse(res, { claimed: 0, totalNgp: 0, needsWallet: true }, 'Connect your Solana wallet first to claim payouts');
+  }
+
   // Get all pending payouts
   const pendingPayouts = await prisma.vaultPayout.findMany({
     where: { userId, status: 'pending' },
@@ -253,8 +264,8 @@ router.post('/claim', async (req, res) => {
 
   let totalClaimed = 0;
   for (const payout of pendingPayouts) {
-    // Credit to user's wallet
-    await vaultService.creditPayoutToWallet(userId, Number(payout.shareNgp));
+    // Send to Solana wallet via USDC transfer (handled by external service/hook)
+    await vaultService.creditPayoutToSolana(userId, user.walletAddress, Number(payout.shareNgp));
 
     // Mark as paid
     await prisma.vaultPayout.update({
@@ -268,5 +279,6 @@ router.post('/claim', async (req, res) => {
   successResponse(res, {
     claimed: pendingPayouts.length,
     totalNgp: totalClaimed,
-  }, `Claimed $${totalClaimed.toLocaleString()} from ${pendingPayouts.length} payout(s)`);
+    walletAddress: user.walletAddress,
+  }, `Claimed $${totalClaimed.toLocaleString()} to your Solana wallet from ${pendingPayouts.length} payout(s)`);
 });
