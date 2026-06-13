@@ -84,6 +84,7 @@ enum TaskStatus {
 
 enum TaskSubmissionStatus {
   PENDING
+  SUBMITTED
   APPROVED
   REJECTED
   DISPUTED
@@ -168,6 +169,7 @@ model User {
   blogPosts         BlogPost[]
   ownedCommunities  Community[]       @relation("CommunityOwner")
   communityMemberships CommunityMember[]
+  bookmarks           Bookmark[]
   communityRequests CommunityRequest[]
   communityChatMessagesSent CommunityChatMessage[] @relation("CommunityChatMessageSender")
   vaultPayouts    VaultPayout[]
@@ -329,6 +331,7 @@ model Task {
   submissions     TaskSubmission[]
   disputes        Dispute[]
   waitlistEntries Waitlist[]
+  bookmarks       Bookmark[]
 
   @@index([status])
   @@index([category])

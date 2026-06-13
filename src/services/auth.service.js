@@ -71,9 +71,6 @@ const register = async ({ firstName, lastName, email, password, username, role, 
       await tx.posterProfile.create({ data: { userId: newUser.id } });
     }
 
-    // Create KYC record
-    await tx.kycVerification.create({ data: { userId: newUser.id } });
-
     // Referral welcome notification
     if (referredById) {
       await tx.notification.create({

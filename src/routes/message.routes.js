@@ -126,6 +126,28 @@ router.post('/', authenticate, async (req, res) => {
     data: { updatedAt: new Date() },
   });
 
+  // Notify the recipient about the new message
+  const recipientId = recipientId || (await prisma.conversationParticipant.findFirst({
+    where: { conversationId: convId, userId: { not: userId } },
+    select: { userId: true },
+  }))?.userId;
+  if (recipientId) {
+    try {
+      const sender = await prisma.user.findUnique({ where: { id: userId }, select: { firstName: true } });
+      await prisma.notification.create({
+        data: {
+          userId: recipientId,
+          type: 'NEW_MESSAGE',
+          title: 'New message',
+          body: `${sender.firstName || 'Someone'}: ${content.trim().slice(0, 100)}`,
+          data: { conversationId: convId, senderId: userId },
+        },
+      });
+    } catch (err) {
+      // Non-critical; don't block message send
+    }
+  }
+
   createdResponse(res, message, 'Message sent');
 });
 

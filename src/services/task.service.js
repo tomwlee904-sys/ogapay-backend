@@ -210,7 +210,7 @@ const submitTask = async (workerId, taskId, { proof, workerNotes, attachments })
   if (!submission) throw ApiError.notFound('Submission not found. Apply to the task first.');
   if (submission.status !== 'PENDING') throw ApiError.badRequest(`Submission already ${submission.status.toLowerCase()}`);
 
-const updated = await prisma.$transaction(async (db) => {
+  const updated = await prisma.$transaction(async (db) => {
     const sub = await db.taskSubmission.update({
       where: { id: submission.id },
       data: { proof, workerNotes, attachments, submittedAt: new Date(), status: 'SUBMITTED' },
@@ -220,7 +220,7 @@ const updated = await prisma.$transaction(async (db) => {
       data: {
         userId: submission.task.posterId,
         type: 'TASK_SUBMISSION',
-        title: '📬 Task submitted for review',
+        title: 'Task submitted for review',
         body: `A worker submitted their work for: "${submission.task.title}"`,
         data: { taskId, submissionId: submission.id },
       },
@@ -382,7 +382,7 @@ const reviewSubmission = async (posterId, submissionId, { status, posterNotes, r
 
 const triggerCooldownIfFull = async (task, taskId) => {
   const pendingCount = await prisma.taskSubmission.count({
-    where: { taskId, status: { in: ['PENDING', 'SUBMITTED'] } },
+    where: { taskId, status: 'PENDING' },
   });
 
   if (pendingCount >= task.maxWorkers && task.status === 'OPEN') {

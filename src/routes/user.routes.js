@@ -163,9 +163,6 @@ router.get('/me/earnings', authenticate, async (req, res) => {
   successResponse(res, result, 'Earnings fetched');
 });
 
-module.exports = router;
-
-
 // DELETE /api/v1/users/me
 router.delete('/me', authenticate, async (req, res) => {
   const { prisma } = require('../config/database');
@@ -199,6 +196,8 @@ router.get('/search', authenticate, async (req, res) => {
 
   successResponse(res, users);
 });
+
+module.exports = router;
 
 // ── Bookmark routes ──────────────────────────────────────────
 // GET /users/bookmarks — fetch all bookmarks

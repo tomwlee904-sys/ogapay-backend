@@ -2,8 +2,9 @@
 
 const express = require('express');
 const { prisma } = require('../config/database');
-const { authenticate } = require('../middleware/auth.middleware');
+const { authenticate, optionalAuth } = require('../middleware/auth.middleware');
 const { successResponse, createdResponse, ApiError } = require('../utils/apiResponse');
+const { logger } = require('../utils/logger');
 const crypto = require('crypto');
 
 const router = express.Router();
@@ -91,10 +92,34 @@ router.get('/featured', async (req, res) => {
 });
 
 // ─── List Communities ──────────────────────────────────────────
+const CATEGORY_BADGE_MAP = {
+  'technology': { badge: 'Technology', accent: '#7C3AED' },
+  'crypto': { badge: 'Crypto', accent: '#1F8CFF' },
+  'social': { badge: 'Social', accent: '#033CE3' },
+  'design': { badge: 'Design', accent: '#EC4899' },
+  'content': { badge: 'Content', accent: '#22C55E' },
+  'marketing': { badge: 'Marketing', accent: '#F5B301' },
+  'business': { badge: 'Business', accent: '#3B82F6' },
+  'gaming': { badge: 'Gaming', accent: '#D97706' },
+  'education': { badge: 'Education', accent: '#06B6D4' },
+  'other': { badge: 'General', accent: '#666' },
+};
+
+function getBadgeAndAccent(category) {
+  const cat = CATEGORY_BADGE_MAP[category?.toLowerCase()] || { badge: 'General', accent: '#666' };
+  return cat;
+}
+
+function getInitials(name) {
+  return (name || '').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'CM';
+}
+
 router.get('/', async (req, res) => {
   const { category, search, sort } = req.query;
   const where = { isPublic: true };
-  if (category) where.category = category;
+  if (category) {
+    where.category = { equals: category, mode: 'insensitive' };
+  }
   if (search) {
     where.OR = [
       { name: { contains: search, mode: 'insensitive' } },
@@ -107,71 +132,50 @@ router.get('/', async (req, res) => {
     include: {
       _count: { select: { members: true } },
     },
-    orderBy: sort === 'newest' 
+    orderBy: sort === 'newest'
       ? { createdAt: 'desc' }
       : { members: { _count: 'desc' } },
   });
 
-  const catBadge = (cat) => {
-    const m = { crypto: 'Crypto', social: 'Social', design: 'Design', content: 'Content', marketing: 'Marketing', business: 'Business', technology: 'Technology', gaming: 'Gaming', education: 'Education' };
-    return (cat && m[cat.toLowerCase()]) || 'General';
-  };
+  const result = communities.map(c => {
+    const { badge, accent } = getBadgeAndAccent(c.category);
+    return {
+      id: c.id,
+      slug: c.slug,
+      name: c.name,
+      desc: c.description,
+      description: c.description,
+      iconUrl: c.iconUrl,
+      coverImage: c.coverImage,
+      accentColor: c.accentColor || accent,
+      accent: c.accentColor || accent,
+      category: c.category,
+      badge,
+      initials: getInitials(c.name),
+      isPublic: c.isPublic,
+      isActive: c.isActive,
+      trending: c._count.members >= 3,
+      members: c._count.members,
+      memberCount: c._count.members,
+      tasks: 0,
+      taskCount: 0,
+      rewards: 0,
+      createdAt: c.createdAt,
+    };
+  });
 
-  const mapped = communities.map(c => ({
-    id: c.id,
-    slug: c.slug,
-    name: c.name,
-    desc: c.description,
-    description: c.description,
-    iconUrl: c.iconUrl,
-    coverImage: c.coverImage,
-    accentColor: c.accentColor,
-    accent: c.accentColor,
-    category: c.category,
-    badge: catBadge(c.category || ''),
-    isPublic: c.isPublic,
-    isActive: c.isActive,
-    trending: c.isActive,
-    initials: (c.name || '?').split(' ').map(w => w[0]).filter(Boolean).join('').slice(0, 2).toUpperCase(),
-    members: c._count.members,
-    tasks: 0,
-    rewards: 0,
-    memberCount: c._count.members,
-    taskCount: 0,
-    createdAt: c.createdAt,
-  }));
+  const totalMembers = result.reduce((s, c) => s + c.members, 0);
+  const trending = result.filter(c => c.trending).slice(0, 5);
 
-  const totalMembers = mapped.reduce((s, c) => s + (c.members || 0), 0);
-  const totalTasks = mapped.reduce((s, c) => s + (c.tasks || 0), 0);
-  const trending = mapped.filter(c => c.trending);
-
-  // Return frontend-expected format
-  res.json({
-    success: true,
-    data: {
-      communities: mapped,
-      stats: { total: mapped.length, members: totalMembers, tasks: totalTasks },
-      trending,
-    },
+  successResponse(res, {
+    communities: result,
+    stats: { total: result.length, members: totalMembers, tasks: 0, rewards: 0 },
+    trending,
   });
 });
 
 // ─── Get Single Community ─────────────────────────────────────
-// ─── My Invites ───────────────────────────────────────────────
-router.get('/invites/mine', authenticate, async (req, res) => {
-  const invites = await prisma.communityInvite.findMany({
-    where: { inviteeId: req.user.id, status: 'PENDING' },
-    include: {
-      community: { select: { id: true, slug: true, name: true, description: true, accentColor: true, iconUrl: true } },
-      inviter: { select: { id: true, username: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  successResponse(res, invites);
-});
-
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuth, async (req, res) => {
   const community = await prisma.community.findFirst({
     where: {
       OR: [
@@ -536,6 +540,22 @@ router.post('/:id/join', authenticate, async (req, res) => {
     const request = await prisma.communityRequest.create({
       data: { communityId: community.id, userId: req.user.id },
     });
+
+    // Notify community owner about join request
+    try {
+      await prisma.notification.create({
+        data: {
+          userId: community.ownerId,
+          type: 'JOIN_REQUEST',
+          title: 'New join request',
+          body: `Someone wants to join "${community.name}"`,
+          data: { communityId: community.id, requestId: request.id, requesterId: req.user.id },
+        },
+      });
+    } catch (err) {
+      logger.warn(`Failed to notify owner about join request: ${err.message}`);
+    }
+
     createdResponse(res, { requestId: request.id }, 'Join request submitted');
   }
 });
@@ -568,6 +588,21 @@ router.post('/:id/request', authenticate, async (req, res) => {
     },
   });
 
+  // Notify community owner about join request
+  try {
+    await prisma.notification.create({
+      data: {
+        userId: community.ownerId,
+        type: 'JOIN_REQUEST',
+        title: 'New join request',
+        body: `Someone wants to join "${community.name}"`,
+        data: { communityId: community.id, requestId: request.id, requesterId: req.user.id },
+      },
+    });
+  } catch (err) {
+    logger.warn(`Failed to notify owner about join request: ${err.message}`);
+  }
+
   createdResponse(res, { requestId: request.id }, 'Join request submitted');
 });
 
@@ -597,7 +632,7 @@ router.get('/mine/list', authenticate, async (req, res) => {
         include: { _count: { select: { members: true } } },
       },
     },
-    orderBy: { joinedAt: 'desc' },
+    orderBy: { createdAt: 'desc' },
   });
 
   successResponse(res, memberships.map(m => ({
@@ -761,6 +796,22 @@ router.patch('/:id/requests/:requestId', authenticate, async (req, res) => {
       where: { id: request.id },
       data: { status: 'ACCEPTED', respondedAt: new Date(), responderId: req.user.id },
     });
+
+    // Notify requester that their request was accepted
+    try {
+      await prisma.notification.create({
+        data: {
+          userId: request.userId,
+          type: 'JOIN_REQUEST_APPROVED',
+          title: 'Join request approved',
+          body: `Your request to join "${community.name}" was accepted!`,
+          data: { communityId: community.id },
+        },
+      });
+    } catch (err) {
+      logger.warn(`Failed to notify requester about approved join request: ${err.message}`);
+    }
+
     successResponse(res, { userId: request.userId }, 'Request accepted');
   } else {
     await prisma.communityRequest.update({
