@@ -66,7 +66,7 @@ router.get('/', authenticate, async (req, res) => {
 router.post('/', authenticate, async (req, res) => {
   const { prisma } = require('../config/database');
   const userId = req.user.id;
-  const { conversationId, recipientId, content } = req.body;
+  let { conversationId, recipientId, content } = req.body;
 
   if (!content || !content.trim()) throw ApiError.badRequest('Message content is required');
   if (!conversationId && !recipientId) throw ApiError.badRequest('Provide conversationId or recipientId');
@@ -127,7 +127,7 @@ router.post('/', authenticate, async (req, res) => {
   });
 
   // Notify the recipient about the new message
-  const recipientId = recipientId || (await prisma.conversationParticipant.findFirst({
+  recipientId = recipientId || (await prisma.conversationParticipant.findFirst({
     where: { conversationId: convId, userId: { not: userId } },
     select: { userId: true },
   }))?.userId;
