@@ -115,7 +115,7 @@ router.get('/my/created', authenticate, async (req, res) => {
   const { prisma } = require('../config/database');
   const where = { posterId: req.user.id, ...(status && { status }) };
   const [tasks, total] = await Promise.all([
-    prisma.task.findMany({ where, skip: (page - 1) * limit, take: parseInt(limit), orderBy: { createdAt: 'desc' }, include: { _count: { select: { submissions: true } } } }),
+    prisma.task.findMany({ where, skip: (page - 1) * limit, take: parseInt(limit), orderBy: { createdAt: 'desc' }, include: { _count: { select: { submissions: true } }, submissions: { include: { worker: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } } }, orderBy: { createdAt: 'desc' } } } }),
     prisma.task.count({ where }),
   ]);
   paginatedResponse(res, tasks, paginate(page, limit, total));
