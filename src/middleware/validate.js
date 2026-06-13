@@ -57,7 +57,7 @@ const createTaskSchema = z.object({
   instructions: z.string().optional(),
   proofRequired: z.string().optional(),
   tags: z.array(z.string()).max(5).optional(),
-  estimatedTime: z.number().int().min(1).max(1440).optional(),
+  estimatedTime: z.number().int().min(1).max(10080).optional(),
 }).superRefine((data, ctx) => {
   if (data.currency === 'NGN' && data.reward < 50) {
     ctx.addIssue({ code: 'custom', message: 'Minimum reward is 50 NGN', path: ['reward'] });

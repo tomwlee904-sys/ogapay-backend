@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build && node scripts/copy-static.mjs",
     "preview": "vite preview",
-    "push": "prisma db push"
+    "push": "prisma db push",
+    "test:agents": "node scripts/e2e-agent-test.js"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

@@ -2,7 +2,7 @@
 
 const express = require('express');
 const multer = require('multer');
-const { authenticate, authorize, requireKyc } = require('../middleware/auth.middleware');
+const { authenticate, authorize, requireKyc, optionalAuth } = require('../middleware/auth.middleware');
 const { validate, createTaskSchema, submitTaskSchema, reviewSubmissionSchema } = require('../middleware/validate');
 const taskService = require('../services/task.service');
 const { successResponse, createdResponse, paginatedResponse, paginate } = require('../utils/apiResponse');
@@ -85,6 +85,30 @@ router.patch(
   },
 );
 
+// POST /api/v1/tasks/:id/submissions/:submissionId/approve — Approve submission
+router.post(
+  '/:id/submissions/:submissionId/approve',
+  authenticate,
+  authorize('POSTER', 'ADMIN'),
+  async (req, res) => {
+    const taskService = require('../services/task.service');
+    const result = await taskService.reviewSubmission(req.user.id, req.params.submissionId, { status: 'APPROVED' });
+    successResponse(res, result, 'Submission approved');
+  },
+);
+
+// POST /api/v1/tasks/:id/submissions/:submissionId/reject — Reject submission
+router.post(
+  '/:id/submissions/:submissionId/reject',
+  authenticate,
+  authorize('POSTER', 'ADMIN'),
+  async (req, res) => {
+    const taskService = require('../services/task.service');
+    const result = await taskService.rejectSubmission(req.user.id, req.params.submissionId, req.body);
+    successResponse(res, result, 'Submission rejected');
+  },
+);
+
 // GET /api/v1/tasks/my/created — Poster's tasks
 router.get('/my/created', authenticate, async (req, res) => {
   const { page = 1, limit = 20, status } = req.query;
@@ -128,7 +152,7 @@ router.get('/my/submissions', authenticate, async (req, res) => {
 
 
 // GET /api/v1/tasks/:id/submissions — Poster views submissions for their task
-router.get('/:id/submissions', authenticate, authorize('POSTER', 'ADMIN'), async (req, res) => {
+router.get('/:id/submissions', authenticate, async (req, res) => {
   const { page = 1, limit = 50 } = req.query;
   const { prisma } = require('../config/database');
   
@@ -188,8 +212,8 @@ router.patch(
 );
 
 // GET /api/v1/tasks/:id
-router.get('/:id', async (req, res) => {
-  const userId = req.headers.authorization ? req.user?.id : null;
+router.get('/:id', optionalAuth, async (req, res) => {
+  const userId = req.user?.id || null;
   const data = await taskService.getTask(req.params.id, userId);
   successResponse(res, data, 'Task fetched');
 });

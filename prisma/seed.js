@@ -111,6 +111,29 @@ async function main() {
   });
   console.log('Poster:', poster.email);
 
+  // ── Poster Beta (poster@ogapay.io) ─────────────────────
+  const posterBetaHash = await bcrypt.hash('PosterBeta123', 12);
+  const posterBeta = await prisma.user.upsert({
+    where: { email: 'poster@ogapay.io' },
+    update: {},
+    create: {
+      email: 'poster@ogapay.io', passwordHash: posterBetaHash,
+      firstName: 'Poster', lastName: 'Beta', username: 'posterbeta',
+      role: 'POSTER', referralCode: 'POSTERB1', isEmailVerified: true,
+      pushNotifications: true, currency: 'NGN',
+      wallets: { create: [
+        { currency: 'NGN', balance: 100000 },
+        { currency: 'USDC', balance: 500 },
+        { currency: 'USDT', balance: 100 },
+      ]},
+      posterProfile: {
+        create: { companyName: 'Poster Beta LLC', website: 'https://ogapay.io', isVerified: true },
+      },
+      kyc: { create: { status: 'APPROVED', verifiedAt: new Date() } },
+    },
+  });
+  console.log('Poster Beta:', posterBeta.email);
+
   // ── Tasks ──────────────────────────────────────────────
   const existingTasks = await prisma.task.count();
   if (existingTasks === 0) {
@@ -205,6 +228,7 @@ async function main() {
   console.log('   Admin: admin@ogapay.io / Admin@ogapay123');
   console.log('   Worker: chidi@example.com / Worker@123');
   console.log('   Poster: amaka@startup.ng / Poster@123');
+  console.log('   Poster Beta: poster@ogapay.io / PosterBeta123');
   console.log('   Beta: zainab/tunde/grace/emeka @example.com / Beta@123');
 }
 

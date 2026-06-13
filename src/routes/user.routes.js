@@ -199,3 +199,45 @@ router.get('/search', authenticate, async (req, res) => {
 
   successResponse(res, users);
 });
+
+// ── Bookmark routes ──────────────────────────────────────────
+// GET /users/bookmarks — fetch all bookmarks
+router.get('/bookmarks', authenticate, async (req, res) => {
+  const { prisma } = require('../config/database');
+  const bookmarks = await prisma.bookmark.findMany({
+    where: { userId: req.user.id },
+    include: {
+      task: {
+        select: {
+          id: true, title: true, description: true,
+          reward: true, currency: true, category: true, status: true
+        }
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+  res.json({ success: true, bookmarks });
+});
+
+// POST /users/bookmarks/:taskId — add bookmark
+router.post('/bookmarks/:taskId', authenticate, async (req, res) => {
+  const { prisma } = require('../config/database');
+  const existing = await prisma.bookmark.findUnique({
+    where: { userId_taskId: { userId: req.user.id, taskId: req.params.taskId } }
+  });
+  if (existing) return res.json({ success: true, bookmarked: true });
+
+  await prisma.bookmark.create({
+    data: { userId: req.user.id, taskId: req.params.taskId }
+  });
+  res.json({ success: true, bookmarked: true });
+});
+
+// DELETE /users/bookmarks/:taskId — remove bookmark
+router.delete('/bookmarks/:taskId', authenticate, async (req, res) => {
+  const { prisma } = require('../config/database');
+  await prisma.bookmark.deleteMany({
+    where: { userId: req.user.id, taskId: req.params.taskId }
+  });
+  res.json({ success: true, bookmarked: false });
+});

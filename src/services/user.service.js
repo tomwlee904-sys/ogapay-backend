@@ -184,7 +184,21 @@ const getEarnings = async (userId) => {
     _sum: { amount: true },
   });
 
-  return { transactions, totals, totalEarnings: totals.reduce((sum, t) => sum + Number(t._sum.amount || 0), 0) };
+  // Also get actual wallet balance from auth context source
+  const wallet = await prisma.wallet.findFirst({
+    where: { userId, currency: 'NGN' }
+  });
+
+  const totalEarned = totals.reduce((sum, t) => sum + Number(t._sum.amount || 0), 0);
+
+  return {
+    transactions,
+    totals,
+    totalEarnings: totalEarned,
+    totalEarned,
+    balance: wallet?.balance ?? 0,
+    currency: 'NGN'
+  };
 };
 
 
