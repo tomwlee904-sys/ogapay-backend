@@ -266,6 +266,7 @@ model WorkerProfile {
   avgRating       Float       @default(0) @map("avg_rating")
   totalRatings    Int         @default(0) @map("total_ratings")
   skills          String[]
+  categories      String[]
   bio             String?
   isAvailable     Boolean     @default(true) @map("is_available")
   createdAt       DateTime    @default(now()) @map("created_at")
