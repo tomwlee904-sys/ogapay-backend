@@ -385,16 +385,47 @@ router.post('/:id/avatar', authenticate, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// ─── Admin Update Community (bypasses membership check) ──────
+router.patch('/:id/admin', authenticate, async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+  if (!user || user.role !== 'ADMIN') throw ApiError.forbidden('Admin access required');
+
+  const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+  if (!community) throw ApiError.notFound('Community not found');
+
+  const { name, description, category, accentColor, coverColor, coverTextColor, isActive, isPublic } = req.body;
+
+  const updated = await prisma.community.update({
+    where: { id: community.id },
+    data: {
+      ...(name && { name: name.trim() }),
+      ...(description !== undefined && { description: description?.trim() }),
+      ...(category && { category }),
+      ...(accentColor && { accentColor }),
+      ...(coverColor && { coverColor }),
+      ...(coverTextColor && { coverTextColor }),
+      ...(isActive !== undefined && { isActive }),
+      ...(isPublic !== undefined && { isPublic }),
+    },
+  });
+
+  successResponse(res, updated, 'Community updated by admin');
+});
+
 // ─── Update Community ─────────────────────────────────────────
 router.patch('/:id', authenticate, async (req, res) => {
   const community = await prisma.community.findUnique({ where: { id: req.params.id } });
   if (!community) throw ApiError.notFound('Community not found');
 
-  const membership = await prisma.communityMember.findUnique({
-    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
-  });
-  if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
-    throw ApiError.forbidden('Only owners and admins can update the community');
+  // Admins can bypass membership check
+  const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+  if (!user || user.role !== 'ADMIN') {
+    const membership = await prisma.communityMember.findUnique({
+      where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+    });
+    if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+      throw ApiError.forbidden('Only owners and admins can update the community');
+    }
   }
 
   const { name, description, category, accentColor, coverColor, coverTextColor, isActive, isPublic, twitter, telegram, discord } = req.body;

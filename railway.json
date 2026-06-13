@@ -2,7 +2,7 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "npm install --omit=dev && bash scripts/prebuild.sh && npx prisma db push --accept-data-loss && npx prisma generate"
+    "buildCommand": "npm install --omit=dev && bash scripts/prebuild.sh && npx prisma db push --accept-data-loss && npx prisma generate && node scripts/fix-community-isactive.js"
   },
   "deploy": {
     "startCommand": "node src/index.js",

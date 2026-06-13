@@ -8,7 +8,7 @@ const { logger } = require('../utils/logger');
 // ── Create Task ────────────────────────────────
 
 const createTask = async (posterId, taskData) => {
-  const { reward, currency, maxWorkers, ...rest } = taskData;
+  const { reward, currency, maxWorkers, title, description, category, instructions, deadline, proofRequired, tags, estimatedTime, status: _, ...extra } = taskData;
 
   // Lock the worker rewards in escrow and charge the platform fee once.
   const taskSubtotal = reward * maxWorkers;
@@ -23,7 +23,14 @@ const createTask = async (posterId, taskData) => {
         reward,
         currency,
         maxWorkers,
-        ...rest,
+        title,
+        description,
+        category,
+        ...(instructions && { instructions }),
+        ...(deadline && { deadline: new Date(deadline) }),
+        ...(proofRequired && { proofRequired }),
+        ...(tags && { tags }),
+        ...(estimatedTime && { estimatedTime }),
         status: 'OPEN',
         escrowed: true,
         escrowTxId: escrowResult.txId,
@@ -372,6 +379,29 @@ const reviewSubmission = async (posterId, submissionId, { status, posterNotes, r
           data: { status: 'COMPLETED', escrowed: false },
         });
       }
+    }
+
+    // Notify poster about the review decision
+    if (status === 'APPROVED') {
+      await db.notification.create({
+        data: {
+          userId: submission.task.posterId,
+          type: 'SUBMISSION_REVIEWED',
+          title: '✅ Submission Approved',
+          body: `You approved a submission for "${submission.task.title}". Payment has been released.`,
+          data: { taskId: submission.taskId, submissionId, workerId: submission.workerId },
+        },
+      });
+    } else if (status === 'REJECTED') {
+      await db.notification.create({
+        data: {
+          userId: submission.task.posterId,
+          type: 'SUBMISSION_REVIEWED',
+          title: '❌ Submission Rejected',
+          body: `You rejected a submission for "${submission.task.title}".`,
+          data: { taskId: submission.taskId, submissionId, workerId: submission.workerId },
+        },
+      });
     }
 
     return updated;
