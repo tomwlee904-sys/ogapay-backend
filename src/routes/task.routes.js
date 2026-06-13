@@ -121,6 +121,21 @@ router.get('/my/created', authenticate, async (req, res) => {
   paginatedResponse(res, tasks, paginate(page, limit, total));
 });
 
+// GET /api/v1/tasks/:id/submissions — Poster's view of all submissions for a task
+router.get('/:id/submissions', authenticate, async (req, res) => {
+  const { prisma } = require('../config/database');
+  const task = await prisma.task.findUnique({ where: { id: req.params.id }, select: { posterId: true } });
+  if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
+  if (task.posterId !== req.user.id && req.user.role !== 'ADMIN')
+    return res.status(403).json({ success: false, message: 'Forbidden' });
+  const submissions = await prisma.taskSubmission.findMany({
+    where: { taskId: req.params.id },
+    orderBy: { createdAt: 'desc' },
+    include: { worker: { select: { id: true, username: true, firstName: true, lastName: true, email: true } } },
+  });
+  successResponse(res, submissions);
+});
+
 // GET /api/v1/tasks/my/submissions — Worker's submissions
 router.get('/my/submissions', authenticate, async (req, res) => {
   const { prisma } = require('../config/database');
