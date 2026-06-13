@@ -582,7 +582,7 @@ model Community {
   coverTextColor String? @map("cover_text_color") @default("#3B5BDB")
   accentColor   String?  @map("accent_color") @default("#7C3AED")
   category      String?
-  isActive      Boolean  @default(false) @map("is_active")
+  isActive      Boolean  @default(true) @map("is_active")
   isPublic      Boolean  @default(true) @map("is_public")
   ownerId       String   @map("owner_id")
   twitter       String?  @map("twitter")
