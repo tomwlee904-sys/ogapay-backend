@@ -282,7 +282,7 @@ router.post('/', authenticate, async (req, res) => {
       accentColor: accentColor || '#7C3AED',
       coverColor,
       coverTextColor,
-      ...(isActive !== undefined && { isActive }),
+      isActive: isActive !== undefined ? isActive : true,
       isPublic: isPublic !== false,
       ownerId: req.user.id,
     },
