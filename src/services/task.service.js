@@ -35,7 +35,7 @@ const createTask = async (posterId, taskData) => {
         escrowed: true,
         escrowTxId: escrowResult.txId,
         platformFee,
-        expiresAt: rest.deadline ? new Date(rest.deadline) : null,
+        expiresAt: deadline ? new Date(deadline) : null,
       },
     });
 
