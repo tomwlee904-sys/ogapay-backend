@@ -288,4 +288,62 @@ router.delete('/delete-account', authenticate, async (req, res) => {
   require('../utils/apiResponse').successResponse(res, null, 'Account deleted successfully');
 });
 
+// POST /api/v1/auth/signin-transaction — sign in via transaction reference
+router.post('/signin-transaction', async (req, res) => {
+  const { transactionRef } = req.body;
+  if (!transactionRef) throw require('../utils/apiResponse').ApiError.badRequest('Transaction reference required');
+
+  const tx = await prisma.transaction.findUnique({
+    where: { reference: transactionRef },
+    include: { user: { select: { id: true, email: true, firstName: true, lastName: true, username: true, avatarUrl: true, role: true } } },
+  });
+  if (!tx) throw require('../utils/apiResponse').ApiError.notFound('Transaction not found');
+
+  const authService = require('../services/auth.service');
+  const { generateTokenPair } = require('../utils/jwt');
+  const tokens = generateTokenPair(tx.user);
+  require('../utils/apiResponse').successResponse(res, { user: tx.user, tokens }, 'Signed in via transaction');
+});
+
+// POST /api/v1/auth/pair-device — pair a new device using a pairing code
+router.post('/pair-device', async (req, res) => {
+  const { code, deviceName } = req.body;
+  if (!code) throw require('../utils/apiResponse').ApiError.badRequest('Pairing code required');
+
+  const pairingCode = await prisma.pairingCode.findFirst({
+    where: { code, used: false, expiresAt: { gt: new Date() } },
+    include: { user: { select: { id: true, email: true, firstName: true, lastName: true, username: true, avatarUrl: true, role: true } } },
+  });
+  if (!pairingCode) throw require('../utils/apiResponse').ApiError.badRequest('Invalid or expired pairing code');
+
+  await prisma.pairingCode.update({
+    where: { id: pairingCode.id },
+    data: { used: true },
+  });
+
+  const ua = req.headers['user-agent'];
+  const parsed = { name: ua?.includes('Chrome') ? 'Chrome' : ua?.includes('Firefox') ? 'Firefox' : 'Unknown', os: null };
+  if (ua?.includes('Windows')) parsed.os = 'Windows';
+  else if (ua?.includes('Mac')) parsed.os = 'macOS';
+  else if (ua?.includes('Linux')) parsed.os = 'Linux';
+  else if (ua?.includes('Android')) parsed.os = 'Android';
+  else if (ua?.includes('iPhone')) parsed.os = 'iOS';
+
+  await prisma.device.create({
+    data: {
+      userId: pairingCode.userId,
+      name: deviceName || parsed.name,
+      browser: parsed.name,
+      os: parsed.os,
+      lastIp: req.ip,
+      lastActiveAt: new Date(),
+    },
+  });
+
+  const authService = require('../services/auth.service');
+  const { generateTokenPair } = require('../utils/jwt');
+  const tokens = generateTokenPair(pairingCode.user);
+  require('../utils/apiResponse').successResponse(res, { user: pairingCode.user, tokens }, 'Device paired and signed in');
+});
+
 module.exports = router;

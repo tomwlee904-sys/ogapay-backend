@@ -49,9 +49,167 @@ const communityUpdates = [
   { name: 'Crypto Traders', badge: '2,500 members', desc: 'Trading competition starts tomorrow' },
 ]
 
+const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
+
+function getToken() {
+  return localStorage.getItem('token') || sessionStorage.getItem('token') || ''
+}
+function authHeaders() {
+  return { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` }
+}
+
+const NIGERIA_BANKS = [
+  { code: '000001', name: 'Access Bank' }, { code: '000002', name: 'Access Bank (Diamond)' },
+  { code: '000003', name: 'Accion Microfinance Bank' }, { code: '000004', name: 'ALAT by WEMA' },
+  { code: '000005', name: 'ASO Savings and Loans' }, { code: '000006', name: 'Bowen Microfinance Bank' },
+  { code: '000007', name: 'Carbon' }, { code: '000008', name: 'CBN' },
+  { code: '000009', name: 'Citibank Nigeria' }, { code: '000010', name: 'Coronation Merchant Bank' },
+  { code: '000011', name: 'Ecobank Nigeria' }, { code: '000012', name: 'Ekondo Microfinance Bank' },
+  { code: '000013', name: 'Fidelity Bank' }, { code: '000014', name: 'First Bank of Nigeria' },
+  { code: '000015', name: 'First City Monument Bank (FCMB)' }, { code: '000016', name: 'FSDH Merchant Bank' },
+  { code: '000017', name: 'Globus Bank' }, { code: '000018', name: 'GTBank (GTCO)' },
+  { code: '000019', name: 'Heritage Bank' }, { code: '000020', name: 'Jaiz Bank' },
+  { code: '000021', name: 'Keystone Bank' }, { code: '000022', name: 'Kuda Bank' },
+  { code: '000023', name: 'Lotus Bank' }, { code: '000024', name: 'Mint Finex MFB' },
+  { code: '000025', name: 'Moniepoint MFB' }, { code: '000026', name: 'Opay' },
+  { code: '000027', name: 'Palmpay' }, { code: '000028', name: 'Parallex Bank' },
+  { code: '000029', name: 'Polaris Bank' }, { code: '000030', name: 'PremiumTrust Bank' },
+  { code: '000031', name: 'Providus Bank' }, { code: '000032', name: 'Rubies MFB' },
+  { code: '000033', name: 'Sparkle Bank' }, { code: '000034', name: 'Stanbic IBTC Bank' },
+  { code: '000035', name: 'Standard Chartered Bank' }, { code: '000036', name: 'Sterling Bank' },
+  { code: '000037', name: 'SunTrust Bank' }, { code: '000038', name: 'Taj Bank' },
+  { code: '000039', name: 'Titan Bank' }, { code: '000040', name: 'Union Bank of Nigeria' },
+  { code: '000041', name: 'United Bank for Africa (UBA)' }, { code: '000042', name: 'Unity Bank' },
+  { code: '000043', name: 'VFD Microfinance Bank' }, { code: '000044', name: 'Wema Bank' },
+  { code: '000045', name: 'Zenith Bank' },
+]
+
 export default function Dashboard() {
   const { isAuthed } = useAuth()
+  const { login } = useAuth()
   const [graphPeriod, setGraphPeriod] = useState('7d')
+  const [showWalletManager, setShowWalletManager] = useState(false)
+  const [connectedWallets, setConnectedWallets] = useState<any[]>([])
+  const [walletLoading, setWalletLoading] = useState(false)
+  const [addingWallet, setAddingWallet] = useState(false)
+  const [showAddBank, setShowAddBank] = useState(false)
+  const [bankAccounts, setBankAccounts] = useState<any[]>([])
+  const [addingBank, setAddingBank] = useState(false)
+  const [bankForm, setBankForm] = useState({ bankCode: '', accountNumber: '', accountName: '' })
+  const [transactionRef, setTransactionRef] = useState('')
+  const [showForm, setShowForm] = useState<string | null>(null)
+  const [pairingCode, setPairingCode] = useState('')
+
+  const loadWallets = async () => {
+    setWalletLoading(true)
+    try {
+      const r = await fetch(`${API_BASE}/links/wallets`, { headers: authHeaders() })
+      const j = await r.json()
+      if (j.success) setConnectedWallets(j.data || [])
+    } catch {}
+    setWalletLoading(false)
+  }
+
+  const loadBanks = async () => {
+    try {
+      const r = await fetch(`${API_BASE}/links/banks`, { headers: authHeaders() })
+      const j = await r.json()
+      if (j.success) setBankAccounts(j.data || [])
+    } catch {}
+  }
+
+  const connectWallet = async (type: string) => {
+    setAddingWallet(true)
+    try {
+      const addr = `${type.toLowerCase()}-${Date.now().toString(36)}`
+      const r = await fetch(`${API_BASE}/links/wallet/add`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ type, address: addr, label: `My ${type} Wallet` }),
+      })
+      const j = await r.json()
+      if (j.success) {
+        setConnectedWallets((w: any[]) => [...w, j.data])
+        showToastLocal(`${type} wallet connected`)
+      } else alert(j.message || 'Failed to connect')
+    } catch { alert('Network error') }
+    setAddingWallet(false)
+  }
+
+  const disconnectWallet = async (id: string) => {
+    try {
+      const r = await fetch(`${API_BASE}/links/wallet/${id}`, { method: 'DELETE', headers: authHeaders() })
+      const j = await r.json()
+      if (j.success) {
+        setConnectedWallets((w: any[]) => w.filter((x: any) => x.id !== id))
+        showToastLocal('Wallet disconnected')
+      }
+    } catch {}
+  }
+
+  const handleAddBank = async () => {
+    if (!bankForm.bankCode || !bankForm.accountNumber) return
+    setAddingBank(true)
+    const bankName = NIGERIA_BANKS.find(b => b.code === bankForm.bankCode)?.name || 'Unknown'
+    try {
+      const r = await fetch(`${API_BASE}/links/bank/add`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ ...bankForm, bankName }),
+      })
+      const j = await r.json()
+      if (j.success) {
+        setBankAccounts((b: any[]) => [...b, j.data])
+        setShowAddBank(false)
+        setBankForm({ bankCode: '', accountNumber: '', accountName: '' })
+        showToastLocal('Bank account added')
+      } else alert(j.message || 'Failed to add bank')
+    } catch { alert('Network error') }
+    setAddingBank(false)
+  }
+
+  const disconnectBank = async (id: string) => {
+    try {
+      const r = await fetch(`${API_BASE}/links/bank/${id}`, { method: 'DELETE', headers: authHeaders() })
+      const j = await r.json()
+      if (j.success) {
+        setBankAccounts((b: any[]) => b.filter((x: any) => x.id !== id))
+        showToastLocal('Bank account removed')
+      }
+    } catch {}
+  }
+
+  const handleTransactionSignin = async () => {
+    try {
+      const r = await fetch(`${API_BASE}/auth/signin-transaction`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transactionRef }),
+      })
+      const j = await r.json()
+      if (j.success && j.tokens) {
+        localStorage.setItem('token', j.tokens.accessToken)
+        login()
+      } else alert(j.message || 'Invalid transaction reference')
+    } catch { alert('Network error') }
+  }
+
+  const handlePairDevice = async () => {
+    try {
+      const r = await fetch(`${API_BASE}/auth/pair-device`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: pairingCode.replace(/[^0-9]/g, '') }),
+      })
+      const j = await r.json()
+      if (j.success && j.tokens) {
+        localStorage.setItem('token', j.tokens.accessToken)
+        login()
+      } else alert(j.message || 'Invalid pairing code')
+    } catch { alert('Network error') }
+  }
+
+  const [toastLocal, setToastLocal] = useState({ visible: false, message: '' })
+  const showToastLocal = (message: string) => {
+    setToastLocal({ visible: true, message })
+    setTimeout(() => setToastLocal(t => ({ ...t, visible: false })), 2500)
+  }
 
   if (!isAuthed) {
     return (
@@ -185,7 +343,9 @@ export default function Dashboard() {
           <div className="wma">
             <a href="#" className="wma-p"><i className="ti ti-plus" /> Deposit</a>
             <a href="/app/wallet" className="wma-o"><i className="ti ti-logout" /> Withdraw</a>
-            <a href="#" className="wma-o"><i className="ti ti-transfer" /> Transfer</a>
+            <button onClick={() => { loadWallets(); setShowWalletManager(true) }} className="wma-o" style={{ height: 38, padding: '0 12px', borderRadius: 9, fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontFamily: 'inherit' }}>
+              <i className="ti ti-wallet" /> Wallets
+            </button>
           </div>
         </div>
         <div className="wallet-grid">
@@ -271,6 +431,130 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {/* Wallet Manager Modal */}
+      {showWalletManager && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          onClick={() => setShowWalletManager(false)}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(4px)' }} />
+          <div style={{ position: 'relative', width: '100%', maxWidth: 480, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 20, padding: 28, maxHeight: '90vh', overflowY: 'auto' }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>Connected Wallets</h2>
+              <button onClick={() => setShowWalletManager(false)} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg2)', cursor: 'pointer', fontSize: 16, display: 'grid', placeItems: 'center' }}>
+                <i className="ti ti-x" />
+              </button>
+            </div>
+            {walletLoading ? (
+              <p style={{ textAlign: 'center', padding: 20, color: 'var(--text3)' }}><span className="spinner" style={{ width: 14, height: 14, display: 'inline-block', marginRight: 6 }} /> Loading...</p>
+            ) : connectedWallets.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+                {connectedWallets.map((w: any) => (
+                  <div key={w.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', border: '1px solid var(--border)', borderRadius: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <i className="ti ti-wallet" style={{ fontSize: 24, color: '#191C6B' }} />
+                      <div>
+                        <div style={{ fontWeight: 700 }}>{w.type} Wallet</div>
+                        <div style={{ fontSize: 12, color: 'var(--text2)', fontFamily: 'monospace' }}>
+                          {w.address?.slice(0, 8)}...{w.address?.slice(-6)}
+                        </div>
+                      </div>
+                    </div>
+                    <button onClick={() => disconnectWallet(w.id)} style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #dc2626', color: '#dc2626', background: 'transparent', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                      Disconnect
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ textAlign: 'center', padding: 20, color: 'var(--text3)' }}>No wallets connected yet</p>
+            )}
+            <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 800 }}>Add Another Wallet</h3>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {['Phantom', 'Backpack', 'Solflare'].map(w => (
+                <button key={w} onClick={() => connectWallet(w)} disabled={addingWallet}
+                  style={{ flex: 1, padding: '12px 8px', border: '1px solid var(--border)', borderRadius: 10, background: 'var(--bg)', cursor: 'pointer', fontWeight: 700, fontSize: 12, transition: 'all .2s', opacity: addingWallet ? 0.6 : 1 }}>
+                  <i className="ti ti-wallet" style={{ fontSize: 18, marginRight: 6 }} /> {w}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bank Accounts Section */}
+      <div className="sec-title" style={{ marginTop: 16 }}><i className="ti ti-building-bank" /> Bank Accounts</div>
+      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: 20, marginBottom: 24 }}>
+        <p style={{ fontSize: 13, color: 'var(--text2)', margin: '0 0 16px' }}>Withdraw NGN directly to your bank account</p>
+        {bankAccounts.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+            {bankAccounts.map((b: any) => (
+              <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', border: '1px solid var(--border)', borderRadius: 10 }}>
+                <div>
+                  <div style={{ fontWeight: 700 }}>{b.bankName}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)' }}>Account: {b.accountNumber?.slice(-4)}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Verified {new Date(b.verifiedAt).toLocaleDateString()}</div>
+                </div>
+                <button onClick={() => disconnectBank(b.id)} style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #dc2626', color: '#dc2626', background: 'transparent', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 13, color: 'var(--text3)', textAlign: 'center', padding: 12 }}>No bank accounts linked</p>
+        )}
+        <button onClick={() => { loadBanks(); setShowAddBank(true) }}
+          style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: '1.5px dashed var(--border)', background: 'transparent', color: '#191C6B', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <i className="ti ti-plus" /> Add Bank Account
+        </button>
+      </div>
+
+      {/* Add Bank Modal */}
+      {showAddBank && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          onClick={() => setShowAddBank(false)}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(4px)' }} />
+          <div style={{ position: 'relative', width: '100%', maxWidth: 400, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 20, padding: 28 }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 900 }}>Add Bank Account</h2>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Select Bank</label>
+              <select value={bankForm.bankCode} onChange={e => setBankForm({ ...bankForm, bankCode: e.target.value })}
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg)', fontFamily: 'inherit', fontSize: 14 }}>
+                <option value="">Choose a bank...</option>
+                {NIGERIA_BANKS.map(b => <option key={b.code} value={b.code}>{b.name}</option>)}
+              </select>
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Account Number</label>
+              <input value={bankForm.accountNumber} onChange={e => setBankForm({ ...bankForm, accountNumber: e.target.value })}
+                placeholder="0123456789" maxLength={10}
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg)', fontFamily: 'inherit', fontSize: 14 }} />
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Account Name (optional)</label>
+              <input value={bankForm.accountName} onChange={e => setBankForm({ ...bankForm, accountName: e.target.value })}
+                placeholder="Full name on account"
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg)', fontFamily: 'inherit', fontSize: 14 }} />
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => { setShowAddBank(false); setBankForm({ bankCode: '', accountNumber: '', accountName: '' }) }}
+                style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg)', cursor: 'pointer', fontWeight: 700 }}>Cancel</button>
+              <button onClick={handleAddBank} disabled={addingBank || !bankForm.bankCode || !bankForm.accountNumber}
+                style={{ flex: 1, padding: '10px', borderRadius: 8, background: '#191C6B', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700, opacity: addingBank ? 0.6 : 1 }}>
+                {addingBank ? 'Adding...' : 'Add Account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toastLocal.visible && (
+        <div style={{ position: 'fixed', bottom: 88, left: '50%', zIndex: 999, transform: 'translateX(-50%)', background: '#16a34a', color: '#fff', padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,.2)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <i className="ti ti-check" /> {toastLocal.message}
+        </div>
+      )}
 
       {/* Announcements + Community Updates */}
       <div className="dash-2col">

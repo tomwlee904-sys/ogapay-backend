@@ -22,6 +22,7 @@ import Campaigns from './pages/Campaigns'
 import Support from './pages/Support'
 import NotFound from './pages/NotFound'
 import CreateTask from './pages/CreateJobPage'
+import LoginPage from './pages/LoginPage'
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/tasks/:id" element={<Tasks />} />
