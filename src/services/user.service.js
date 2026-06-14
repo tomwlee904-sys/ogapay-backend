@@ -27,19 +27,39 @@ const getProfile = async (userId) => {
 // ── Update profile ─────────────────────────────
 
 const updateProfile = async (userId, updates) => {
-  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl'];
+  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'role', 'twitter', 'telegram', 'discord', 'website', 'isPublic', 'emailNotifications', 'pushNotifications', 'currency', 'walletAddress', 'bankAccount', 'bankName'];
   const data = Object.fromEntries(
     Object.entries(updates).filter(([k]) => allowed.includes(k))
   );
 
+  // Handle role upgrade (WORKER → POSTER)
+  if (updates.role === 'POSTER') {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    if (user && user.role === 'WORKER') {
+      await prisma.posterProfile.upsert({
+        where: { userId },
+        create: { userId },
+        update: {},
+      });
+      await prisma.kycVerification.upsert({
+        where: { userId },
+        create: { userId },
+        update: {},
+      });
+    }
+  }
+
   // Worker-specific updates
-  if (updates.bio !== undefined || updates.skills !== undefined || updates.isAvailable !== undefined) {
+  if (updates.bio !== undefined || updates.skills !== undefined || updates.isAvailable !== undefined || updates.nickname !== undefined || updates.description !== undefined || updates.categories !== undefined || updates.tags !== undefined) {
     await prisma.workerProfile.updateMany({
       where: { userId },
       data: {
         ...(updates.bio !== undefined && { bio: updates.bio }),
         ...(updates.skills !== undefined && { skills: updates.skills }),
-        ...(updates.isAvailable !== undefined && { isAvailable: updates.isAvailable }),
+        ...(updates.isAvailable !== undefined && { isAvailable: updates.isAvailable }),                    ...(updates.nickname !== undefined && { nickname: updates.nickname }),                    ...(updates.description !== undefined && { description: updates.description }),                    ...(updates.categories !== undefined && { categories: updates.categories }),                    ...(updates.tags !== undefined && { tags: updates.tags }),
       },
     });
   }
@@ -58,7 +78,7 @@ const updateProfile = async (userId, updates) => {
   return prisma.user.update({
     where: { id: userId },
     data,
-    select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true, username: true, role: true },
+    select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true, username: true, role: true, twitter: true, telegram: true, discord: true, website: true, isPublic: true, emailNotifications: true, pushNotifications: true, currency: true },
   });
 };
 
@@ -149,7 +169,41 @@ const getReferralStats = async (userId) => {
   };
 };
 
+
+
+const getEarnings = async (userId) => {
+  const transactions = await prisma.transaction.findMany({
+    where: { userId, type: { in: ['EARNING', 'REFERRAL_BONUS', 'TASK_REWARD'] } },
+    select: { amount: true, currency: true, type: true, status: true, createdAt: true, description: true },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const totals = await prisma.transaction.groupBy({
+    by: ['currency'],
+    where: { userId, type: { in: ['EARNING', 'REFERRAL_BONUS', 'TASK_REWARD'] }, status: 'COMPLETED' },
+    _sum: { amount: true },
+  });
+
+  // Also get actual wallet balance from auth context source
+  const wallet = await prisma.wallet.findFirst({
+    where: { userId, currency: 'NGN' }
+  });
+
+  const totalEarned = totals.reduce((sum, t) => sum + Number(t._sum.amount || 0), 0);
+
+  return {
+    transactions,
+    totals,
+    totalEarnings: totalEarned,
+    totalEarned,
+    balance: wallet?.balance ?? 0,
+    currency: 'NGN'
+  };
+};
+
+
 module.exports = {
+  getEarnings,
   getProfile,
   updateProfile,
   uploadAvatar,

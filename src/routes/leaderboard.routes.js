@@ -6,6 +6,78 @@ const { successResponse, paginatedResponse, paginate } = require('../utils/apiRe
 
 const router = express.Router();
 
+// GET / — Root leaderboard (delegates to workers)
+router.get('/', async (req, res) => {
+  const { category, limit = 20 } = req.query;
+  const takeLimit = Math.min(Math.max(parseInt(limit) || 20, 1), 100);
+
+  let workers;
+
+  if (category) {
+    // Category-filtered: aggregate earnings from approved submissions
+    const submissions = await prisma.taskSubmission.findMany({
+      where: {
+        status: 'APPROVED',
+        task: { category },
+      },
+      include: {
+        worker: {
+          select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true },
+        },
+        task: { select: { reward: true } },
+      },
+    });
+
+    const grouped = new Map();
+    for (const s of submissions) {
+      const uid = s.workerId;
+      if (!grouped.has(uid)) {
+        grouped.set(uid, {
+          user: s.worker,
+          totalEarned: 0,
+          tasksCompleted: 0,
+        });
+      }
+      const g = grouped.get(uid);
+      g.totalEarned += Number(s.task.reward);
+      g.tasksCompleted += 1;
+    }
+
+    workers = Array.from(grouped.values())
+      .sort((a, b) => b.totalEarned - a.totalEarned)
+      .slice(0, takeLimit);
+  } else {
+    // Default: use WorkerProfile aggregated stats
+    const profiles = await prisma.workerProfile.findMany({
+      where: { tasksCompleted: { gt: 0 } },
+      select: {
+        user: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } },
+        tasksCompleted: true,
+        totalEarned: true,
+      },
+      orderBy: { totalEarned: 'desc' },
+      take: takeLimit,
+    });
+    workers = profiles.map(w => ({
+      user: w.user,
+      totalEarned: Number(w.totalEarned || 0),
+      tasksCompleted: w.tasksCompleted || 0,
+    }));
+  }
+
+  const mapped = workers.map((w, i) => ({
+    rank: i + 1,
+    name: (w.user?.firstName || '') + ' ' + (w.user?.lastName || ''),
+    username: w.user?.username,
+    avatarUrl: w.user?.avatarUrl,
+    earnings: Number(w.totalEarned || 0),
+    tasks: w.tasksCompleted || 0,
+  }));
+
+  successResponse(res, { topEarners: mapped, period: 'all_time' });
+});
+
+
 // GET /api/v1/leaderboard/workers
 // Rank workers by: earnings | tasks_completed | reputation
 router.get('/workers', async (req, res) => {

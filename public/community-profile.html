@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Community Profile - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'dark')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050816;--bg2:#080B1A;--card:#0B1020;--card2:#0F1428;
+  --border:#1A2040;--border2:#2A3070;--text:#FFFFFF;--text2:#8B8FA3;--text3:#5C6080;
+  --accent:#3B82F6;--accent2:#2563EB;--accent-dim:rgba(59,130,246,.12);
+  --accent-glow:0 0 40px rgba(59,130,246,.2);
+  --green:#22C55E;--gold:#F5B301;
+  --shadow:0 4px 24px rgba(0,0,0,.5);--radius:14px;--radius-sm:10px;--nav-h:60px;
+}
+[data-theme="light"]{--bg:#050816;--bg2:#080B1A;--card:#0B1020;--card2:#0F1428;--border:#1A2040;--border2:#2A3070;--text:#FFFFFF;--text2:#8B8FA3;--text3:#5C6080;--accent:#3B82F6}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
+a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}input,select,textarea{font:inherit}img{max-width:100%;display:block}
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(5,8,22,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4)}
+.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:19px;font-weight:800;letter-spacing:-.4px;white-space:nowrap}
+.logo-mark{width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:9px;overflow:hidden}
+.logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}
+.brand span span{color:var(--text)}
+.nav-links{display:flex;align-items:center;justify-content:center;gap:4px}
+.nav-link{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:600;line-height:1;transition:all .14s}
+.nav-link svg{width:15px;height:15px;stroke-width:2.2;flex-shrink:0}
+.nav-link.active,.nav-link:hover{color:var(--text);background:var(--bg2)}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.wallet-btn{height:36px;padding:0 14px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:all .2s}
+.wallet-btn:hover{border-color:var(--accent);background:var(--accent-dim)}
+.wallet-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.icon-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text2);font-size:18px;line-height:1;display:grid;place-items:center;transition:all .2s}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.mobile-menu{display:none;position:fixed;inset:0;z-index:150}
+.mobile-menu.open{display:block}
+.mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+.oga-drawer{position:absolute;right:0;top:0;bottom:0;width:min(360px,88vw);background:#0B1020;border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s}
+.mobile-menu.open .oga-drawer{transform:translateX(0)}
+.oga-drawer-head{height:60px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.oga-drawer-close{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text2);display:grid;place-items:center;cursor:pointer}
+.oga-drawer-nav{padding:12px;overflow-y:auto;flex:1}
+.oga-drawer-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:var(--text2);text-decoration:none;font-weight:600;font-size:14px;transition:all .14s}
+.oga-drawer-item:hover{background:var(--card2);color:var(--text)}
+.oga-drawer-item svg{width:18px;height:18px;color:var(--accent)}
+.oga-drawer-foot{padding:12px;border-top:1px solid var(--border)}
+.oga-drawer-actions{display:flex;gap:10px}
+.oga-drawer-actions .wallet-btn{flex:1;justify-content:center}
+.authed-only{display:none!important}.public-only{display:flex!important}
+body[data-auth="authed"] .authed-only{display:flex!important}
+body[data-auth="authed"] .public-only{display:none!important}
+.main-wrap{flex:1;width:min(1200px,calc(100% - 32px));margin:0 auto;padding:calc(var(--nav-h) + 16px) 0 60px}
+
+/* hero */
+.cp-hero{position:relative;height:240px;border-radius:var(--radius);overflow:hidden;margin-bottom:0;background:linear-gradient(135deg,#1a1a4e,#3B82F6)}
+.cp-hero img{width:100%;height:100%;object-fit:cover;opacity:.4}
+.cp-hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,var(--bg))}
+.cp-header-info{display:flex;align-items:flex-end;gap:20px;margin-top:-64px;position:relative;z-index:1;padding:0 24px;flex-wrap:wrap}
+@media(max-width:640px){.cp-header-info{flex-direction:column;align-items:flex-start;gap:12px}}
+.cp-avatar{width:96px;height:96px;border-radius:50%;border:4px solid var(--card);background:var(--bg2);display:grid;place-items:center;font-size:32px;font-weight:800;color:var(--accent);flex-shrink:0;overflow:hidden}
+.cp-avatar img{width:100%;height:100%;object-fit:cover}
+.cp-header-text{flex:1}
+.cp-header-text h1{font-family:Outfit;font-size:28px;font-weight:800;margin:0}
+.cp-header-text .cp-meta{display:flex;gap:16px;margin-top:4px;color:var(--text2);font-size:13px;flex-wrap:wrap}
+.cp-header-text .cp-meta span{display:flex;align-items:center;gap:4px}
+.cp-header-text .cp-meta svg{width:14px;height:14px;color:var(--accent)}
+.cp-header-actions{display:flex;gap:8px;flex-wrap:wrap}
+.cp-join-btn{height:40px;padding:0 22px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:all .2s}
+.cp-join-btn:hover{box-shadow:0 4px 20px rgba(59,130,246,.3)}
+.cp-share-btn{height:40px;padding:0 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s}
+.cp-share-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* tabs */
+.cp-tabs{display:flex;gap:4px;margin:20px 0 24px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto}
+.cp-tab{padding:10px 18px;border:0;border-radius:8px 8px 0 0;background:transparent;color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;border-bottom:2px solid transparent}
+.cp-tab.active,.cp-tab:hover{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* tab content */
+.tab-content{display:none;animation:fadeIn .3s ease}
+.tab-content.active{display:block}
+@keyframes fadeIn{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
+.cp-desc{color:var(--text2);font-size:14px;line-height:1.7;margin:0 0 20px}
+.cp-section{margin-bottom:24px}
+.cp-section h3{font-family:Outfit;font-size:17px;font-weight:700;margin:0 0 12px}
+.cp-rules{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.cp-rules li{display:flex;align-items:flex-start;gap:8px;color:var(--text2);font-size:14px;line-height:1.5}
+.cp-rules li svg{width:16px;height:16px;color:var(--accent);margin-top:2px;flex-shrink:0}
+.cp-social{display:flex;gap:8px;flex-wrap:wrap}
+.cp-social a{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;transition:all .2s}
+.cp-social a:hover{border-color:var(--accent);color:var(--accent)}
+.cp-social a svg{width:16px;height:16px}
+
+/* task cards */
+.task-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.task-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:all .25s}
+.task-card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:var(--shadow)}
+.task-card .tc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.task-card .tc-title{font-weight:700;font-size:15px}
+.task-card .tc-reward{color:var(--green);font-weight:700;font-size:14px}
+.task-card .tc-diff{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;margin-bottom:8px}
+.task-card .tc-diff.easy{background:rgba(34,197,94,.1);color:var(--green)}
+.task-card .tc-diff.medium{background:rgba(245,179,1,.1);color:var(--gold)}
+.task-card .tc-diff.hard{background:rgba(239,68,68,.1);color:#EF4444}
+.task-card .tc-slots{color:var(--text2);font-size:12px;margin-bottom:10px}
+.task-card .tc-apply{height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+.task-card .tc-apply:hover{background:var(--accent);color:#fff}
+
+/* members */
+.member-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.member-card{display:flex;align-items:center;gap:10px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);transition:all .2s}
+.member-card:hover{border-color:var(--accent)}
+.member-card .ma{width:36px;height:36px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--accent);flex-shrink:0}
+.member-card .mn{font-weight:600;font-size:13px;flex:1}
+.member-card .ms{color:var(--text3);font-size:11px}
+
+/* leaderboard */
+.lb-list{display:grid;gap:8px}
+.lb-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);transition:all .2s}
+.lb-item:hover{border-color:var(--accent-dark)}
+.lb-item .lb-rank{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;flex-shrink:0;background:var(--bg2);color:var(--text2)}
+.lb-item:nth-child(1) .lb-rank{background:var(--gold);color:#000}
+.lb-item:nth-child(2) .lb-rank{background:#a8a8b0;color:#000}
+.lb-item:nth-child(3) .lb-rank{background:#cd7f32;color:#000}
+.lb-item .lb-av{width:34px;height:34px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--accent)}
+.lb-item .lb-name{font-weight:600;font-size:14px;flex:1}
+.lb-item .lb-pts{color:var(--accent);font-weight:700;font-size:14px}
+.lb-item .lb-stat{color:var(--text3);font-size:12px}
+
+/* gallery */
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:640px){.gallery-grid{grid-template-columns:repeat(2,1fr)}}
+.gallery-item{aspect-ratio:16/10;border-radius:var(--radius-sm);background:var(--bg2);display:grid;place-items:center;color:var(--text3);font-size:12px;overflow:hidden;cursor:pointer;transition:all .2s}
+.gallery-item:hover{border:1px solid var(--accent)}
+
+/* activity */
+.activity-feed{display:grid;gap:10px}
+.activity-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.activity-item .ai-icon{width:32px;height:32px;border-radius:50%;background:var(--accent-dim);color:var(--accent);display:grid;place-items:center;flex-shrink:0}
+.activity-item .ai-icon svg{width:16px;height:16px}
+.activity-item .ai-text{flex:1;font-size:13px}
+.activity-item .ai-text strong{font-weight:600}
+.activity-item .ai-time{color:var(--text3);font-size:11px}
+
+/* loading/empty */
+.load-state,.empty-state{display:flex;flex-direction:column;align-items:center;padding:48px 24px;text-align:center}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.site-footer{position:relative;overflow:hidden;padding:60px 24px 32px;background:linear-gradient(180deg,var(--bg) 0%,#000 100%);border-top:1px solid var(--border);margin-top:auto}
+.site-footer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.15;pointer-events:none}
+.footer-overlay{position:relative;z-index:1;max-width:1120px;margin:0 auto}
+.footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:34px;margin-bottom:32px}
+@media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:24px}}
+.footer-brand{display:flex;align-items:center;gap:10px;font-family:Outfit;font-size:22px;font-weight:900;margin-bottom:10px}
+.footer-brand .logo-mark{width:28px;height:28px}
+.footer-desc{color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:16px;max-width:280px}
+.footer-social{display:flex;gap:10px}
+.footer-social a{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);display:grid;place-items:center;color:var(--text2);transition:all .2s}
+.footer-social a:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.footer-col h4{font-size:14px;font-weight:700;margin:0 0 14px;color:var(--text)}
+.footer-col nav{display:grid;gap:8px}
+.footer-col a{color:var(--text2);font-size:13px;transition:color .2s}
+.footer-col a:hover{color:var(--accent)}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:20px;border-top:1px solid var(--border);color:var(--text3);font-size:13px;flex-wrap:wrap;gap:12px}
+@media(max-width:768px){.nav-links{display:none}.nav-actions .wallet-btn .wallet-label{display:none}}
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span><span>Oga<span>Pay</span></span></a>
+    <nav class="nav-links">
+      <a class="nav-link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a>
+      <a class="nav-link" href="tasks.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Tasks</a>
+      <a class="nav-link" href="store.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Deals</a>
+      <a class="nav-link active" href="communities.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Communities</a>
+      <a class="nav-link" href="faq.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>FAQ</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="wallet-btn public-only" href="login.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg><span class="wallet-label">Login</span></a>
+      <a class="wallet-btn primary public-only" href="login.html?mode=signup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg><span class="wallet-label">Get Started</span></a>
+      <button class="icon-btn" id="themeToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+      <button class="icon-btn" id="menuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    </div>
+  </div>
+</header>
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-overlay" data-close-menu></div>
+  <div class="oga-drawer">
+    <div class="oga-drawer-head"><span style="font-weight:800;font-size:16px">Menu</span><button class="oga-drawer-close" data-close-menu><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="oga-drawer-nav">
+      <a class="oga-drawer-item" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a>
+      <a class="oga-drawer-item" href="communities.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Communities</a>
+      <a class="oga-drawer-item" href="my-communities.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>My Communities</a>
+    </div>
+    <div class="oga-drawer-foot">
+      <div class="oga-drawer-actions">
+        <a class="wallet-btn public-only" href="login.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/></svg>Login</a>
+        <a class="wallet-btn primary public-only" href="login.html?mode=signup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>Sign Up</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main-wrap">
+  <a href="communities.html" style="display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;font-weight:600;margin-bottom:16px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Communities
+  </a>
+
+  <div id="loadState" class="load-state"><div class="spinner"></div><p>Loading community...</p></div>
+  <div id="communityContent" style="display:none">
+
+    <div class="cp-hero" id="cpHero"></div>
+    <div class="cp-header-info" id="cpHeader"></div>
+
+    <div class="cp-tabs" id="cpTabs">
+      <button class="cp-tab active" data-tab="overview">Overview</button>
+      <button class="cp-tab" data-tab="tasks">Tasks</button>
+      <button class="cp-tab" data-tab="members">Members</button>
+      <button class="cp-tab" data-tab="leaderboard">Leaderboard</button>
+      <button class="cp-tab" data-tab="gallery">Gallery</button>
+      <button class="cp-tab" data-tab="activity">Activity</button>
+    </div>
+
+    <div id="tabOverview" class="tab-content active">
+      <div class="cp-section"><h3>About</h3><p class="cp-desc" id="cpAbout"></p></div>
+      <div class="cp-section"><h3>Community Rules</h3><ul class="cp-rules" id="cpRules"></ul></div>
+      <div class="cp-section"><h3>Social Links</h3><div class="cp-social" id="cpSocial"></div></div>
+      <div class="cp-section"><h3>Recent Achievements</h3><div class="activity-feed" id="cpAchievements"></div></div>
+    </div>
+
+    <div id="tabTasks" class="tab-content"><div class="task-grid" id="cpTasksGrid"></div></div>
+    <div id="tabMembers" class="tab-content"><div class="member-grid" id="cpMembersGrid"></div></div>
+    <div id="tabLeaderboard" class="tab-content"><div class="lb-list" id="cpLB"></div></div>
+    <div id="tabGallery" class="tab-content"><div class="gallery-grid" id="cpGallery"></div></div>
+    <div id="tabActivity" class="tab-content"><div class="activity-feed" id="cpActivity"></div></div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <video autoplay muted loop playsinline poster=""><source src="https://ogapay-five.vercel.app/videos/ogapay-bg.mp4" type="video/mp4"></video>
+  <div class="footer-overlay">
+    <div class="footer-grid">
+      <div><div class="footer-brand"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</div><p class="footer-desc">Work. Earn. Repeat.</p><div class="footer-social"><a href="#" aria-label="X"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a><a href="#" aria-label="Telegram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 11 10 14 20 4"/><path d="M4 11l4 9 2-6 6-4-12 1z"/></svg></a><a href="#" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><line x1="17" y1="7" x2="17.01" y2="7"/></svg></a></div></div>
+      <div class="footer-col"><h4>Marketplace</h4><nav><a href="store.html">Browse Products</a><a href="store.html">Categories</a><a href="#">Trending</a><a href="#">New Arrivals</a></nav></div>
+      <div class="footer-col"><h4>Resources</h4><nav><a href="blog.html">Blog</a><a href="faq.html">FAQ</a><a href="support.html">Support</a><a href="communities.html">Communities</a></nav></div>
+      <div class="footer-col"><h4>Company</h4><nav><a href="about.html">About</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="contact.html">Contact</a></nav></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; 2026 OgaPay. All rights reserved.</span><span style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M6 8l6-4 6 4-6 4-6-4z"/><path d="M6 16l6-4 6 4-6 4-6-4z"/></svg>Powered by Solana</span></div>
+  </div>
+</footer>
+
+<script>
+const COMMUNITIES = [
+  {id:1,name:'Solana Builders',category:'crypto',members:2840,tasks:456,rewards:45000,badge:'Crypto',desc:'Building the future on Solana. Discussions, development, and alpha for Web3 builders and developers.',banner:'',initials:'SB',created:'Jan 2025'},
+  {id:2,name:'Design Masters',category:'design',members:1820,tasks:320,rewards:28000,badge:'Design',desc:'Premium design resources, feedback, and collaborations for designers of all levels.',banner:'',initials:'DM',created:'Mar 2025'},
+  {id:3,name:'Content Creators Hub',category:'content',members:3150,tasks:540,rewards:52000,badge:'Content',desc:'Create, share, and earn. Video, writing, and multimedia content creation community.',banner:'',initials:'CC',created:'Feb 2025'},
+  {id:5,name:'Crypto Traders',category:'crypto',members:4200,tasks:680,rewards:95000,badge:'Crypto',desc:'Trade signals, analysis, DeFi strategies, and crypto market discussions.',banner:'',initials:'CT',created:'Dec 2024'},
+  {id:7,name:'AI & Automation',category:'crypto',members:2100,tasks:380,rewards:34000,badge:'Crypto',desc:'AI agents, automation tools, bot development, and machine learning.',banner:'',initials:'AA',created:'Apr 2025'},
+  {id:10,name:'DeFi Degens',category:'crypto',members:3800,tasks:590,rewards:78000,badge:'Crypto',desc:'Decentralized finance, yield farming, liquidity provision, and DeFi protocols.',banner:'',initials:'DD',created:'Jan 2025'},
+];
+
+function $(id){return document.getElementById(id)}
+function html(el,h){el.innerHTML=h}
+
+function getCommunity(id){
+  return COMMUNITIES.find(c=>c.id===Number(id)||c.id===id);
+}
+
+function getGradient(category){
+  const g={'crypto':'#1a1a4e,#3B82F6','design':'#4a1a4e,#EC4899','content':'#1a4e3a,#22C55E','marketing':'#4e3a1a,#F5B301','business':'#1a2a4e,#3B82F6'}
+  return g[category]||'#1a1a4e,#3B82F6';
+}
+
+function init(){
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id')||1;
+  const c = getCommunity(id);
+  if(!c){$('loadState').innerHTML='<p style="color:var(--text2)">Community not found</p>';return}
+  
+  $('loadState').style.display='none';
+  $('communityContent').style.display='block';
+  
+  $('cpHero').style.background='linear-gradient(135deg,'+getGradient(c.category)+')';
+  
+  const initials = c.initials||c.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+  html($('cpHeader'),
+    '<div class="cp-avatar"><span style="font-size:32px">'+initials+'</span></div>'+
+    '<div class="cp-header-text">'+
+      '<h1>'+c.name+'</h1>'+
+      '<div class="cp-meta">'+
+        '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'+c.members.toLocaleString()+' members</span>'+
+        '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'+c.tasks+' tasks completed</span>'+
+        '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>NGN '+c.rewards.toLocaleString()+'/week rewards</span>'+
+        '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>Created '+c.created+'</span>'+
+      '</div>'+
+    '</div>'+
+    '<div class="cp-header-actions">'+
+      '<button class="cp-join-btn" onclick="joinCommunity()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Join Community</button>'+
+      '<button class="cp-share-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button>'+
+    '</div>'
+  );
+  
+  $('cpAbout').textContent = c.desc;
+  
+  html($('cpRules'),[
+    'Be respectful and professional at all times',
+    'No spam, scams, or malicious content',
+    'Follow the community guidelines',
+    'Help others and contribute positively',
+    'Report any violations to moderators'
+  ].map(r=>'<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>'+r+'</li>').join(''));
+  
+  html($('cpSocial'),[
+    {icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>',label:'X (Twitter)',url:'#'},
+    {icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 11 10 14 20 4"/><path d="M4 11l4 9 2-6 6-4-12 1z"/></svg>',label:'Telegram',url:'#'},
+    {icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',label:'Discord',url:'#'},
+  ].map(s=>'<a href="'+s.url+'">'+s.icon+s.label+'</a>').join(''));
+  
+  html($('cpAchievements'),[
+    {icon:'users',text:'Reached <strong>2,000 members</strong> milestone',time:'2 days ago'},
+    {icon:'award',text:'Community of the Month <strong>award received</strong>',time:'1 week ago'},
+    {icon:'dollar-sign',text:'<strong>NGN 50,000</strong> rewards distributed this week',time:'3 days ago'},
+  ].map(a=>'<div class="activity-item"><div class="ai-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+
+    (a.icon==='users'?'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>':a.icon==='award'?'<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>':'<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>')+
+  '</svg></div><div class="ai-text">'+a.text+'</div><span class="ai-time">'+a.time+'</span></div>').join(''));
+  
+  // Tasks
+  const tasks = [
+    {title:'Create 3 Tweets about the community',reward:'NGN 500',diff:'easy',slots:12},
+    {title:'Design a community banner',reward:'NGN 1,200',diff:'medium',slots:5},
+    {title:'Write a community spotlight article',reward:'NGN 2,500',diff:'hard',slots:3},
+    {title:'Share community on 5 social platforms',reward:'NGN 800',diff:'easy',slots:8},
+    {title:'Create a video tutorial',reward:'NGN 3,000',diff:'hard',slots:2},
+  ];
+  html($('cpTasksGrid'),tasks.map(t=>'<div class="task-card"><div class="tc-top"><span class="tc-title">'+t.title+'</span><span class="tc-reward">'+t.reward+'</span></div><div class="tc-diff '+t.diff+'">'+
+    (t.diff==='easy'?'Easy':t.diff==='medium'?'Medium':'Hard')+'</div><div class="tc-slots">'+t.slots+' slots remaining</div><button class="tc-apply">Apply Now</button></div>').join(''));
+  
+  // Members
+  const names = ['Alex M.','Sarah K.','James W.','Emma R.','David O.','Lisa C.','John D.','Maya T.'];
+  html($('cpMembersGrid'),names.map((n,i)=>'<div class="member-card"><div class="ma">'+n.slice(0,2)+'</div><div class="mn">'+n+'</div><div class="ms">Joined '+(i+1)+' months ago</div></div>').join(''));
+  
+  // Leaderboard
+  const lb = [
+    {name:'Alex M.',pts:2840,tasks:145,earned:12000,initials:'AM'},
+    {name:'Sarah K.',pts:2210,tasks:112,earned:9800,initials:'SK'},
+    {name:'James W.',pts:1890,tasks:98,earned:7500,initials:'JW'},
+    {name:'Emma R.',pts:1560,tasks:82,earned:6200,initials:'ER'},
+    {name:'David O.',pts:1230,tasks:67,earned:4800,initials:'DO'},
+    {name:'Lisa C.',pts:980,tasks:54,earned:3500,initials:'LC'},
+    {name:'John D.',pts:720,tasks:41,earned:2800,initials:'JD'},
+    {name:'Maya T.',pts:510,tasks:30,earned:1900,initials:'MT'},
+  ];
+  html($('cpLB'),lb.map((u,i)=>'<div class="lb-item"><div class="lb-rank">#'+(i+1)+'</div><div class="lb-av">'+u.initials+'</div><div class="lb-name">'+u.name+'</div><div class="lb-stat">'+u.tasks+' tasks</div><div class="lb-pts">'+u.pts+' pts</div><div class="lb-stat">NGN '+u.earned.toLocaleString()+'</div></div>').join(''));
+  
+  // Gallery
+  html($('cpGallery'),Array.from({length:6}).map((_,i)=>'<div class="gallery-item">Gallery Image '+(i+1)+'</div>').join(''));
+  
+  // Activity
+  const activities = [
+    {text:'<strong>Sarah K.</strong> completed a task',time:'10m ago',icon:'check-circle'},
+    {text:'<strong>James W.</strong> joined the community',time:'25m ago',icon:'user-plus'},
+    {text:'<strong>Emma R.</strong> earned NGN 1,200 reward',time:'1h ago',icon:'dollar-sign'},
+    {text:'Community milestone: 2,500 tasks completed',time:'2h ago',icon:'award'},
+    {text:'<strong>Admin</strong> posted a new announcement',time:'3h ago',icon:'bell'},
+    {text:'<strong>David O.</strong> referred 5 new members',time:'5h ago',icon:'share-2'},
+  ];
+  html($('cpActivity'),activities.map(a=>'<div class="activity-item"><div class="ai-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+
+    (a.icon==='check-circle'?'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>':a.icon==='user-plus'?'<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>':a.icon==='dollar-sign'?'<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>':a.icon==='award'?'<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>':a.icon==='bell'?'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>':'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>')+
+  '</svg></div><div class="ai-text">'+a.text+'</div><span class="ai-time">'+a.time+'</span></div>').join(''));
+}
+
+function joinCommunity(){
+  const params = new URLSearchParams(window.location.search);
+  window.location.href='join-community.html?id='+params.get('id')||1;
+}
+
+// Tab switching
+document.addEventListener('click',function(e){
+  const tab = e.target.closest('.cp-tab');
+  if(tab){
+    document.querySelectorAll('.cp-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    document.getElementById('tab'+tab.dataset.tab.charAt(0).toUpperCase()+tab.dataset.tab.slice(1)).classList.add('active');
+  }
+});
+
+init();
+
+(function(){
+  try{var th=localStorage.getItem('ogapay-theme')||'dark';document.documentElement.setAttribute('data-theme',th);}catch(e){}
+  var authed=false;try{authed=localStorage.getItem('ogapay-authenticated')==='true';}catch(e){}
+  document.body.setAttribute('data-auth',authed?'authed':'public');
+  var themeBtn=document.getElementById('themeToggle');
+  if(themeBtn){themeBtn.addEventListener('click',function(){var html=document.documentElement;html.setAttribute('data-theme',next);
+      // Swap icon
+      var iconEl=document.getElementById('themeToggle').querySelector('svg');
+      if(iconEl)iconEl.outerHTML=next==='dark'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';try{localStorage.setItem('ogapay-theme',next);}catch(e){}});}
+  var menuBtn=document.getElementById('menuBtn');
+  var mobileMenu=document.getElementById('mobileMenu');
+  if(menuBtn&&mobileMenu){menuBtn.addEventListener('click',function(){mobileMenu.classList.add('open');});mobileMenu.querySelectorAll('[data-close-menu]').forEach(function(el){el.addEventListener('click',function(){mobileMenu.classList.remove('open');});});}
+})();
+</script>
+</body>
+</html>

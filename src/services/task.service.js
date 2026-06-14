@@ -8,7 +8,7 @@ const { logger } = require('../utils/logger');
 // ── Create Task ────────────────────────────────
 
 const createTask = async (posterId, taskData) => {
-  const { reward, currency, maxWorkers, ...rest } = taskData;
+  const { reward, currency, maxWorkers, title, description, category, instructions, deadline, proofRequired, tags, estimatedTime, status: _, ...extra } = taskData;
 
   // Lock the worker rewards in escrow and charge the platform fee once.
   const taskSubtotal = reward * maxWorkers;
@@ -23,12 +23,19 @@ const createTask = async (posterId, taskData) => {
         reward,
         currency,
         maxWorkers,
-        ...rest,
+        title,
+        description,
+        category,
+        ...(instructions && { instructions }),
+        ...(deadline && { deadline: new Date(deadline) }),
+        ...(proofRequired && { proofRequired }),
+        ...(tags && { tags }),
+        ...(estimatedTime && { estimatedTime }),
         status: 'OPEN',
         escrowed: true,
         escrowTxId: escrowResult.txId,
         platformFee,
-        expiresAt: rest.deadline ? new Date(rest.deadline) : null,
+        expiresAt: deadline ? new Date(deadline) : null,
       },
     });
 
@@ -47,6 +54,31 @@ const createTask = async (posterId, taskData) => {
   });
 
   logger.info(`Task created: ${task.id} by poster ${posterId}`);
+
+  // Notify workers whose categories match this task
+  try {
+    const category = task.category;
+    if (category) {
+      const matchingWorkers = await prisma.workerProfile.findMany({
+        where: { categories: { has: category }, isAvailable: true },
+        select: { userId: true },
+      });
+      await Promise.all(matchingWorkers.map(w =>
+        prisma.notification.create({
+          data: {
+            userId: w.userId,
+            type: 'NEW_TASK',
+            title: 'New task available in your category',
+            body: `"${task.title}" — ₦${Number(task.reward).toLocaleString()} · ${category}`,
+            data: { taskId: task.id, category },
+          },
+        })
+      ));
+    }
+  } catch (err) {
+    logger.warn(`Failed to notify workers about new task ${task.id}: ${err.message}`);
+  }
+
   return task;
 };
 
@@ -151,7 +183,7 @@ const applyToTask = async (workerId, taskId) => {
       where: { id: taskId },
       data: {
         currentWorkers: { increment: 1 },
-        status: task.currentWorkers + 1 >= task.maxWorkers ? 'IN_PROGRESS' : 'OPEN',
+        submissionsCount: { increment: 1 },
       },
     });
 
@@ -167,6 +199,9 @@ const applyToTask = async (workerId, taskId) => {
 
     return sub;
   });
+
+  // Trigger cooldown if all slots filled
+  await triggerCooldownIfFull(task, taskId);
 
   return submission;
 };
@@ -185,14 +220,14 @@ const submitTask = async (workerId, taskId, { proof, workerNotes, attachments })
   const updated = await prisma.$transaction(async (db) => {
     const sub = await db.taskSubmission.update({
       where: { id: submission.id },
-      data: { proof, workerNotes, attachments, submittedAt: new Date() },
+      data: { proof, workerNotes, attachments, submittedAt: new Date(), status: 'SUBMITTED' },
     });
 
     await db.notification.create({
       data: {
         userId: submission.task.posterId,
         type: 'TASK_SUBMISSION',
-        title: '📬 Task submitted for review',
+        title: 'Task submitted for review',
         body: `A worker submitted their work for: "${submission.task.title}"`,
         data: { taskId, submissionId: submission.id },
       },
@@ -214,7 +249,7 @@ const reviewSubmission = async (posterId, submissionId, { status, posterNotes, r
 
   if (!submission) throw ApiError.notFound('Submission not found');
   if (submission.task.posterId !== posterId) throw ApiError.forbidden('Not your task');
-  if (submission.status !== 'PENDING') throw ApiError.badRequest('Submission already reviewed');
+  if (submission.status !== 'SUBMITTED') throw ApiError.badRequest('Submission not ready for review');
   if (!submission.submittedAt) throw ApiError.badRequest('Worker has not submitted yet');
 
   return prisma.$transaction(async (db) => {
@@ -284,10 +319,271 @@ const reviewSubmission = async (posterId, submissionId, { status, posterNotes, r
           data: { taskId: submission.taskId, submissionId, reason: posterNotes },
         },
       });
+
+      // Reopen slot: decrement filled counts, set task back to OPEN
+      await db.task.update({
+        where: { id: submission.taskId },
+        data: {
+          currentWorkers: { decrement: 1 },
+          submissionsCount: { decrement: 1 },
+          status: 'OPEN',
+        },
+      });
+
+      // Notify first waitlisted worker about the reopened slot
+      const next = await db.waitlist.findFirst({
+        where: { taskId: submission.taskId },
+        orderBy: { createdAt: 'asc' },
+      });
+      if (next) {
+        await db.notification.create({
+          data: {
+            userId: next.userId,
+            type: 'SLOT_REOPENED',
+            title: '🎯 Slot Reopened!',
+            body: `A slot opened up for "${submission.task.title}" — apply now!`,
+            data: { taskId: submission.taskId },
+          },
+        });
+      }
+    }
+
+    // Check if all slots filled and all submissions resolved → mark task COMPLETED, refund remaining escrow
+    if (submission.task.maxWorkers <= submission.task.currentWorkers) {
+      const resolvedCount = await db.taskSubmission.count({
+        where: { taskId: submission.taskId, status: { in: ['APPROVED', 'REJECTED'] } },
+      });
+      if (resolvedCount >= submission.task.maxWorkers) {
+        const totalLocked = parseFloat(submission.task.reward) * submission.task.maxWorkers;
+        const approvedCount = await db.taskSubmission.count({
+          where: { taskId: submission.taskId, status: 'APPROVED' },
+        });
+        const paidAmount = parseFloat(submission.task.reward) * approvedCount;
+        const remaining = totalLocked - paidAmount;
+
+        if (remaining > 0) {
+          const posterWallet = await db.wallet.findUnique({
+            where: { userId_currency: { userId: submission.task.posterId, currency: submission.task.currency } },
+          });
+          await db.wallet.update({
+            where: { id: posterWallet.id },
+            data: {
+              lockedBalance: { decrement: remaining },
+              balance: { increment: remaining },
+            },
+          });
+        }
+
+        await db.task.update({
+          where: { id: submission.taskId },
+          data: { status: 'COMPLETED', escrowed: false },
+        });
+      }
+    }
+
+    // Notify poster about the review decision
+    if (status === 'APPROVED') {
+      await db.notification.create({
+        data: {
+          userId: submission.task.posterId,
+          type: 'SUBMISSION_REVIEWED',
+          title: '✅ Submission Approved',
+          body: `You approved a submission for "${submission.task.title}". Payment has been released.`,
+          data: { taskId: submission.taskId, submissionId, workerId: submission.workerId },
+        },
+      });
+    } else if (status === 'REJECTED') {
+      await db.notification.create({
+        data: {
+          userId: submission.task.posterId,
+          type: 'SUBMISSION_REVIEWED',
+          title: '❌ Submission Rejected',
+          body: `You rejected a submission for "${submission.task.title}".`,
+          data: { taskId: submission.taskId, submissionId, workerId: submission.workerId },
+        },
+      });
     }
 
     return updated;
   }, { timeout: 20000 });
+};
+
+// ── Cooldown Trigger ────────────────────────────
+
+const triggerCooldownIfFull = async (task, taskId) => {
+  const pendingCount = await prisma.taskSubmission.count({
+    where: { taskId, status: 'PENDING' },
+  });
+
+  if (pendingCount >= task.maxWorkers && task.status === 'OPEN') {
+    await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        status: 'COOLING_DOWN',
+        cooldownStartedAt: new Date(),
+      },
+    });
+    await prisma.notification.create({
+      data: {
+        userId: task.posterId,
+        type: 'COOLDOWN',
+        title: '⏳ Task Cooling Down',
+        body: `Your task "${task.title}" is now cooling down. Review and approve submissions.`,
+        data: { taskId, message: 'cooldown' },
+      },
+    });
+  }
+};
+
+// ── Featured Tasks ──────────────────────────────
+
+const getFeaturedTasks = async () => {
+  const tasks = await prisma.task.findMany({
+    where: {
+      status: { in: ['OPEN', 'COOLING_DOWN'] },
+      featured: true,
+    },
+    include: {
+      poster: {
+        select: {
+          id: true,
+          username: true,
+          avatarUrl: true,
+          createdAt: true,
+          posterProfile: { select: { avgRating: true, isVerified: true, totalPosted: true } },
+        },
+      },
+      _count: { select: { submissions: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 10,
+  });
+
+  return tasks;
+};
+
+// ── Join Waitlist ───────────────────────────────
+
+const joinWaitlist = async (userId, taskId) => {
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task) throw ApiError.notFound('Task not found');
+  if (task.status !== 'COOLING_DOWN') throw ApiError.badRequest('Task is not in cooldown');
+
+  const existing = await prisma.waitlist.findUnique({
+    where: { taskId_userId: { taskId, userId } },
+  });
+  if (existing) throw ApiError.conflict('Already on waitlist');
+
+  await prisma.waitlist.create({ data: { taskId, userId } });
+
+  const position = await prisma.waitlist.count({ where: { taskId } });
+
+  return { position };
+};
+
+// ── Reject Submission ───────────────────────────
+
+const rejectSubmission = async (posterId, submissionId, { posterNotes }) => {
+  const submission = await prisma.taskSubmission.findUnique({
+    where: { id: submissionId },
+    include: { task: true },
+  });
+
+  if (!submission) throw ApiError.notFound('Submission not found');
+  if (submission.task.posterId !== posterId) throw ApiError.forbidden('Not your task');
+  if (!['SUBMITTED', 'PENDING'].includes(submission.status)) throw ApiError.badRequest('Submission cannot be rejected');
+
+  return prisma.$transaction(async (db) => {
+    const updated = await db.taskSubmission.update({
+      where: { id: submissionId },
+      data: { status: 'REJECTED', reviewedAt: new Date(), posterNotes: posterNotes || undefined },
+    });
+
+    await db.workerProfile.update({
+      where: { userId: submission.workerId },
+      data: { tasksRejected: { increment: 1 } },
+    });
+
+    await db.notification.create({
+      data: {
+        userId: submission.workerId,
+        type: 'SUBMISSION_REJECTED',
+        title: '❌ Submission Rejected',
+        body: posterNotes || 'Your submission was rejected.',
+        data: { taskId: submission.taskId, submissionId, reason: posterNotes },
+      },
+    });
+
+    // Reopen slot
+    await db.task.update({
+      where: { id: submission.taskId },
+      data: {
+        currentWorkers: { decrement: 1 },
+        submissionsCount: { decrement: 1 },
+        status: 'OPEN',
+        featured: submission.task.featured,
+      },
+    });
+
+    // Notify first waitlisted worker
+    const next = await db.waitlist.findFirst({
+      where: { taskId: submission.taskId },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (next) {
+      await db.notification.create({
+        data: {
+          userId: next.userId,
+          type: 'SLOT_REOPENED',
+          title: '🎯 Slot Reopened!',
+          body: `A slot opened up for "${submission.task.title}" — apply now!`,
+          data: { taskId: submission.taskId },
+        },
+      });
+      await db.waitlist.delete({ where: { id: next.id } });
+    }
+
+    return updated;
+  });
+};
+
+// ── Auto-Complete Expired Cooldowns ─────────────
+
+const autoCompleteExpiredCooldowns = async () => {
+  const expired = await prisma.task.findMany({
+    where: {
+      status: 'COOLING_DOWN',
+      cooldownStartedAt: {
+        lte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      },
+    },
+  });
+
+  for (const task of expired) {
+    await prisma.$transaction(async (db) => {
+      await db.taskSubmission.updateMany({
+        where: { taskId: task.id, status: 'PENDING' },
+        data: { status: 'APPROVED' },
+      });
+
+      await db.task.update({
+        where: { id: task.id },
+        data: { status: 'COMPLETED' },
+      });
+
+      await db.notification.create({
+        data: {
+          userId: task.posterId,
+          type: 'COOLDOWN_EXPIRED',
+          title: '⏰ Cooldown Expired',
+          body: `Cooldown expired for "${task.title}". Pending submissions auto-approved.`,
+          data: { taskId: task.id },
+        },
+      });
+    });
+  }
+
+  return expired.length;
 };
 
 // ── Helpers ────────────────────────────────────
@@ -314,4 +610,9 @@ module.exports = {
   applyToTask,
   submitTask,
   reviewSubmission,
+  triggerCooldownIfFull,
+  getFeaturedTasks,
+  joinWaitlist,
+  rejectSubmission,
+  autoCompleteExpiredCooldowns,
 };

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Community - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'dark')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050816;--bg2:#080B1A;--card:#0B1020;--card2:#0F1428;--border:#1A2040;--border2:#2A3070;--text:#FFFFFF;--text2:#8B8FA3;--text3:#5C6080;--accent:#3B82F6;--accent2:#2563EB;--accent-dim:rgba(59,130,246,.12);--green:#22C55E;--shadow:0 4px 24px rgba(0,0,0,.5);--radius:14px;--nav-h:60px}
+[data-theme="light"]{--bg:#050816;--bg2:#080B1A;--card:#0B1020;--card2:#0F1428;--border:#1A2040;--border2:#2A3070;--text:#FFFFFF;--text2:#8B8FA3;--text3:#5C6080;--accent:#3B82F6}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
+a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}input,select,textarea{font:inherit}img{max-width:100%;display:block}
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(5,8,22,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4)}
+.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:19px;font-weight:800;letter-spacing:-.4px;white-space:nowrap}
+.logo-mark{width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:9px;overflow:hidden}
+.logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}
+.brand span span{color:var(--text)}
+.nav-links{display:flex;align-items:center;justify-content:center;gap:4px}
+.nav-link{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:600;line-height:1;transition:all .14s}
+.nav-link svg{width:15px;height:15px;stroke-width:2.2;flex-shrink:0}
+.nav-link.active,.nav-link:hover{color:var(--text);background:var(--bg2)}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.wallet-btn{height:36px;padding:0 14px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:all .2s}
+.wallet-btn:hover{border-color:var(--accent);background:var(--accent-dim)}
+.wallet-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.icon-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text2);font-size:18px;line-height:1;display:grid;place-items:center;transition:all .2s}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.mobile-menu{display:none;position:fixed;inset:0;z-index:150}
+.mobile-menu.open{display:block}
+.mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+.oga-drawer{position:absolute;right:0;top:0;bottom:0;width:min(360px,88vw);background:#0B1020;border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s}
+.mobile-menu.open .oga-drawer{transform:translateX(0)}
+.oga-drawer-head{height:60px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.oga-drawer-close{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text2);display:grid;place-items:center;cursor:pointer}
+.oga-drawer-nav{padding:12px;overflow-y:auto;flex:1}
+.oga-drawer-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:var(--text2);text-decoration:none;font-weight:600;font-size:14px;transition:all .14s}
+.oga-drawer-item:hover{background:var(--card2);color:var(--text)}
+.oga-drawer-item svg{width:18px;height:18px;color:var(--accent)}
+.oga-drawer-foot{padding:12px;border-top:1px solid var(--border)}
+.oga-drawer-actions{display:flex;gap:10px}
+.oga-drawer-actions .wallet-btn{flex:1;justify-content:center}
+.authed-only{display:none!important}.public-only{display:flex!important}
+body[data-auth="authed"] .authed-only{display:flex!important}
+body[data-auth="authed"] .public-only{display:none!important}
+.main-wrap{flex:1;width:min(800px,calc(100% - 32px));margin:0 auto;padding:calc(var(--nav-h) + 16px) 0 60px}
+@keyframes fadeIn{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.wizard-header{text-align:center;margin-bottom:32px}
+.wizard-header h1{font-family:Outfit;font-size:32px;font-weight:900;margin:0 0 6px;background:linear-gradient(135deg,#fff 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.wizard-header p{color:var(--text2);font-size:14px;margin:0}
+.steps-bar{display:flex;justify-content:center;gap:8px;margin-bottom:32px}
+.step-dot{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;border:2px solid var(--border);color:var(--text3);transition:all .3s}
+.step-dot.active{border-color:var(--accent);background:var(--accent);color:#fff}
+.step-dot.done{border-color:var(--green);background:var(--green);color:#fff}
+.step-line{width:40px;height:2px;background:var(--border);align-self:center}
+.step-line.done{background:var(--green)}
+
+.wizard-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:32px;animation:fadeIn .3s ease}
+@media(max-width:640px){.wizard-card{padding:20px}}
+.wizard-card h2{font-family:Outfit;font-size:20px;font-weight:800;margin:0 0 4px}
+.wizard-card .wc-sub{color:var(--text2);font-size:14px;margin:0 0 24px}
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text2)}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text);font-size:14px;outline:none;transition:border-color .2s;font-family:inherit}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.form-group textarea{resize:vertical;min-height:100px}
+.form-group select{appearance:auto}
+.form-group .hint{color:var(--text3);font-size:12px;margin-top:4px}
+.wizard-actions{display:flex;gap:12px;margin-top:24px;justify-content:space-between}
+.wizard-actions .btn{height:44px;padding:0 24px;border-radius:10px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:all .2s}
+.btn-back{border:1px solid var(--border);background:transparent;color:var(--text2)}
+.btn-back:hover{border-color:var(--accent);color:var(--accent)}
+.btn-next{border:0;background:var(--accent);color:#fff}
+.btn-next:hover{box-shadow:0 4px 20px rgba(59,130,246,.3)}
+.btn-next:disabled{opacity:.5;cursor:not-allowed}
+.upload-area{width:100%;height:140px;border:2px dashed var(--border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);cursor:pointer;transition:all .2s;background:var(--bg2)}
+.upload-area:hover{border-color:var(--accent);color:var(--accent)}
+.upload-area svg{width:32px;height:32px;margin-bottom:8px}
+.upload-area span{font-size:13px}
+
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.cat-opt{padding:16px;border:1.5px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg2)}
+.cat-opt:hover,.cat-opt.active{border-color:var(--accent);background:var(--accent-dim)}
+.cat-opt svg{width:24px;height:24px;color:var(--accent);margin-bottom:6px}
+.cat-opt .co-name{font-size:12px;font-weight:600}
+
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:0}
+.setting-row .sr-label{font-size:14px;font-weight:600}
+.setting-row .sr-desc{color:var(--text2);font-size:12px}
+.toggle{width:44px;height:24px;border-radius:999px;border:2px solid var(--border);background:var(--bg2);cursor:pointer;position:relative;transition:all .2s;flex-shrink:0}
+.toggle.active{border-color:var(--accent);background:var(--accent)}
+.toggle:after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text);transition:transform .2s}
+.toggle.active:after{transform:translateX(20px);background:#fff}
+
+.preview-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.preview-card .pc-banner{height:120px;background:linear-gradient(135deg,#1a1a4e,#3B82F6)}
+.preview-card .pc-body{padding:16px;display:flex;gap:14px;align-items:center}
+.preview-card .pc-av{width:52px;height:52px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;font-size:20px;font-weight:800;color:var(--accent);flex-shrink:0}
+.preview-card .pc-info h3{font-size:18px;font-weight:700;margin:0}
+.preview-card .pc-info p{color:var(--text2);font-size:13px;margin:2px 0 0}
+
+.success-state{text-align:center;padding:48px 24px}
+.success-state svg{width:64px;height:64px;color:var(--green);margin-bottom:16px}
+.success-state h2{font-family:Outfit;font-size:24px;font-weight:800;margin:0 0 8px}
+.success-state p{color:var(--text2);font-size:14px;margin:0 0 24px}
+
+.site-footer{position:relative;overflow:hidden;padding:60px 24px 32px;background:linear-gradient(180deg,var(--bg) 0%,#000 100%);border-top:1px solid var(--border)}
+.site-footer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.15;pointer-events:none}
+.footer-overlay{position:relative;z-index:1;max-width:1120px;margin:0 auto}
+.footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:34px;margin-bottom:32px}
+@media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:24px}}
+.footer-brand{display:flex;align-items:center;gap:10px;font-family:Outfit;font-size:22px;font-weight:900;margin-bottom:10px}
+.footer-brand .logo-mark{width:28px;height:28px}
+.footer-desc{color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:16px;max-width:280px}
+.footer-social{display:flex;gap:10px}
+.footer-social a{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);display:grid;place-items:center;color:var(--text2);transition:all .2s}
+.footer-social a:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.footer-col h4{font-size:14px;font-weight:700;margin:0 0 14px;color:var(--text)}
+.footer-col nav{display:grid;gap:8px}
+.footer-col a{color:var(--text2);font-size:13px;transition:color .2s}
+.footer-col a:hover{color:var(--accent)}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:20px;border-top:1px solid var(--border);color:var(--text3);font-size:13px;flex-wrap:wrap;gap:12px}
+@media(max-width:768px){.nav-links{display:none}.nav-actions .wallet-btn .wallet-label{display:none}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="nav-inner"><a class="brand" href="index.html"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span><span>Oga<span>Pay</span></span></a><nav class="nav-links"><a class="nav-link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a><a class="nav-link" href="communities.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Communities</a><a class="nav-link active" href="create-community.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Create</a></nav><div class="nav-actions"><button class="icon-btn" id="themeToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button><button class="icon-btn" id="menuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button></div></div></header>
+
+<div class="main-wrap">
+<div class="wizard-header">
+  <h1>Create a Community</h1>
+  <p>Build your community in just a few steps</p>
+</div>
+<div class="steps-bar" id="stepsBar"></div>
+
+<div id="wizardContent"></div>
+</div>
+
+<footer class="site-footer">
+  <video autoplay muted loop playsinline poster=""><source src="https://ogapay-five.vercel.app/videos/ogapay-bg.mp4" type="video/mp4"></video>
+  <div class="footer-overlay"><div class="footer-grid"><div><div class="footer-brand"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</div><p class="footer-desc">Work. Earn. Repeat.</p></div><div class="footer-col"><h4>Resources</h4><nav><a href="faq.html">FAQ</a><a href="support.html">Support</a><a href="communities.html">Communities</a></nav></div><div class="footer-col"><h4>Company</h4><nav><a href="about.html">About</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a></nav></div></div><div class="footer-bottom"><span>&copy; 2026 OgaPay.</span></div></div>
+</footer>
+
+<script>
+let step = 1;
+const data = {name:'',tagline:'',desc:'',category:'',type:'public',approval:false,website:'',x:'',telegram:'',discord:''};
+
+function $(id){return document.getElementById(id)}
+function html(el,h){el.innerHTML=h}
+
+function renderSteps(){
+  const steps = ['Basic Info','Branding','Category','Settings','Social Links','Review'];
+  html($('stepsBar'),steps.map((s,i)=>{
+    const num = i+1;
+    let cls = 'step-dot';
+    if(num===step)cls+=' active';
+    else if(num<step)cls+=' done';
+    return '<div style="display:flex;align-items:center;gap:8px">'+
+      (i>0?'<div class="step-line'+(num<=step?' done':'')+'"></div>':'')+
+      '<div class="'+cls+'">'+(num<step?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':num)+'</div></div>';
+  }).join('')+'<div style="margin-left:8px;font-size:13px;color:var(--text2);font-weight:600">Step '+step+' of 6</div>');
+}
+
+function renderStep(){
+  const wc = $('wizardContent');
+  let h = '';
+  switch(step){
+    case 1:
+      h = '<div class="wizard-card"><h2>Basic Information</h2><p class="wc-sub">Tell us about your community</p>'+
+        '<div class="form-group"><label>Community Name</label><input id="fName" placeholder="e.g. Solana Builders" value="'+data.name+'"></div>'+
+        '<div class="form-group"><label>Tagline</label><input id="fTagline" placeholder="e.g. Building the future on Solana" value="'+data.tagline+'"></div>'+
+        '<div class="form-group"><label>Description</label><textarea id="fDesc" placeholder="Describe your community, its purpose, and what members can expect...">'+data.desc+'</textarea><div class="hint">Minimum 50 characters recommended</div></div>'+
+        '<div class="wizard-actions"><div></div><button class="btn btn-next" onclick="nextStep()">Continue <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button></div></div>';
+      break;
+    case 2:
+      h = '<div class="wizard-card"><h2>Branding</h2><p class="wc-sub">Add visuals to make your community stand out</p>'+
+        '<div class="form-group"><label>Community Avatar</label><div class="upload-area" onclick="document.getElementById(\'avInput\').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Upload avatar image</span></div><input type="file" id="avInput" accept="image/*" style="display:none"></div>'+
+        '<div class="form-group"><label>Community Banner</label><div class="upload-area" onclick="document.getElementById(\'bnInput\').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Upload banner image (1920x480)</span></div><input type="file" id="bnInput" accept="image/*" style="display:none"></div>'+
+        '<div class="form-group"><label>Theme Color</label><input type="color" id="fColor" value="#3B82F6" style="height:48px;padding:4px;cursor:pointer"></div>'+
+        '<div class="wizard-actions"><button class="btn btn-back" onclick="prevStep()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Back</button><button class="btn btn-next" onclick="nextStep()">Continue <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button></div></div>';
+      break;
+    case 3:
+      h = '<div class="wizard-card"><h2>Category</h2><p class="wc-sub">Choose the category that best fits your community</p><div class="cat-grid">'+
+        ['Crypto','Business','Marketing','Design','Content','Development','Education'].map(c=>'<div class="cat-opt'+(data.category===c?' active':'')+'" onclick="selectCategory(\''+c+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div class="co-name">'+c+'</div></div>').join('')+
+      '</div><div class="wizard-actions"><button class="btn btn-back" onclick="prevStep()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Back</button><button class="btn btn-next" onclick="nextStep()" id="catNextBtn" disabled>Continue <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button></div></div>';
+      setTimeout(()=>{if(data.category)document.getElementById('catNextBtn').disabled=false},50);
+      break;
+    case 4:
+      h = '<div class="wizard-card"><h2>Community Settings</h2><p class="wc-sub">Configure how people join and interact</p>'+
+        '<div class="form-group"><label>Community Type</label><select id="fType"><option value="public"'+(data.type==='public'?' selected':'')+'>Public - Anyone can join</option><option value="private"'+(data.type==='private'?' selected':'')+'>Private - Approval required</option><option value="invite"'+(data.type==='invite'?' selected':'')+'>Invite Only</option></select></div>'+
+        '<div class="setting-row"><div><div class="sr-label">Member Approval</div><div class="sr-desc">Require admin approval for new members</div></div><div class="toggle'+(data.approval?' active':'')+'" onclick="this.classList.toggle(\'active\');data.approval=this.classList.contains(\'active\')"></div></div>'+
+        '<div class="wizard-actions"><button class="btn btn-back" onclick="prevStep()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Back</button><button class="btn btn-next" onclick="nextStep()">Continue <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button></div></div>';
+      break;
+    case 5:
+      h = '<div class="wizard-card"><h2>Social Links</h2><p class="wc-sub">Connect your community's social presence</p>'+
+        '<div class="form-group"><label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg> Website</label><input id="fWeb" placeholder="https://" value="'+data.website+'"></div>'+
+        '<div class="form-group"><label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg> X / Twitter</label><input id="fX" placeholder="@username" value="'+data.x+'"></div>'+
+        '<div class="form-group"><label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><polyline points="4 11 10 14 20 4"/><path d="M4 11l4 9 2-6 6-4-12 1z"/></svg> Telegram</label><input id="fTg" placeholder="t.me/username" value="'+data.telegram+'"></div>'+
+        '<div class="form-group"><label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Discord</label><input id="fDc" placeholder="discord.gg/invite" value="'+data.discord+'"></div>'+
+        '<div class="wizard-actions"><button class="btn btn-back" onclick="prevStep()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Back</button><button class="btn btn-next" onclick="nextStep()">Continue <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button></div></div>';
+      break;
+    case 6:
+      h = '<div class="wizard-card"><h2>Review & Launch</h2><p class="wc-sub">Preview your community before publishing</p>'+
+        '<div class="preview-card"><div class="pc-banner" style="background:linear-gradient(135deg,#1a1a4e,#3B82F6)"></div><div class="pc-body"><div class="pc-av">'+(data.name?data.name.slice(0,2).toUpperCase():'CO')+'</div><div class="pc-info"><h3>'+(data.name||'Community Name')+'</h3><p>'+(data.tagline||'Community tagline')+'</p></div></div></div>'+
+        '<div style="margin-top:16px;display:grid;gap:8px;font-size:14px;color:var(--text2)">'+
+          '<div><strong style="color:var(--text)">Category:</strong> '+(data.category||'Not set')+'</div>'+
+          '<div><strong style="color:var(--text)">Type:</strong> '+(data.type==='public'?'Public':data.type==='private'?'Private':'Invite Only')+'</div>'+
+          '<div><strong style="color:var(--text)">Approval:</strong> '+(data.approval?'Required':'Not required')+'</div>'+
+        '</div>'+
+        '<div class="wizard-actions"><button class="btn btn-back" onclick="prevStep()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Back</button><button class="btn btn-next" onclick="launchCommunity()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg> Launch Community</button></div></div>';
+      break;
+  }
+  if(step>6){
+    h = '<div class="wizard-card"><div class="success-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><h2>Community Created!</h2><p>Your community has been launched. Start inviting members and posting tasks.</p><button class="btn btn-next" onclick="window.location.href=\'community-profile.html\'">View Community</button></div></div>';
+  }
+  wc.innerHTML = h;
+  renderSteps();
+}
+
+function nextStep(){
+  if(step===1){data.name=$('fName').value;data.tagline=$('fTagline').value;data.desc=$('fDesc').value;if(!data.name)return}
+  if(step===3&&!data.category)return;
+  if(step===5){data.website=$('fWeb').value;data.x=$('fX').value;data.telegram=$('fTg').value;data.discord=$('fDc').value}
+  if(step===4)data.type=document.getElementById('fType').value;
+  step++;renderStep();window.scrollTo({top:0,behavior:'smooth'});
+}
+function prevStep(){step--;renderStep();window.scrollTo({top:0,behavior:'smooth'});}
+function selectCategory(c){data.category=c;document.querySelectorAll('.cat-opt').forEach(el=>el.classList.remove('active'));event.target.closest('.cat-opt').classList.add('active');document.getElementById('catNextBtn').disabled=false}
+function launchCommunity(){step=7;renderStep();}
+
+renderStep();
+
+(function(){
+  try{var th=localStorage.getItem('ogapay-theme')||'dark';document.documentElement.setAttribute('data-theme',th);}catch(e){}
+  var authed=false;try{authed=localStorage.getItem('ogapay-authenticated')==='true';}catch(e){}
+  document.body.setAttribute('data-auth',authed?'authed':'public');
+  var themeBtn=document.getElementById('themeToggle');
+  if(themeBtn){themeBtn.addEventListener('click',function(){var html=document.documentElement;html.setAttribute('data-theme',next);
+      // Swap icon
+      var iconEl=document.getElementById('themeToggle').querySelector('svg');
+      if(iconEl)iconEl.outerHTML=next==='dark'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';try{localStorage.setItem('ogapay-theme',next);}catch(e){}});}
+  var menuBtn=document.getElementById('menuBtn');var mobileMenu=document.getElementById('mobileMenu');
+  if(menuBtn&&mobileMenu){menuBtn.addEventListener('click',function(){mobileMenu.classList.add('open');});mobileMenu.querySelectorAll('[data-close-menu]').forEach(function(el){el.addEventListener('click',function(){mobileMenu.classList.remove('open');});});}
+})();
+</script>
+</body>
+</html>
+CREEOF
+echo "create-community.html built: $(wc -l < /root/Documents/Codex/2026-05-31/hi/Ogapay/create-community.html) lines"

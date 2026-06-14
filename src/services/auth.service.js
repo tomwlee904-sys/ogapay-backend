@@ -3,6 +3,7 @@
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const { prisma } = require('../config/database');
+const { supabase, supabaseAdmin } = require('../config/supabase');
 const { generateTokenPair, verifyRefreshToken } = require('../utils/jwt');
 const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
@@ -53,7 +54,7 @@ const register = async ({ firstName, lastName, email, password, username, role, 
     });
 
     // Create wallets
-    const currencies = ['NGN', 'USDC', 'USDT'];
+    const currencies = ['NGN', 'USDC', 'USDT', 'SOL'];
     await tx.wallet.createMany({
       data: currencies.map((currency) => ({
         userId: newUser.id,
@@ -69,9 +70,6 @@ const register = async ({ firstName, lastName, email, password, username, role, 
     } else if (role === 'POSTER') {
       await tx.posterProfile.create({ data: { userId: newUser.id } });
     }
-
-    // Create KYC record
-    await tx.kycVerification.create({ data: { userId: newUser.id } });
 
     // Referral welcome notification
     if (referredById) {
@@ -93,102 +91,6 @@ const register = async ({ firstName, lastName, email, password, username, role, 
   const tokens = generateTokenPair(user);
   await saveRefreshToken(user.id, tokens.refreshToken);
 
-  return { user: sanitizeUser(user), tokens };
-};
-
-const uniqueUsername = async (base) => {
-  const cleaned = String(base || 'ogapay_user').toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/^_+|_+$/g, '').slice(0, 24) || 'ogapay_user';
-  let candidate = cleaned;
-  let suffix = 1;
-
-  while (await prisma.user.findUnique({ where: { username: candidate } })) {
-    candidate = `${cleaned.slice(0, 24)}_${suffix}`;
-    suffix += 1;
-  }
-
-  return candidate;
-};
-
-const createUserDefaults = async (tx, userId, role) => {
-  await tx.wallet.createMany({
-    data: ['NGN', 'USDC', 'USDT'].map((currency) => ({
-      userId,
-      currency,
-      balance: 0,
-      lockedBalance: 0,
-    })),
-    skipDuplicates: true,
-  });
-
-  if (role === 'WORKER') {
-    await tx.workerProfile.upsert({ where: { userId }, update: {}, create: { userId } });
-  } else if (role === 'POSTER') {
-    await tx.posterProfile.upsert({ where: { userId }, update: {}, create: { userId } });
-  }
-
-  await tx.kycVerification.upsert({ where: { userId }, update: {}, create: { userId } });
-};
-
-const googleExchange = async ({ supabaseAccessToken, role = 'WORKER' }, ipAddress, userAgent) => {
-  const { supabaseAdmin } = require('../config/supabase');
-  const { data, error } = await supabaseAdmin.auth.getUser(supabaseAccessToken);
-
-  if (error || !data?.user?.email) {
-    throw ApiError.unauthorized('Invalid Google session. Please sign in again.');
-  }
-
-  const supabaseUser = data.user;
-  const email = supabaseUser.email.toLowerCase();
-  const metadata = supabaseUser.user_metadata || {};
-  const resolvedRole = String(role || 'WORKER').toUpperCase() === 'POSTER' ? 'POSTER' : 'WORKER';
-
-  const user = await prisma.$transaction(async (tx) => {
-    const existing = await tx.user.findFirst({
-      where: { OR: [{ email }, { supabaseId: supabaseUser.id }] },
-    });
-
-    if (existing) {
-      await createUserDefaults(tx, existing.id, existing.role);
-      return tx.user.update({
-        where: { id: existing.id },
-        data: {
-          supabaseId: existing.supabaseId || supabaseUser.id,
-          avatarUrl: existing.avatarUrl || metadata.avatar_url || metadata.picture,
-          isEmailVerified: true,
-          lastLoginAt: new Date(),
-        },
-      });
-    }
-
-    const fullName = String(metadata.full_name || metadata.name || '').trim();
-    const [firstFromName, ...rest] = fullName.split(/\s+/).filter(Boolean);
-    const firstName = metadata.given_name || firstFromName || 'OgaPay';
-    const lastName = metadata.family_name || rest.join(' ') || 'User';
-    const username = await uniqueUsername(metadata.preferred_username || email.split('@')[0]);
-
-    const created = await tx.user.create({
-      data: {
-        supabaseId: supabaseUser.id,
-        email,
-        firstName,
-        lastName,
-        username,
-        role: resolvedRole,
-        avatarUrl: metadata.avatar_url || metadata.picture,
-        isEmailVerified: true,
-        referralCode: generateReferralCode(),
-        lastLoginAt: new Date(),
-      },
-    });
-
-    await createUserDefaults(tx, created.id, resolvedRole);
-    return created;
-  });
-
-  const tokens = generateTokenPair(user);
-  await saveRefreshToken(user.id, tokens.refreshToken, ipAddress, userAgent);
-
-  logger.info(`Google user signed in: ${user.email}`);
   return { user: sanitizeUser(user), tokens };
 };
 
@@ -244,6 +146,105 @@ const refreshTokens = async (token) => {
   return { tokens };
 };
 
+// ── Google Exchange ────────────────────────────
+
+const googleExchange = async ({ supabaseAccessToken, role }, ipAddress, userAgent) => {
+  if (!supabaseAccessToken) throw ApiError.badRequest('Missing Supabase access token');
+
+  let supabaseUser;
+  try {
+    const { data, error } = await supabase.auth.getUser(supabaseAccessToken);
+    if (error) throw error;
+    supabaseUser = data.user;
+  } catch (err) {
+    try {
+      const { data, error } = await supabaseAdmin.auth.getUser(supabaseAccessToken);
+      if (error) throw error;
+      supabaseUser = data.user;
+    } catch (err2) {
+      logger.error(`Supabase token verification failed (anon: ${err.message}, admin: ${err2.message})`);
+      throw ApiError.unauthorized('Invalid or expired Supabase session');
+    }
+  }
+
+  if (!supabaseUser?.email) throw ApiError.badRequest('No email returned from Google');
+
+  const { email, user_metadata, id: supabaseId } = supabaseUser;
+  const meta = user_metadata || {};
+  const fullName = meta.full_name || meta.name || email.split('@')[0];
+  const parts = fullName.trim().split(/\s+/);
+  const firstName = meta.given_name || parts[0] || '';
+  const lastName = meta.family_name || parts.slice(1).join(' ') || '';
+  const avatarUrl = meta.avatar_url || meta.picture || null;
+
+  let user = await prisma.user.findUnique({ where: { email } });
+
+  if (user) {
+    if (user.isBanned) throw ApiError.forbidden('Account has been banned. Contact support.');
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date(), avatarUrl: avatarUrl || undefined },
+    });
+    await prisma.kycVerification.upsert({
+      where: { userId: user.id },
+      create: { userId: user.id, status: 'APPROVED' },
+      update: { status: 'APPROVED' },
+    });
+    const existingWallets = await prisma.wallet.findMany({ where: { userId: user.id }, select: { currency: true } });
+    const existingCurrencies = existingWallets.map(w => w.currency);
+    const neededCurrencies = ['NGN', 'USDC', 'USDT', 'SOL'];
+    const missing = neededCurrencies.filter(c => !existingCurrencies.includes(c));
+    if (missing.length > 0) {
+      await prisma.wallet.createMany({
+        data: missing.map(currency => ({ userId: user.id, currency, balance: 0, lockedBalance: 0 })),
+      });
+    }
+  } else {
+    user = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          firstName: firstName || email.split('@')[0],
+          lastName,
+          email,
+          username: email.split('@')[0] + '_' + supabaseId.slice(0, 6),
+          role: role || 'POSTER',
+          isEmailVerified: true,
+          avatarUrl,
+          referralCode: generateReferralCode(),
+        },
+      });
+
+      const currencies = ['NGN', 'USDC', 'USDT', 'SOL'];
+      await tx.wallet.createMany({
+        data: currencies.map((currency) => ({
+          userId: newUser.id,
+          currency,
+          balance: 0,
+          lockedBalance: 0,
+        })),
+      });
+
+      if (newUser.role === 'WORKER') {
+        await tx.workerProfile.create({ data: { userId: newUser.id } });
+      } else if (newUser.role === 'POSTER') {
+        await tx.posterProfile.create({ data: { userId: newUser.id } });
+      }
+
+      await tx.kycVerification.create({ data: { userId: newUser.id, status: 'APPROVED' } });
+
+      logger.info(`New user from Google: ${newUser.email} (${newUser.role})`);
+      const newTokens = generateTokenPair(newUser);
+      await saveRefreshToken(newUser.id, newTokens.refreshToken, ipAddress, userAgent);
+      return { user: sanitizeUser(newUser), tokens: newTokens };
+    });
+  }
+
+  const tokens = generateTokenPair(user);
+  await saveRefreshToken(user.id, tokens.refreshToken, ipAddress, userAgent);
+
+  return { user: sanitizeUser(user), tokens };
+};
+
 // ── Logout ─────────────────────────────────────
 
 const logout = async (userId, refreshToken) => {
@@ -278,4 +279,90 @@ const sanitizeUser = (user) => ({
   createdAt: user.createdAt,
 });
 
-module.exports = { register, googleExchange, login, refreshTokens, logout };
+
+// ── Forgot Password ────────────────────────────
+
+const forgotPassword = async (email) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    // Don't reveal whether email exists
+    return { message: 'If that email is registered, a reset link will be sent.' };
+  }
+
+  const resetToken = uuidv4();
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + 1);
+
+  // Store reset token in DB
+  await prisma.refreshToken.create({
+    data: {
+      userId: user.id,
+      token: `reset_${resetToken}`,
+      expiresAt,
+    },
+  });
+
+  // In production, send email via SendGrid/Mailgun
+  logger.info(`Password reset requested for ${email}. Token: ${resetToken}`);
+
+  return { message: 'If that email is registered, a reset link will be sent.' };
+};
+
+// ── Reset Password ─────────────────────────────
+
+const resetPassword = async (token, newPassword) => {
+  const stored = await prisma.refreshToken.findUnique({
+    where: { token: `reset_${token}` },
+    include: { user: true },
+  });
+
+  if (!stored) throw ApiError.badRequest('Invalid or expired reset token');
+  if (stored.expiresAt < new Date()) {
+    await prisma.refreshToken.delete({ where: { id: stored.id } });
+    throw ApiError.badRequest('Reset token expired');
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: stored.userId },
+      data: { passwordHash },
+    }),
+    prisma.refreshToken.delete({ where: { id: stored.id } }),
+  ]);
+
+  return { message: 'Password reset successful' };
+};
+
+// ── Change Password (authenticated) ────────────
+
+const changePassword = async (userId, currentPassword, newPassword) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw ApiError.notFound('User not found');
+
+  if (!user.passwordHash) {
+    // User signed up with Google — set password
+    const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+    return { message: 'Password set successfully' };
+  }
+
+  const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!isValid) throw ApiError.badRequest('Current password is incorrect');
+
+  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { passwordHash },
+  });
+
+  // Invalidate all existing sessions
+  await prisma.refreshToken.deleteMany({ where: { userId } });
+
+  return { message: 'Password changed successfully' };
+};
+
+module.exports = { register, login, googleExchange, refreshTokens, logout, forgotPassword, resetPassword, changePassword };

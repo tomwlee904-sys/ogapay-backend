@@ -4,31 +4,583 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Referrals - OgaPay</title>
-<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-<style>
-:root{
-  --bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--gold:#f5b301;--soft-purple:#f4f6fa;--soft-blue:#eef6ff;--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--radius:14px;--nav-h:60px;
-}
-[data-theme="dark"]{
-  --bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--border2:#2d384d;--text:#f4f7fb;--text2:#9aa7bc;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--soft-purple:#111725;--soft-blue:#0d1d34;--shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);--shadow-soft:0 2px 8px rgba(0,0,0,.22);
-}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
-.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4)}[data-theme="dark"] .nav{background:rgba(8,11,19,.92)}
-.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;width:min(1200px,calc(100% - 48px));margin:0 auto}.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit";font-weight:800;font-size:19px}.logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:grid;place-items:center;font-size:18px}.nav-links{display:flex;justify-content:center;gap:4px}.nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700}.nav-link:hover,.nav-link.active{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;align-items:center;gap:8px}.icon-btn,.menu-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center}.icon-btn:hover,.menu-btn:hover{color:var(--text);background:var(--bg2);border-color:var(--border2)}.pill-btn{height:36px;border:1.5px solid var(--border2);border-radius:999px;background:var(--primary);color:var(--bg);display:inline-flex;align-items:center;gap:8px;padding:0 16px;font-weight:800;font-size:13px}
-.app{display:flex;min-height:calc(100vh - var(--nav-h))}.sidebar{width:244px;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));border-right:1px solid var(--border);background:var(--bg);padding:14px 10px;overflow:auto;display:none}body.is-authed .sidebar{display:block}.sb-cta{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 12px;padding:10px 14px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:800;font-size:13px}.sb-label,.drawer-section{display:block;padding:12px 8px 5px;color:var(--text3);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px}.sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--text2);font-size:13.5px;font-weight:700}.sb-item:hover,.sb-item.active{background:var(--bg2);color:var(--text)}.sb-icon{width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);display:grid;place-items:center;color:var(--text3)}.sb-user{margin:14px 0 0;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);display:flex;gap:10px;align-items:center}.avatar-mini{width:34px;height:34px;border-radius:50%;background:var(--brand-blue);display:grid;place-items:center;color:var(--card);font-weight:900}.main{flex:1;min-width:0}.page{width:min(1120px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);font-size:12px;font-weight:800}.page h1{font-family:"Outfit";font-size:clamp(30px,4vw,46px);letter-spacing:-1.2px;margin:10px 0 8px}.lead{margin:0;color:var(--text2);max-width:680px;line-height:1.65}.grid{display:grid;gap:16px}.grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft);padding:18px}.card h2,.card h3{font-family:"Outfit";margin:0 0 10px}.muted{color:var(--text2)}.small{font-size:12.5px;color:var(--text3)}.stat{font-family:"Outfit";font-size:26px;font-weight:900}.badge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--bg2);border-radius:999px;padding:5px 9px;font-size:12px;font-weight:800;color:var(--text2)}.btn{border:1.5px solid var(--border2);background:var(--card);color:var(--text);border-radius:10px;height:40px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:800}.btn.primary{background:var(--primary);color:var(--bg);border-color:var(--primary)}.btn.danger{color:var(--accent);border-color:var(--border)}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.space{justify-content:space-between}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:12px 10px;border-bottom:1px solid var(--border);text-align:left;font-size:13.5px}.table th{color:var(--text3);text-transform:uppercase;font-size:11px;letter-spacing:1px}.form{display:grid;gap:12px}.field{display:grid;gap:6px}.field label{font-size:12px;font-weight:800;color:var(--text2)}.field input,.field select,.field textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);padding:11px 12px}.switch{width:46px;height:26px;border-radius:999px;background:var(--bg2);border:1px solid var(--border);position:relative}.switch:after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:var(--text3);left:3px;top:2px}.switch.on:after{left:21px;background:var(--accent2)}.progress{height:9px;border-radius:999px;background:var(--bg2);overflow:hidden}.bar{height:100%;border-radius:inherit;background:var(--brand-blue)}.drawer{position:fixed;inset:0;z-index:300;display:none}.drawer.open{display:block}.overlay{position:absolute;inset:0;background:rgba(0,0,0,.36);backdrop-filter:blur(3px)}.drawer-panel{position:absolute;right:0;top:0;bottom:0;width:min(340px,92vw);background:var(--bg);border-left:1px solid var(--border);padding:16px;overflow:auto}.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.drawer-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--text2);font-weight:800}.drawer-link:hover,.drawer-link.active{background:var(--bg2);color:var(--text)}.toast{position:fixed;right:18px;bottom:18px;background:var(--primary);color:var(--bg);border-radius:12px;padding:12px 14px;font-weight:800;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:.2s;z-index:400}.toast.show{opacity:1;transform:translateY(0)}
-@media(max-width:860px){.nav-links,.pill-btn{display:none}.nav-inner{width:min(100% - 28px,1200px)}.sidebar{display:none!important}.page{width:min(100% - 28px,1120px);padding-top:24px}.page-head{display:block}.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr}.table-wrap{overflow:auto}.table{min-width:680px}}
+<style>:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--shadow-glow:0 0 30px rgba(124,58,237,.15);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);--shadow-soft:0 2px 8px rgba(0,0,0,.22);--shadow-glow:0 0 30px rgba(167,139,250,.12)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cursor:pointer}
+/* old nav line removed */
+/* old nav css removed */
+.app{display:flex;width:min(1200px,calc(100% - 32px));margin:0 auto;gap:24px;padding:calc(var(--nav-h) + 24px) 0 72px;min-height:calc(100vh - var(--nav-h))}.main{flex:1;min-width:0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;cursor:pointer;text-decoration:none}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:36px;padding:0 14px;font-size:12px}.btn.outline{border-color:var(--accent);color:var(--accent);background:transparent}
+/* Marketplace */
+.market-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}.market-header h1{font-family:Outfit;font-size:28px;font-weight:800;margin:0}.market-header p{color:var(--text2);font-size:14px;margin:2px 0 0}
+.search-bar{display:flex;align-items:center;gap:8px;padding:0 14px;height:44px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);flex:1;max-width:360px;transition:border-color .2s}.search-bar:focus-within{border-color:var(--accent)}.search-bar input{flex:1;border:0;background:transparent;color:var(--text);font-size:14px;outline:none;height:100%}.search-bar i{color:var(--text3);font-size:18px}
+.cat-row{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}.cat-pill{height:34px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px;text-decoration:none}.cat-pill:hover,.cat-pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}.cat-pill.active{box-shadow:0 4px 12px rgba(124,58,237,.2)}
+.prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.prod-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all .25s;display:flex;flex-direction:column}.prod-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(16,21,37,.1);border-color:var(--border2)}.prod-card .pc-img{height:140px;background:var(--bg2);display:grid;place-items:center;font-size:32px;color:var(--text3);border-bottom:1px solid var(--border)}.prod-card .pc-body{padding:16px;flex:1;display:flex;flex-direction:column}.prod-card .pc-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font-size:9px;font-weight:700;background:rgba(124,58,237,.1);color:var(--accent);margin-bottom:6px;width:fit-content}.prod-card h3{margin:0;font-size:14px;font-weight:800;line-height:1.3}.prod-card .pc-desc{font-size:12px;color:var(--text2);margin:4px 0;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.prod-card .pc-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);margin-top:6px}.prod-card .pc-meta span{display:flex;align-items:center;gap:3px}.prod-card .pc-foot{margin-top:auto;padding-top:12px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border)}.prod-card .pc-price{font-family:Outfit;font-size:18px;font-weight:800}.prod-card .pc-price .sub{font-size:11px;font-weight:500;color:var(--text3)}.sidebar-right{width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:12px}.sb-card{padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm)}.sb-card .sbt{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:10px}.creator-card{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}.creator-card:last-child{border:0}.c-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#6366F1);display:grid;place-items:center;color:#fff;font-size:12px;font-weight:800;flex-shrink:0}.c-info{flex:1;min-width:0}.c-info .cn{font-size:12px;font-weight:600}.c-info .cm{font-size:10px;color:var(--text3)}
+@media(max-width:1024px){.prod-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.app{flex-direction:column}.sidebar-right{display:none}.prod-grid{grid-template-columns:1fr}.market-header{flex-direction:column;align-items:stretch}.search-bar{max-width:100%}}
+.app{display:flex;min-height:calc(100vh - var(--nav-h))}.sidebar{width:244px;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));border-right:1px solid var(--border);background:var(--bg);padding:14px 10px;overflow:auto;display:none}body.is-authed .sidebar{display:block}.main{flex:1;min-width:0}.page{width:min(1120px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}
+
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px;flex-wrap:wrap}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px}.eyebrow i{font-size:15px;color:var(--accent)}.lead{color:var(--text2);font-size:16px;line-height:1.7;margin:6px 0 0;max-width:680px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft)}.btn{height:48px;padding:0 24px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--card);color:var(--text);font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;cursor:pointer;text-decoration:none}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:38px;padding:0 16px;font-size:13px}.btn.outline{background:transparent;border-color:var(--accent);color:var(--accent)}.btn.full{width:100%}.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800}.badge-accent{background:rgba(124,58,237,.12);color:var(--accent)}.badge-blue{background:rgba(37,99,235,.1);color:var(--accent2)}.badge-green{background:rgba(22,163,74,.12);color:var(--green)}.badge-gold{background:rgba(245,179,1,.12);color:var(--gold)}.small{font-size:12px;color:var(--text3)}.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);padding:12px 28px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:700;font-size:14px;z-index:999;opacity:0;transition:all .35s;pointer-events:none;white-space:nowrap}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;visibility:hidden;opacity:0;transition:all .3s}.modal.open{visibility:visible;opacity:1}.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}.modal-panel{position:relative;width:min(440px,calc(100% - 32px));background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transform:translateY(20px);transition:all .3s}.modal.open .modal-panel{transform:translateY(0)}.fg{margin-bottom:14px}.fg label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;display:block}.fg input,.fg select,.fg textarea{width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;outline:none}.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}.fg-h{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid{display:grid;gap:16px}.grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.space{justify-content:space-between}
+@media(max-width:768px){.mobile-bottom-nav{display:flex}}@media(min-width:769px){.mobile-bottom-nav{display:none!important}}.mobile-bottom-nav{position:fixed;bottom:0;left:0;right:0;height:68px;z-index:150;background:rgba(255,255,255,.96);border-top:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.25);display:none;justify-content:space-around;align-items:center;padding:0 8px}[data-theme="dark"] .mobile-bottom-nav{background:rgba(0,0,0,.96);border-top-color:#222b3c}[data-theme="light"] .mobile-bottom-nav{border-top-color:transparent}.mobile-bottom-nav a{min-width:0;display:grid;justify-items:center;gap:3px;color:var(--text3);font-size:11px;font-weight:800;text-decoration:none;transition:color .15s}.mobile-bottom-nav a i{font-size:22px}.mobile-bottom-nav a:hover,.mobile-bottom-nav a.active{color:var(--accent)}.mobile-bottom-nav a.create{transform:translateY(-10px)}.mobile-bottom-nav a.create i{width:50px;height:50px;border-radius:16px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:26px;box-shadow:0 6px 20px rgba(124,58,237,.3)}
+/* === SHARED NAV === */
+/* ═══ SHARED NAVBAR + DRAWER CSS ═══ */
+/* old nav line removed */
+[data-theme="dark"] [data-theme="light"] .nav{background:rgba(255,255,255,.92);backdrop-filter:blur(18px) saturate(1.4);border-bottom-color:transparent}[data-theme="dark"] .nav{background:rgba(0,0,0,.92);}
+[data-theme="light"] .nav{border-bottom-color:transparent}
+.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:19px;font-weight:800;letter-spacing:-.4px;white-space:nowrap}
+.logo-mark{width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:9px;overflow:hidden;box-shadow:0 8px 22px rgba(37,99,235,.12)}
+.logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}
+.nav-links{display:flex;align-items:center;justify-content:center;gap:4px}
+.nav-link{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:600;line-height:1;transition:color .14s,background .14s}
+.nav-link svg{width:15px;height:15px;stroke-width:2.2;flex-shrink:0}
+.nav-link.active,.nav-link:hover{color:var(--text);background:var(--bg2)}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.wallet-btn{height:36px;padding:0 18px;display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--border2);border-radius:999px;background:var(--card);color:var(--text);font-size:13.5px;font-weight:700;cursor:pointer;transition:border-color .14s,background .14s;text-decoration:none}
+.wallet-btn:hover{border-color:var(--text);background:var(--bg2)}
+.wallet-btn svg{width:15px;height:15px}
+.icon-btn{width:36px;height:36px;display:grid;place-items:center;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);cursor:pointer;transition:color .14s,border-color .14s,background .14s}
+.icon-btn:hover{color:var(--text);border-color:var(--border2);background:var(--bg2)}
+.icon-btn svg{width:17px;height:17px;stroke-width:2.2}
+/* Drawer */
+.mobile-menu{position:fixed;inset:0;z-index:300;display:none;visibility:hidden;pointer-events:none}
+.mobile-menu.open{display:block;visibility:visible;pointer-events:auto}
+.mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(3px)}
+.oga-drawer{position:absolute;right:0;top:0;bottom:0;width:min(360px,92vw);padding:0 0 18px;background:#fbfbfc;color:var(--text);border-left:1px solid #e6e8ee;box-shadow:-16px 0 42px rgba(16,21,37,.12);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}
+[data-theme="dark"] .oga-drawer{background:#000000;color:#ffffff;border-left-color:#232323}
+.mobile-menu.open .oga-drawer{transform:translateX(0)}
+.oga-drawer-head{height:64px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e6e8ee;background:rgba(255,255,255,.72)}
+[data-theme="dark"] .oga-drawer-head{background:rgba(8,11,19,.72);border-bottom-color:#232323}
+.oga-drawer-brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:19px;font-weight:900;letter-spacing:-.4px;color:inherit;text-decoration:none}
+.oga-drawer-logo.logo-mark{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;overflow:hidden}
+.oga-drawer-close{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);font-size:20px;line-height:1;cursor:pointer;display:grid;place-items:center}
+[data-theme="dark"] .oga-drawer-close{background:#111111;border-color:#333333;color:#cbd5e1}
+.oga-drawer-nav{padding:10px 8px 12px;overflow-y:auto;flex:1}
+.oga-drawer-section{margin-bottom:6px}
+.oga-drawer-item{width:100%;min-height:56px;display:flex;align-items:center;gap:12px;padding:8px 10px;border:0;border-radius:10px;background:transparent;color:inherit;text-align:left;text-decoration:none;cursor:pointer;font:inherit}
+.oga-drawer-item:hover,.oga-drawer-group.open>.oga-drawer-group-toggle{background:#f2f2f4}
+[data-theme="dark"] .oga-drawer-item:hover,[data-theme="dark"] .oga-drawer-group.open>.oga-drawer-group-toggle{background:#111111}
+.oga-drawer-icon{width:36px;height:36px;display:grid;place-items:center;border:1px solid #e0e3e8;border-radius:9px;background:#f9fafb;color:#4f5665;flex:0 0 auto;font-size:18px}
+.oga-drawer-icon svg{width:18px;height:18px;stroke-width:2;fill:none;stroke:currentColor}
+.oga-drawer-icon.create-icon{background:#f5f0ff;border-color:#ede9fe;color:#7C3AED}
+.oga-drawer-icon.mini{width:34px;height:34px;border-radius:8px;background:var(--card)}
+[data-theme="dark"] .oga-drawer-icon{background:#050505;border-color:#333333;color:#b8c2d2}
+.oga-drawer-item strong{display:block;color:#171a22;font-size:15px;line-height:1.15;font-weight:800}
+.oga-drawer-item small{display:block;margin-top:3px;color:#9ca1ad;font-size:13px;line-height:1.2;font-weight:600}
+[data-theme="dark"] .oga-drawer-item strong{color:#ffffff}
+.oga-drawer-subnav strong{display:block;font-size:15px;color:#5b606c;font-weight:800}
+.oga-drawer-subnav small{display:block;font-size:13px;margin-top:3px}
+[data-theme="dark"] .oga-drawer-subnav strong{color:#d1d5db}
+.oga-drawer-chevron{width:15px;height:15px;margin-left:auto;color:#697082;stroke-width:2.5;transition:transform .16s ease;flex-shrink:0}
+.oga-drawer-group.open .oga-drawer-chevron{transform:rotate(180deg)}
+.oga-drawer-subnav{display:none;margin:4px 0 10px 18px;padding:6px 0 6px 22px;border-left:2px solid #e1e3e8}
+.oga-drawer-group.open .oga-drawer-subnav{display:grid;gap:4px}
+.oga-drawer-subnav a{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:9px;color:inherit;text-decoration:none}
+.oga-drawer-subnav a:hover{background:#f6f7f9}
+[data-theme="dark"] .oga-drawer-subnav a:hover{background:#111111}
+[data-theme="dark"] .oga-drawer-subnav{border-left-color:#333333}
+.oga-drawer-foot{padding:8px 8px 0;border-top:1px solid #e6e8ee;background:rgba(251,251,252,.92)}
+[data-theme="dark"] .oga-drawer-foot{background:rgba(8,11,19,.92);border-top-color:#232323}
+.oga-drawer-foot-label{font-size:11px;font-weight:800;color:#9ca1ad;letter-spacing:.08em;text-transform:uppercase;padding:8px 10px 4px}
+.oga-drawer-actions{height:52px;display:flex;align-items:center;justify-content:center;gap:14px;padding:0 14px;border-radius:999px;background:#11151f;color:#fff;box-shadow:0 12px 30px rgba(16,21,37,.18)}
+.oga-drawer-actions button{border:0;background:transparent;color:#fff;font-size:14px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.oga-drawer-actions svg{width:16px;height:16px;stroke-width:2.3}
+.logout-item strong{color:#dc2626!important}
+.logout-item .oga-drawer-icon{color:#dc2626;border-color:rgba(220,38,38,.2);background:rgba(220,38,38,.05)}
+/* auth visibility */
+.authed-only{display:none!important}
+.public-only{display:flex!important}
+body[data-auth="authed"] .authed-only{display:flex!important}
+body[data-auth="authed"] .public-only{display:none!important}
+nav.oga-drawer-nav.authed-only{display:none!important}
+nav.oga-drawer-nav.public-only{display:block!important}
+body[data-auth="authed"] nav.oga-drawer-nav.authed-only{display:block!important}
+body[data-auth="authed"] nav.oga-drawer-nav.public-only{display:none!important}
+div.oga-drawer-foot.authed-only{display:none!important}
+div.oga-drawer-foot.public-only{display:block!important}
+body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important}
+body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
+@media(max-width:768px){.nav-links{display:none}.nav-inner{width:100%;padding:0 24px;gap:12px;grid-template-columns:1fr auto}}
+
+
+/* REFERRAL PAGE CSS */
+.page{width:min(900px,calc(100% - 32px));margin:0 auto;padding:34px 0 72px}
+.ref-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.ref-header h1{font-family:Outfit;font-size:28px;font-weight:800;margin:0;background:linear-gradient(135deg,#7C3AED,#6366F1,#2563EB);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ref-header p{color:var(--text2);font-size:14px;margin:2px 0 0}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.stat-card .stat-icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;margin-bottom:10px;font-size:20px}
+.stat-card .stat-value{font-family:Outfit;font-size:26px;font-weight:800;line-height:1.1}
+.stat-card .stat-label{font-size:12px;color:var(--text2);margin-top:4px;font-weight:600}
+.stat-card .stat-change{font-size:11px;font-weight:700;margin-top:6px}
+.ref-link-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:24px}
+.ref-link-card h3{font-family:Outfit;font-size:16px;font-weight:800;margin:0 0 4px}
+.ref-link-card p{font-size:13px;color:var(--text2);margin:0 0 16px}
+.ref-link-box{display:flex;align-items:center;gap:8px;padding:0 14px;height:48px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg)}
+.ref-link-box input{flex:1;border:0;background:transparent;color:var(--text);font-size:13px;font-family:monospace;outline:none}
+.share-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.tiers-section{margin-bottom:24px}
+.tiers-section h2{font-family:Outfit;font-size:20px;font-weight:800;margin:0 0 4px}
+.tiers-section>p{font-size:13px;color:var(--text2);margin:0 0 16px}
+.tiers-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.tier-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;transition:all .2s;position:relative;overflow:hidden}
+.tier-card.featured{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.tier-card.featured::before{content:"POPULAR";position:absolute;top:10px;right:-28px;background:var(--accent);color:#fff;font-size:8px;font-weight:900;padding:2px 30px;transform:rotate(45deg);letter-spacing:.08em}
+.tier-card .tier-icon{font-size:36px;margin-bottom:8px;display:block}
+.tier-card h3{font-family:Outfit;font-size:18px;font-weight:800;margin:0}
+.tier-card .tier-commission{font-family:Outfit;font-size:32px;font-weight:900;color:var(--accent);margin:8px 0 2px}
+.tier-card .tier-commission small{font-size:14px;font-weight:600;color:var(--text3)}
+.tier-card .tier-req{font-size:11px;color:var(--text2);font-weight:600;margin-bottom:10px}
+.tier-card .tier-desc{font-size:12px;color:var(--text3);line-height:1.4}
+.how-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:24px}
+.how-section h2{font-family:Outfit;font-size:18px;font-weight:800;margin:0 0 16px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.step{text-align:center;padding:16px}
+.step .step-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#6366F1);color:#fff;font-family:Outfit;font-weight:900;font-size:16px;display:grid;place-items:center;margin:0 auto 10px}
+.step h4{font-size:14px;font-weight:800;margin:0 0 4px}
+.step p{font-size:12px;color:var(--text2);margin:0;line-height:1.4}
+.lb-section{margin-bottom:24px}
+.lb-section h2{font-family:Outfit;font-size:18px;font-weight:800;margin:0 0 4px}
+.lb-section>p{font-size:13px;color:var(--text2);margin:0 0 16px}
+.lb-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.lb-item{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);transition:all .1s}
+.lb-item:last-child{border-bottom:0}
+.lb-item:hover{background:var(--bg2)}
+.lb-rank{width:32px;font-family:Outfit;font-size:18px;font-weight:800;color:var(--text3);text-align:center}
+.lb-rank.gold{color:var(--gold)}
+.lb-rank.silver{color:#94a3b8}
+.lb-rank.bronze{color:#cd7f32}
+.lb-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#6366F1);display:grid;place-items:center;color:#fff;font-size:13px;font-weight:800;flex-shrink:0}
+.lb-info{flex:1;min-width:0}
+.lb-info .lb-name{font-size:14px;font-weight:700}
+.lb-info .lb-detail{font-size:11px;color:var(--text2);margin-top:2px}
+.lb-referrals{text-align:right;font-family:Outfit;font-size:16px;font-weight:800;color:var(--accent)}
+.activity-section{margin-bottom:24px}
+.activity-section h2{font-family:Outfit;font-size:18px;font-weight:800;margin:0 0 4px}
+.activity-section>p{font-size:13px;color:var(--text2);margin:0 0 16px}
+.activity-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.activity-item{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border)}
+.activity-item:last-child{border-bottom:0}
+.activity-item .act-icon{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;font-size:16px;flex-shrink:0}
+.activity-item .act-info{flex:1;min-width:0}
+.activity-item .act-info .act-title{font-size:13px;font-weight:700}
+.activity-item .act-info .act-time{font-size:11px;color:var(--text3);margin-top:2px}
+.activity-item .act-reward{font-family:Outfit;font-weight:800;font-size:14px;color:var(--green)}
+@media(max-width:768px){.stats-grid{grid-template-columns:repeat(2,1fr)}.tiers-grid{grid-template-columns:repeat(2,1fr)}.steps{grid-template-columns:1fr}.ref-link-box{flex-wrap:wrap;height:auto;padding:10px 14px}.ref-link-box input{min-width:150px;font-size:12px}}
+@media(max-width:480px){.stats-grid{grid-template-columns:1fr}.tiers-grid{grid-template-columns:1fr}}
 </style>
 </head>
-<body data-page="referrals.html">
-<header class="nav"><div class="nav-inner"><a class="brand" href="index.html"><span class="logo"><i class="ti ti-layout-grid"></i></span><span>Oga<span>Pay</span></span></a><nav class="nav-links"><a class="nav-link" href="index.html" data-navlink><i class="ti ti-home"></i>Home</a><a class="nav-link" href="tasks.html" data-navlink><i class="ti ti-layout-grid"></i>Tasks</a><a class="nav-link" href="store.html" data-navlink><i class="ti ti-discount-2"></i>Deals</a><a class="nav-link" href="communities.html" data-navlink><i class="ti ti-users-group"></i>Communities</a><a class="nav-link" href="index.html#footer" data-navlink><i class="ti ti-help-circle"></i>FAQ</a></nav><div class="nav-actions"><a class="pill-btn nav-auth-only" href="post-task.html"><i class="ti ti-square-plus"></i>Post Task</a><button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><i class="ti ti-moon"></i></button><button class="menu-btn" id="menuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button></div></div></header>
-<div class="drawer" id="mobileMenu"><div class="overlay" data-close-menu></div><aside class="drawer-panel"><div class="drawer-head"><a class="brand" href="index.html"><span class="logo"><i class="ti ti-layout-grid"></i></span>OgaPay</a><button class="icon-btn" data-close-menu aria-label="Close menu"><i class="ti ti-x"></i></button></div><div class="drawer-section">Main</div><a class="drawer-link" href="dashboard.html" data-close-menu><i class="ti ti-dashboard"></i><span>Overview</span></a><a class="drawer-link" href="profile.html" data-close-menu><i class="ti ti-user-circle"></i><span>My Profile</span></a><a class="drawer-link" href="wallet.html" data-close-menu><i class="ti ti-wallet"></i><span>Wallet</span></a><a class="drawer-link" href="notifications.html" data-close-menu><i class="ti ti-bell"></i><span>Notifications</span></a><a class="drawer-link" href="messages.html" data-close-menu><i class="ti ti-message-2"></i><span>Messages</span></a><div class="drawer-section">Earn</div><a class="drawer-link" href="tasks.html" data-close-menu><i class="ti ti-briefcase"></i><span>Browse Tasks</span></a><a class="drawer-link" href="monitor.html" data-close-menu><i class="ti ti-eye"></i><span>Job Monitor</span></a><a class="drawer-link" href="my-tasks.html" data-close-menu><i class="ti ti-checklist"></i><span>My Tasks</span></a><a class="drawer-link" href="communities.html" data-close-menu><i class="ti ti-users-group"></i><span>Communities</span></a><a class="drawer-link" href="worker.html" data-close-menu><i class="ti ti-id-badge-2"></i><span>Worker Portal</span></a><a class="drawer-link" href="leaderboard.html" data-close-menu><i class="ti ti-trophy"></i><span>Leaderboard</span></a><div class="drawer-section">Business</div><a class="drawer-link" href="post-task.html" data-close-menu><i class="ti ti-square-plus"></i><span>Post Task</span></a><a class="drawer-link" href="analytics.html" data-close-menu><i class="ti ti-chart-line"></i><span>Analytics</span></a><div class="drawer-section">Growth</div><a class="drawer-link active" href="referrals.html" data-close-menu><i class="ti ti-link"></i><span>Referrals</span></a><a class="drawer-link" href="vault.html" data-close-menu><i class="ti ti-building-bank"></i><span>Rewards Vault</span></a><div class="drawer-section">Account</div><a class="drawer-link" href="kyc.html" data-close-menu><i class="ti ti-shield-check"></i><span>KYC</span></a><a class="drawer-link" href="settings.html" data-close-menu><i class="ti ti-settings"></i><span>Settings</span></a></aside></div>
-<div class="app"><aside class="sidebar"><a class="sb-cta" href="post-task.html"><i class="ti ti-square-plus"></i>Post a Task</a><span class="sb-label">Main</span><a class="sb-item" href="dashboard.html"><span class="sb-icon"><i class="ti ti-dashboard"></i></span>Overview</a><a class="sb-item" href="profile.html"><span class="sb-icon"><i class="ti ti-user-circle"></i></span>My Profile</a><a class="sb-item" href="wallet.html"><span class="sb-icon"><i class="ti ti-wallet"></i></span>Wallet</a><a class="sb-item" href="notifications.html"><span class="sb-icon"><i class="ti ti-bell"></i></span>Notifications</a><a class="sb-item" href="messages.html"><span class="sb-icon"><i class="ti ti-message-2"></i></span>Messages</a><span class="sb-label">Earn</span><a class="sb-item" href="tasks.html"><span class="sb-icon"><i class="ti ti-briefcase"></i></span>Browse Tasks</a><a class="sb-item" href="monitor.html"><span class="sb-icon"><i class="ti ti-eye"></i></span>Job Monitor</a><a class="sb-item" href="my-tasks.html"><span class="sb-icon"><i class="ti ti-checklist"></i></span>My Tasks</a><a class="sb-item" href="communities.html"><span class="sb-icon"><i class="ti ti-users-group"></i></span>Communities</a><a class="sb-item" href="worker.html"><span class="sb-icon"><i class="ti ti-id-badge-2"></i></span>Worker Portal</a><a class="sb-item" href="leaderboard.html"><span class="sb-icon"><i class="ti ti-trophy"></i></span>Leaderboard</a><span class="sb-label">Business</span><a class="sb-item" href="post-task.html"><span class="sb-icon"><i class="ti ti-square-plus"></i></span>Post Task</a><a class="sb-item" href="analytics.html"><span class="sb-icon"><i class="ti ti-chart-line"></i></span>Analytics</a><span class="sb-label">Growth</span><a class="sb-item active" href="referrals.html"><span class="sb-icon"><i class="ti ti-link"></i></span>Referrals</a><a class="sb-item" href="vault.html"><span class="sb-icon"><i class="ti ti-building-bank"></i></span>Rewards Vault</a><span class="sb-label">Account</span><a class="sb-item" href="kyc.html"><span class="sb-icon"><i class="ti ti-shield-check"></i></span>KYC</a><a class="sb-item" href="settings.html"><span class="sb-icon"><i class="ti ti-settings"></i></span>Settings</a><div class="sb-user"><div class="avatar-mini">AD</div><div><strong>Ada Danladi</strong><div class="small">Worker · KYC verified</div></div></div></aside><main class="main"><section class="page"><div class="page-head"><div><span class="eyebrow"><i class="ti ti-link"></i>Referrals</span><h1>Referrals</h1><p class="lead">Share OgaPay, track invited workers, and collect commission.</p></div></div><div class="card"><h3>Your referral link</h3><div class="row"><input value="https://ogapay.ng/r/adadearn" readonly><button class="btn primary" data-copy="https://ogapay.ng/r/adadearn">Copy</button></div></div><div class="grid cols-3" style="margin-top:16px"><div class="card"><div class="stat">184</div><div class="muted">Invited users</div></div><div class="card"><div class="stat">62</div><div class="muted">Active earners</div></div><div class="card"><div class="stat">₦34,850</div><div class="muted">Commission</div></div></div></section></main></div><div class="toast" id="toast">Done</div>
+<body>
+<!-- ═══ SHARED NAVBAR ═══ -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html" aria-label="OgaPay home">
+      <span class="logo-mark">
+        <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg>
+      </span>
+      <span>Oga<span>Pay</span></span>
+    </a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a class="nav-link" href="index.html" data-navlink><i class="ti ti-home"></i>Home</a>
+      <a class="nav-link" href="tasks.html" data-navlink><i class="ti ti-layout-grid"></i>Tasks</a>
+      <a class="nav-link" href="store.html" data-navlink><i class="ti ti-discount-2"></i>Deals</a>
+      <a class="nav-link" href="communities.html" data-navlink><i class="ti ti-users-group"></i>Communities</a>
+      <a class="nav-link" href="faq.html" data-navlink><i class="ti ti-help-circle"></i>FAQ</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="wallet-btn public-only" href="login.html"><i class="ti ti-login"></i><span class="wallet-label">Login</span></a>
+      <a class="wallet-btn public-only" href="login.html?mode=signup"><i class="ti ti-arrow-right"></i><span class="wallet-label">Get Started</span></a>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><i class="ti ti-moon"></i></button>
+      <button class="icon-btn" id="menuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
+    </div>
+  </div>
+</header>
+<!-- ═══ SHARED DRAWER SIDEBAR ═══ -->
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-overlay" data-close-menu></div>
+  <aside class="mobile-drawer oga-drawer" aria-label="OgaPay menu">
+    <div class="oga-drawer-head">
+      <a class="oga-drawer-brand" href="index.html" aria-label="OgaPay home">
+        <span class="oga-drawer-logo logo-mark" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
+        <span>OgaPay</span>
+      </a>
+      <button class="oga-drawer-close" data-close-menu aria-label="Close menu">&#x2715;</button>
+    </div>
+
+    <!-- PUBLIC sidebar (non-logged in) -->
+    <nav class="oga-drawer-nav public-only" aria-label="Primary menu">
+      <div class="oga-drawer-section">
+        <section class="oga-drawer-group">
+          <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
+            <span class="oga-drawer-icon"><i class="ti ti-layout-grid"></i></span>
+            <span><strong>Tasks</strong><small>Browse and track tasks</small></span>
+            <i class="ti ti-chevron-down"></i>
+          </button>
+          <div class="oga-drawer-subnav">
+            <a href="tasks.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-layout-grid"></i></span>
+              <span><strong>All Tasks</strong><small>Browse all tasks</small></span>
+            </a>
+            <a href="monitor.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-eye"></i></span>
+              <span><strong>Job Monitor</strong><small>Track new tasks</small></span>
+            </a>
+          </div>
+        </section>
+        <a class="oga-drawer-item" href="store.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-discount-2"></i></span>
+          <span><strong>Deals</strong><small>Worker tools and inbox</small></span>
+        </a>
+        <a class="oga-drawer-item" href="blog.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-news"></i></span>
+          <span><strong>Blog</strong><small>Read articles and updates</small></span>
+        </a>
+        <a class="oga-drawer-item" href="vault.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-building-bank"></i></span>
+          <span><strong>Vault</strong><small>Reward pool</small></span>
+        </a>
+        <a class="oga-drawer-item" href="faq.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span>
+          <span><strong>FAQ</strong><small>Answers and guides</small></span>
+        </a>
+        <a class="oga-drawer-item" href="support.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-message-2"></i></span>
+          <span><strong>Support</strong><small>Get help</small></span>
+        </a>
+      </div>
+    </nav>
+    <div class="oga-drawer-foot public-only">
+      <div class="oga-drawer-actions">
+        <button type="button" onclick="window.location.href='login.html'">
+          <i class="ti ti-login"></i>Login
+        </button>
+      </div>
+    </div>
+
+    <!-- AUTHED sidebar (logged-in users) -->
+    <nav class="oga-drawer-nav authed-only" aria-label="Authenticated menu" style="display:none">
+      <div class="oga-drawer-section">
+        <!-- Create Job -->
+        <a class="oga-drawer-item" href="post-task.html" data-close-menu>
+          <span class="oga-drawer-icon create-icon"><i class="ti ti-circle-plus"></i></span>
+          <span><strong>Create Job</strong><small>Post a new task</small></span>
+        </a>
+        <!-- Jobs accordion -->
+        <section class="oga-drawer-group">
+          <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
+            <span class="oga-drawer-icon"><i class="ti ti-layout-grid"></i></span>
+            <span><strong>Jobs</strong><small>Browse and track jobs</small></span>
+            <i class="ti ti-chevron-down"></i>
+          </button>
+          <div class="oga-drawer-subnav">
+            <a href="tasks.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-layout-grid"></i></span>
+              <span><strong>All Jobs</strong><small>Browse all jobs</small></span>
+            </a>
+            <a href="monitor.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-eye"></i></span>
+              <span><strong>Job Monitor</strong><small>Track new jobs</small></span>
+            </a>
+          </div>
+        </section>
+        <!-- Store accordion -->
+        <section class="oga-drawer-group">
+          <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
+            <span class="oga-drawer-icon"><i class="ti ti-discount-2"></i></span>
+            <span><strong>Store</strong><small>Wurker tools and inbox</small></span>
+            <i class="ti ti-chevron-down"></i>
+          </button>
+          <div class="oga-drawer-subnav">
+            <a href="store.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-discount-2"></i></span>
+              <span><strong>Wurker Store</strong><small>Browse the store</small></span>
+            </a>
+            <a href="my-store.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-home"></i></span>
+              <span><strong>My Store</strong><small>Manage your listings</small></span>
+            </a>
+            <a href="my-tasks.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-briefcase"></i></span>
+              <span><strong>My Wurk</strong><small>View your work</small></span>
+            </a>
+            <a href="messages.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-message-2"></i></span>
+              <span><strong>Messages</strong><small>Open your inbox</small></span>
+            </a>
+            <a href="worker.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-user"></i></span>
+              <span><strong>Wurker Portal</strong><small>Open the portal</small></span>
+            </a>
+          </div>
+        </section>
+        <a class="oga-drawer-item" href="communities.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-users-group"></i></span>
+          <span><strong>Communities</strong><small>Open your communities</small></span>
+        </a>
+        <a class="oga-drawer-item" href="blog.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-news"></i></span>
+          <span><strong>Blog</strong><small>Read articles and updates</small></span>
+        </a>
+        <a class="oga-drawer-item" href="vault.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-building-bank"></i></span>
+          <span><strong>Vault</strong><small>Reward pool</small></span>
+        </a>
+        <a class="oga-drawer-item" href="notifications.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-bell"></i></span>
+          <span><strong>Notifications</strong><small>See updates</small></span>
+        </a>
+        <a class="oga-drawer-item" href="faq.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span>
+          <span><strong>FAQ</strong><small>Answers and guides</small></span>
+        </a>
+        <a class="oga-drawer-item" href="support.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-message-2"></i></span>
+          <span><strong>Support</strong><small>Get help</small></span>
+        </a>
+      </div>
+    </nav>
+    <!-- Authed footer: account section -->
+    <div class="oga-drawer-foot authed-only" style="display:none">
+      <div class="oga-drawer-foot-label">ACCOUNT</div>
+      <a class="oga-drawer-item" href="profile.html" data-close-menu>
+        <span class="oga-drawer-icon"><i class="ti ti-user"></i></span>
+        <span><strong>My Profile</strong></span>
+      </a>
+      <a class="oga-drawer-item logout-item" href="login.html" data-close-menu>
+        <span class="oga-drawer-icon"><i class="ti ti-logout"></i></span>
+        <span><strong>Logout</strong></span>
+      </a>
+    </div>
+  </aside>
+</div>
+
+<div class="app">
+<aside class="sidebar" style="display:none"></aside>
+<main class="main">
+<section class="page">
+
+<div class="ref-header">
+<div>
+<h1>Referral Program</h1>
+<p>Invite friends and earn rewards when they complete tasks</p>
+</div>
+</div>
+
+<div class="stats-grid">
+<div class="stat-card">
+<div class="stat-icon" style="background:rgba(124,58,237,.1);color:#7C3AED"><i class="ti ti-users"></i></div>
+<div class="stat-value">0</div>
+<div class="stat-label">Total Referrals</div>
+<div class="stat-change" style="color:var(--text3)">Start inviting to grow</div>
+</div>
+<div class="stat-card">
+<div class="stat-icon" style="background:rgba(22,163,74,.1);color:#16a34a"><i class="ti ti-coin"></i></div>
+<div class="stat-value">N0</div>
+<div class="stat-label">Total Earnings</div>
+<div class="stat-change" style="color:var(--text3)">From completed tasks</div>
+</div>
+<div class="stat-card">
+<div class="stat-icon" style="background:rgba(245,179,1,.1);color:var(--gold)"><i class="ti ti-hourglass"></i></div>
+<div class="stat-value">N0</div>
+<div class="stat-label">Pending Rewards</div>
+<div class="stat-change" style="color:var(--text3)">Awaiting confirmation</div>
+</div>
+<div class="stat-card">
+<div class="stat-icon" style="background:rgba(37,99,235,.1);color:#2563EB"><i class="ti ti-trophy"></i></div>
+<div class="stat-value">Bronze</div>
+<div class="stat-label">Current Tier</div>
+<div class="stat-change" style="color:var(--accent)">Invite 5 more for Silver</div>
+</div>
+</div>
+
+<div class="ref-link-card">
+<h3>Your Referral Link</h3>
+<p>Share this link with friends. You earn when they sign up and complete tasks.</p>
+<div class="ref-link-box">
+<input type="text" id="refLink" value="https://ogapay-five.vercel.app/?ref=YOUR_USERNAME" readonly>
+<button class="btn primary sm" onclick="copyRefLink()"><i class="ti ti-copy"></i>Copy</button>
+</div>
+<div class="share-row">
+<a href="#" class="btn sm" onclick="shareRef('whatsapp')"><i class="ti ti-brand-whatsapp" style="color:#25D366"></i>WhatsApp</a>
+<a href="#" class="btn sm" onclick="shareRef('twitter')"><i class="ti ti-brand-x" style="color:var(--text)"></i>X</a>
+<a href="#" class="btn sm" onclick="shareRef('telegram')"><i class="ti ti-brand-telegram" style="color:#0088cc"></i>Telegram</a>
+<a href="#" class="btn sm" onclick="shareRef('email')"><i class="ti ti-mail"></i>Email</a>
+</div>
+</div>
+
+<div class="tiers-section">
+<h2>Commission Tiers</h2>
+<p>Earn more as you invite more active referrals</p>
+<div class="tiers-grid">
+<div class="tier-card featured">
+<span class="tier-icon">🥉</span>
+<h3>Bronze</h3>
+<div class="tier-commission">5<small>%</small></div>
+<div class="tier-req">0-4 referrals</div>
+<div class="tier-desc">Earn 5% commission on each task your referrals complete</div>
+</div>
+<div class="tier-card">
+<span class="tier-icon">🥈</span>
+<h3>Silver</h3>
+<div class="tier-commission">8<small>%</small></div>
+<div class="tier-req">5-19 referrals</div>
+<div class="tier-desc">Earn 8% commission plus weekly bonus rewards</div>
+</div>
+<div class="tier-card">
+<span class="tier-icon">🥇</span>
+<h3>Gold</h3>
+<div class="tier-commission">12<small>%</small></div>
+<div class="tier-req">20-49 referrals</div>
+<div class="tier-desc">Earn 12% commission with priority support and badges</div>
+</div>
+<div class="tier-card">
+<span class="tier-icon">💎</span>
+<h3>Diamond</h3>
+<div class="tier-commission">18<small>%</small></div>
+<div class="tier-req">50+ referrals</div>
+<div class="tier-desc">Earn 18% commission plus exclusive Diamond perks</div>
+</div>
+</div>
+</div>
+
+<div class="how-section">
+<h2>How It Works</h2>
+<div class="steps">
+<div class="step">
+<div class="step-num">1</div>
+<h4>Share Your Link</h4>
+<p>Copy your unique referral link and share it with friends, family, or social media followers</p>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<h4>They Sign Up</h4>
+<p>When someone clicks your link and creates an account, they're linked to you automatically</p>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<h4>You Earn</h4>
+<p>Each time your referrals complete tasks, you earn a commission based on your current tier</p>
+</div>
+</div>
+</div>
+
+<div class="lb-section">
+<h2>Top Referrers</h2>
+<p>Compete with others to earn the most. Rankings reset monthly.</p>
+<div class="lb-card">
+<div class="lb-item">
+<div class="lb-rank gold">1</div>
+<div class="lb-av">AK</div>
+<div class="lb-info"><div class="lb-name">Adekunle O.</div><div class="lb-detail">Diamond Tier · 247 referrals</div></div>
+<div class="lb-referrals">N124,500</div>
+</div>
+<div class="lb-item">
+<div class="lb-rank silver">2</div>
+<div class="lb-av">CM</div>
+<div class="lb-info"><div class="lb-name">Chioma M.</div><div class="lb-detail">Gold Tier · 189 referrals</div></div>
+<div class="lb-referrals">N96,200</div>
+</div>
+<div class="lb-item">
+<div class="lb-rank bronze">3</div>
+<div class="lb-av">TE</div>
+<div class="lb-info"><div class="lb-name">Tunde E.</div><div class="lb-detail">Gold Tier · 156 referrals</div></div>
+<div class="lb-referrals">N78,900</div>
+</div>
+<div class="lb-item">
+<div class="lb-rank">4</div>
+<div class="lb-av">FO</div>
+<div class="lb-info"><div class="lb-name">Folake O.</div><div class="lb-detail">Silver Tier · 98 referrals</div></div>
+<div class="lb-referrals">N42,300</div>
+</div>
+<div class="lb-item">
+<div class="lb-rank">5</div>
+<div class="lb-av">IB</div>
+<div class="lb-info"><div class="lb-name">Ibrahim B.</div><div class="lb-detail">Silver Tier · 72 referrals</div></div>
+<div class="lb-referrals">N31,600</div>
+</div>
+</div>
+</div>
+
+<div class="activity-section">
+<h2>Recent Activity</h2>
+<p>Your referral earnings and sign-ups at a glance</p>
+<div class="activity-card">
+<div class="activity-item">
+<div class="act-icon" style="background:rgba(22,163,74,.1);color:var(--green)"><i class="ti ti-user-plus"></i></div>
+<div class="act-info"><div class="act-title">New sign-up via your link</div><div class="act-time">Invite pending task completion</div></div>
+<div class="act-reward">—</div>
+</div>
+<div class="activity-item">
+<div class="act-icon" style="background:rgba(245,179,1,.1);color:var(--gold)"><i class="ti ti-coin"></i></div>
+<div class="act-info"><div class="act-title">Commission earned · Chidi O.</div><div class="act-time">Completed 3 tasks today</div></div>
+<div class="act-reward">+N2,400</div>
+</div>
+<div class="activity-item">
+<div class="act-icon" style="background:rgba(124,58,237,.1);color:#7C3AED"><i class="ti ti-users"></i></div>
+<div class="act-info"><div class="act-title">5th referral joined!</div><div class="act-time">You've unlocked Silver tier</div></div>
+<div class="act-reward">🎉</div>
+</div>
+</div>
+</div>
+
+</section>
+</main>
+</div>
+
 <script>
-(function(){const html=document.documentElement,theme=document.getElementById('themeToggle'),menu=document.getElementById('mobileMenu'),btn=document.getElementById('menuBtn'),toast=document.getElementById('toast');function setTheme(v){html.setAttribute('data-theme',v);try{localStorage.setItem('ogapay-theme',v)}catch(e){} if(theme) theme.innerHTML='<i class="ti '+(v==='dark'?'ti-sun':'ti-moon')+'"></i>'}setTheme(html.getAttribute('data-theme')||'light');theme&&theme.addEventListener('click',()=>setTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));function setAuth(v){document.body.classList.toggle('is-authed',v);document.body.setAttribute('data-auth',v?'authed':'public')}let saved=false;try{saved=!!localStorage.getItem('ogapay_access_token')}catch(e){}setAuth(saved);btn&&btn.addEventListener('click',()=>menu.classList.add('open'));document.querySelectorAll('[data-close-menu]').forEach(el=>el.addEventListener('click',()=>menu.classList.remove('open')));function say(text){if(!toast)return;toast.textContent=text;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800)}document.querySelectorAll('[data-copy]').forEach(el=>el.addEventListener('click',()=>{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));say('Copied')}));document.querySelectorAll('[data-toggle-label]').forEach(el=>el.addEventListener('click',()=>{el.classList.toggle('on');say(el.classList.contains('on')?'Enabled':'Disabled')}));document.querySelectorAll('[data-join]').forEach(el=>el.addEventListener('click',()=>{const joined=el.dataset.join==='true';el.dataset.join=String(!joined);el.innerHTML=joined?'<i class="ti ti-user-plus"></i>Join':'<i class="ti ti-check"></i>Joined';say(joined?'Left community':'Joined community')}));document.querySelectorAll('[data-apply]').forEach(el=>el.addEventListener('click',()=>{el.disabled=true;el.classList.add('primary');el.innerHTML='<i class="ti ti-check"></i>Applied';say('Application submitted')}));})();
+function copyRefLink(){var i=document.getElementById('refLink');if(i){i.select();try{document.execCommand('copy')}catch(e){}i.setSelectionRange(0,99999);alert('Referral link copied!')}}
+function shareRef(p){var u=encodeURIComponent(document.getElementById('refLink').value);var t=encodeURIComponent('Join OgaPay and start earning! Complete tasks, get paid. Sign up here:');var l='';if(p==='whatsapp')l='https://wa.me/?text='+t+'%20'+u;else if(p==='twitter')l='https://twitter.com/intent/tweet?text='+t+'&url='+u;else if(p==='telegram')l='https://t.me/share/url?url='+u+'&text='+t;else if(p==='email')l='mailto:?subject=Join%20OgaPay&body='+t+'%20'+u;if(l)window.open(l,'_blank','noopener,noreferrer')}
 </script>
-<script src="assets/ogapay-live.js"></script></body>
+
+<!-- SHARED NAV JS -->
+<script>
+(function(){
+  var th;
+  try{th=localStorage.getItem('ogapay-theme');}catch(e){}
+  var t=th||document.documentElement.getAttribute('data-theme')||'light';
+  document.documentElement.setAttribute('data-theme',t);
+  var authed=false;
+  try{authed=localStorage.getItem('ogapay-authenticated')==='true';}catch(e){}
+  document.body.setAttribute('data-auth',authed?'authed':'public');
+  var themeBtn=document.getElementById('themeToggle');
+  if(themeBtn){
+    themeBtn.addEventListener('click',function(){
+      var html=document.documentElement;
+      var next=html.getAttribute('data-theme')==='dark'?'light':'dark';
+      html.setAttribute('data-theme',next);
+      try{localStorage.setItem('ogapay-theme',next);}catch(e){}
+    });
+  }
+  var menuBtn=document.getElementById('menuBtn');
+  var mobileMenu=document.getElementById('mobileMenu');
+  if(menuBtn&&mobileMenu){
+    menuBtn.addEventListener('click',function(){mobileMenu.classList.add('open');});
+    mobileMenu.querySelectorAll('[data-close-menu]').forEach(function(el){
+      el.addEventListener('click',function(){mobileMenu.classList.remove('open');});
+    });
+  }
+  document.addEventListener('click',function(e){
+    var toggle=e.target.closest('.oga-drawer-group-toggle');
+    if(toggle){
+      var group=toggle.closest('.oga-drawer-group');
+      var open=!group.classList.contains('open');
+      group.classList.toggle('open',open);
+      toggle.setAttribute('aria-expanded',String(open));
+    }
+  });
+  var path=window.location.pathname.split('/').pop()||'index.html';
+  document.querySelectorAll('[data-navlink]').forEach(function(a){
+    if(a.getAttribute('href')===path)a.classList.add('active');
+  });
+})();
+</script>
+
+</body>
 </html>

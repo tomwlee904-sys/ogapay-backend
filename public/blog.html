@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Blog - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(16,21,37,.06);--shadow-md:0 4px 16px rgba(16,21,37,.08);--shadow-lg:0 8px 32px rgba(16,21,37,.1);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(0,0,0,.25);--shadow-md:0 4px 16px rgba(0,0,0,.3);--shadow-lg:0 8px 32px rgba(0,0,0,.4)}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
+img{max-width:100%}
+
+/* ═══ NAVBAR ═══ */
+.nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:200;background:rgba(255,255,255,.94);backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid var(--border)}
+[data-theme="dark"] .nav{background:rgba(0,0,0,.94)}
+.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-family:Outfit,sans-serif;font-size:19px;font-weight:900;letter-spacing:-.4px}
+.logo-mark{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;overflow:hidden}
+.logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}
+.nav-links{display:flex;align-items:center;justify-content:center;gap:4px}
+.nav-link{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:600;transition:all .14s}
+.nav-link:hover,.nav-link.active{color:var(--text);background:var(--bg2)}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.wallet-btn{height:36px;padding:0 18px;display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--border2);border-radius:999px;background:var(--card);color:var(--text);font-size:13.5px;font-weight:700;transition:border-color .2s;text-decoration:none}
+.wallet-btn:hover{border-color:var(--text)}
+.icon-btn{width:36px;height:36px;display:grid;place-items:center;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);transition:all .2s}
+.icon-btn:hover{color:var(--text);border-color:var(--border2)}
+@media(max-width:768px){.nav-links{display:none}.nav-inner{width:100%;padding:0 20px;gap:10px;grid-template-columns:1fr auto}}
+
+/* ═══ DRAWER ═══ */
+.mobile-menu{position:fixed;top:0;left:0;right:0;bottom:0;z-index:300;display:none;visibility:hidden;pointer-events:none}
+.mobile-menu.open{display:block;visibility:visible;pointer-events:auto}
+.mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(4px)}
+.oga-drawer{position:absolute;right:0;top:0;bottom:0;width:min(340px,90vw);padding:0;background:var(--bg2);border-left:1px solid var(--border);box-shadow:-16px 0 42px rgba(16,21,37,.12);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}
+[data-theme="dark"] .oga-drawer{background:#000;border-left-color:var(--border)}
+.mobile-menu.open .oga-drawer{transform:translateX(0)}
+.oga-drawer-head{height:64px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.oga-drawer-close{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);font-size:20px;display:grid;place-items:center;cursor:pointer}
+.oga-drawer-nav{padding:10px 8px;overflow-y:auto;flex:1}
+.oga-drawer-item{width:100%;min-height:52px;display:flex;align-items:center;gap:12px;padding:8px 10px;border:0;border-radius:10px;background:transparent;color:inherit;text-decoration:none;cursor:pointer;font:inherit}
+.oga-drawer-item:hover{background:var(--card)}
+.oga-drawer-icon{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--border);border-radius:9px;background:var(--card);color:var(--text2);flex:0 0 auto;font-size:18px}
+.oga-drawer-item strong{display:block;font-size:15px;font-weight:800}
+.oga-drawer-item small{display:block;margin-top:2px;color:var(--text3);font-size:12px}
+.oga-drawer-chevron{width:14px;height:14px;margin-left:auto;color:var(--text3);transition:transform .16s;display:inline-block}
+.oga-drawer-group.open .oga-drawer-chevron{transform:rotate(180deg)}
+.oga-drawer-subnav{display:none;margin:4px 0 10px 18px;padding:6px 0 6px 22px;border-left:2px solid var(--border)}
+.oga-drawer-group.open .oga-drawer-subnav{display:grid;gap:4px}
+.oga-drawer-subnav a{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;font-size:13px;font-weight:600;color:var(--text2)}
+.oga-drawer-subnav a:hover{background:var(--card);color:var(--text)}
+.oga-drawer-foot{padding:8px 8px 0;border-top:1px solid var(--border)}
+.oga-drawer-foot-label{font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 10px 4px}
+.authed-only{display:none!important}.public-only{display:flex!important}
+body[data-auth="authed"] .authed-only{display:flex!important}
+body[data-auth="authed"] .public-only{display:none!important}
+nav.oga-drawer-nav.authed-only{display:none!important}nav.oga-drawer-nav.public-only{display:block!important}
+body[data-auth="authed"] nav.oga-drawer-nav.authed-only{display:block!important}
+body[data-auth="authed"] nav.oga-drawer-nav.public-only{display:none!important}
+div.oga-drawer-foot.authed-only{display:none!important}div.oga-drawer-foot.public-only{display:block!important}
+body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important}
+body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
+
+/* ═══ PAGE LAYOUT ═══ */
+.wrapper{width:min(860px,calc(100% - 40px));margin:0 auto;padding:calc(var(--nav-h) + 32px) 0 100px}
+
+/* ═══ VIEW SYSTEM ═══ */
+.view{display:none}
+.view.active{display:block}
+
+/* ═══ BUTTONS ═══ */
+.btn{height:42px;padding:0 20px;border:1.5px solid var(--border2);border-radius:10px;background:var(--card);color:var(--text);font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:7px;cursor:pointer;transition:all .12s;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{box-shadow:0 4px 12px rgba(124,58,237,.2)}
+.btn.sm{height:34px;padding:0 12px;font-size:11px}
+.btn.outline{border-color:var(--accent);color:var(--accent);background:transparent}
+.btn.danger{background:rgba(239,68,68,.1);color:#ef4444;border-color:transparent}
+
+/* ═══ VIEW 1: BLOG HUB ═══ */
+.blog-hero{padding:40px 0 32px;text-align:center}
+.blog-hero h1{margin:0;font-family:Outfit;font-size:34px;font-weight:900;letter-spacing:-.8px;line-height:1.15}
+.blog-hero p{margin:8px 0 24px;font-size:16px;color:var(--text2)}
+.blog-hero .hero-actions{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.section-head h2{margin:0;font-family:Outfit;font-size:20px;font-weight:800;letter-spacing:-.3px}
+.section-head a{font-size:13px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:4px}
+
+/* ═══ BLOG CARDS ═══ */
+.blog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:40px}
+.blog-card{border-radius:var(--radius);border:1px solid var(--border);background:var(--card);overflow:hidden;transition:all .12s;cursor:pointer}
+.blog-card:hover{border-color:var(--border2);box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.blog-card .bc-cover{width:100%;height:160px;background:var(--bg2);display:grid;place-items:center;font-size:36px;color:var(--text3);overflow:hidden}
+.blog-card .bc-cover img{width:100%;height:100%;object-fit:cover}
+.blog-card .bc-body{padding:14px 16px 16px}
+.blog-card .bc-body h3{margin:0;font-family:Outfit;font-size:15px;font-weight:800;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.blog-card .bc-body p{margin:6px 0 0;font-size:12px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.blog-card .bc-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 14px;font-size:11px;color:var(--text3)}
+.blog-card .bc-foot .bc-author{display:flex;align-items:center;gap:6px}
+.blog-card .bc-foot .bc-author .bc-av{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:8px;font-weight:700}
+.featured-card{grid-column:span 2;grid-row:span 2}
+.featured-card .bc-cover{height:220px}
+.featured-card .bc-body h3{font-size:18px}
+.featured-card .bc-body p{font-size:13px}
+@media(max-width:768px){.blog-grid{grid-template-columns:1fr}.featured-card{grid-column:span 1;grid-row:span 1}.featured-card .bc-cover{height:160px}}
+@media(max-width:500px){.blog-hero h1{font-size:26px}}
+
+/* ═══ VIEW 2: WORKSPACE ═══ */
+.workspace-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}
+.workspace-header h1{margin:0;font-family:Outfit;font-size:24px;font-weight:900;letter-spacing:-.4px}
+.ws-stats{display:flex;gap:12px;margin-bottom:24px}
+.ws-stat{padding:16px 20px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);flex:1;text-align:center}
+.ws-stat .ws-num{font-family:Outfit;font-size:28px;font-weight:900;letter-spacing:-.4px}
+.ws-stat .ws-label{font-size:12px;color:var(--text2);margin-top:2px}
+.post-item{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);margin-bottom:8px;transition:all .1s}
+.post-item:hover{border-color:var(--border2)}
+.post-item .pi-icon{width:44px;height:44px;border-radius:10px;background:var(--bg2);display:grid;place-items:center;font-size:18px;color:var(--text2);flex-shrink:0}
+.post-item .pi-info{flex:1;min-width:0}
+.post-item .pi-info h4{margin:0;font-size:14px;font-weight:700}
+.post-item .pi-info .pi-meta{font-size:11px;color:var(--text2);margin-top:2px}
+.post-item .pi-actions{display:flex;gap:4px}
+.post-empty{text-align:center;padding:48px 20px;color:var(--text2)}
+.post-empty .pe-icon{font-size:36px;color:var(--text3);margin-bottom:12px}
+.post-empty h3{margin:0;font-family:Outfit;font-size:16px;font-weight:800;color:var(--text)}
+.post-empty p{margin:4px 0 16px;font-size:13px}
+
+/* ═══ VIEW 3: CREATE / EDIT BLOG ═══ */
+.editor-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+.editor-header h1{margin:0;font-family:Outfit;font-size:22px;font-weight:900;letter-spacing:-.3px}
+.editor-card{padding:28px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card)}
+.editor-card .form-group{margin-bottom:18px}
+.editor-card .form-group label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.03em}
+.editor-card .form-group input,.editor-card .form-group textarea{width:100%;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text);font-size:14px;transition:border-color .15s;height:44px}
+.editor-card .form-group input:focus,.editor-card .form-group textarea:focus{outline:0;border-color:var(--accent)}
+.editor-card .form-group textarea{height:80px;padding:12px 14px;resize:vertical;font-size:13px;line-height:1.5}
+.editor-card .file-upload{height:80px;border:2px dashed var(--border);border-radius:10px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:all .12s;color:var(--text2);font-size:12px}
+.editor-card .file-upload:hover{border-color:var(--accent);color:var(--accent)}
+.editor-card .file-upload i{font-size:20px}
+.editor-card .file-upload input{display:none}
+
+/* ═══ RICH TEXT TOOLBAR ═══ */
+.editor-toolbar{display:flex;flex-wrap:wrap;gap:3px;padding:10px 12px;border:1.5px solid var(--border);border-bottom:0;border-radius:10px 10px 0 0;background:var(--bg2)}
+.editor-toolbar button{width:34px;height:34px;border:0;border-radius:6px;background:transparent;color:var(--text2);display:grid;place-items:center;cursor:pointer;font-size:14px;transition:all .1s}
+.editor-toolbar button:hover{background:var(--card);color:var(--text)}
+.editor-toolbar button.active{background:var(--accent);color:#fff}
+.editor-toolbar .tb-sep{width:1px;height:20px;background:var(--border);margin:7px 4px}
+.editor-content{min-height:280px;padding:16px;border:1.5px solid var(--border);border-radius:0 0 10px 10px;background:var(--card);color:var(--text);font-size:14px;line-height:1.7;outline:0;overflow-y:auto;white-space:pre-wrap;word-wrap:break-word}
+.editor-content:focus{border-color:var(--accent)}
+.editor-content h1,.editor-content h2,.editor-content h3{margin:16px 0 8px;font-family:Outfit;font-weight:800}
+.editor-content h1{font-size:22px}.editor-content h2{font-size:18px}.editor-content h3{font-size:15px}
+.editor-content p{margin:0 0 10px}
+.editor-content ul,.editor-content ol{padding-left:20px;margin:0 0 10px}
+.editor-content blockquote{border-left:3px solid var(--accent);padding:8px 12px;margin:0 0 10px;background:var(--bg2);border-radius:0 8px 8px 0;color:var(--text2);font-style:italic}
+.editor-content a{color:var(--accent);text-decoration:underline}
+.editor-content img{max-width:100%;border-radius:8px;margin:10px 0}
+.editor-content .empty-state{color:var(--text3)}
+.editor-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.editor-actions .btn{flex:1;justify-content:center}
+
+/* ═══ TOAST ═══ */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);color:var(--text);padding:12px 24px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow-md);font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s ease;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body data-auth="public">
+
+<!-- ═══ NAVBAR ═══ -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/">
+      <span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
+      OgaPay
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="index.html" data-navlink><i class="ti ti-home"></i>Home</a>
+      <a class="nav-link" href="tasks.html" data-navlink><i class="ti ti-checklist"></i>Tasks</a>
+      <a class="nav-link" href="store.html" data-navlink><i class="ti ti-building-store"></i>Store</a>
+      <a class="nav-link" href="communities.html" data-navlink><i class="ti ti-users"></i>Communities</a>
+      <a class="nav-link" href="faq.html" data-navlink><i class="ti ti-help-circle"></i>FAQ</a>
+    </div>
+    <div class="nav-actions">
+      <a class="wallet-btn" href="login.html"><i class="ti ti-wallet"></i> &#8358;0.00</a>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="ti ti-moon"></i></button>
+      <button class="icon-btn" id="menuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ DRAWER ═══ -->
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-overlay" data-close-menu></div>
+  <div class="oga-drawer">
+    <div class="oga-drawer-head">
+      <span style="font-family:Outfit;font-weight:900;font-size:17px">Menu</span>
+      <button class="oga-drawer-close" data-close-menu><i class="ti ti-x"></i></button>
+    </div>
+    <nav class="oga-drawer-nav public-only">
+      <a class="oga-drawer-item" href="tasks.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-checklist"></i></span><span><strong>Tasks</strong><small>Browse available tasks</small></span></a>
+      <a class="oga-drawer-item" href="store.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-building-store"></i></span><span><strong>Store</strong><small>Browse products &amp; gigs</small></span></a>
+      <a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-article"></i></span><span><strong>Blog</strong><small>Latest insights</small></span></a>
+      <a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span><span><strong>FAQ</strong><small>Frequently asked questions</small></span></a>
+      <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-headset"></i></span><span><strong>Support</strong><small>Get help</small></span></a>
+      <div style="padding:12px 10px;margin-top:8px"><a class="wallet-btn" href="login.html" style="width:100%;justify-content:center" data-close-menu><i class="ti ti-login"></i> Login</a></div>
+    </nav>
+    <nav class="oga-drawer-nav authed-only">
+      <a class="oga-drawer-item" href="dashboard.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-dashboard"></i></span><span><strong>Dashboard</strong><small>Your overview</small></span></a>
+      <a class="oga-drawer-item" href="post-task.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-plus-circle"></i></span><span><strong>Create Job</strong><small>Post a new task</small></span></a>
+      <div class="oga-drawer-group">
+        <button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false"><span class="oga-drawer-icon"><i class="ti ti-briefcase"></i></span><span><strong>Jobs</strong><small>Manage your tasks</small></span><i class="ti ti-chevron-down oga-drawer-chevron"></i></button>
+        <div class="oga-drawer-subnav"><a href="tasks.html"><i class="ti ti-arrow-right"></i>Browse Tasks</a><a href="my-tasks.html"><i class="ti ti-arrow-right"></i>My Tasks</a></div>
+      </div>
+      <div class="oga-drawer-group">
+        <button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false"><span class="oga-drawer-icon"><i class="ti ti-building-store"></i></span><span><strong>Store</strong><small>Marketplace</small></span><i class="ti ti-chevron-down oga-drawer-chevron"></i></button>
+        <div class="oga-drawer-subnav"><a href="store.html"><i class="ti ti-arrow-right"></i>Wurker Store</a><a href="my-store.html"><i class="ti ti-arrow-right"></i>My Store</a><a href="worker.html"><i class="ti ti-arrow-right"></i>Wurker Portal</a><a href="messages.html"><i class="ti ti-arrow-right"></i>Messages</a></div>
+      </div>
+      <a class="oga-drawer-item" href="communities.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-users"></i></span><span><strong>Communities</strong><small>Connect with others</small></span></a>
+      <a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-article"></i></span><span><strong>Blog</strong><small>Latest insights</small></span></a>
+      <a class="oga-drawer-item" href="notifications.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-bell"></i></span><span><strong>Notifications</strong><small>Alerts &amp; updates</small></span></a>
+      <a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span><span><strong>FAQ</strong><small>Frequently asked questions</small></span></a>
+      <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-headset"></i></span><span><strong>Support</strong><small>Get help</small></span></a>
+    </nav>
+    <div class="oga-drawer-foot authed-only">
+      <div class="oga-drawer-foot-label">Account</div>
+      <a class="oga-drawer-item" href="profile.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-user"></i></span><span><strong>My Profile</strong><small>View and edit profile</small></span></a>
+      <button class="oga-drawer-item" onclick="localStorage.removeItem('ogapay-authenticated');document.body.setAttribute('data-auth','public')"><span class="oga-drawer-icon"><i class="ti ti-logout"></i></span><span><strong>Logout</strong><small>Sign out</small></span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE CONTENT ═══ -->
+<div class="wrapper">
+
+  <!-- ═══ VIEW 1: BLOG HUB ═══ -->
+  <div class="view active" id="viewHub">
+    <div class="blog-hero">
+      <h1>Read stories. Share knowledge.</h1>
+      <p>Discover insights from the OgaPay community</p>
+      <div class="hero-actions">
+        <button class="btn primary" onclick="switchView('viewEditor')"><i class="ti ti-edit"></i> Write a Blog</button>
+        <button class="btn" onclick="switchView('viewWorkspace')"><i class="ti ti-files"></i> My Blog Workspace</button>
+      </div>
+    </div>
+
+    <div class="section-head"><h2>Featured</h2></div>
+    <div class="blog-grid" id="featuredGrid"></div>
+
+    <div class="section-head"><h2>Latest</h2></div>
+    <div class="blog-grid" id="latestGrid"></div>
+  </div>
+
+  <!-- ═══ VIEW 2: BLOG WORKSPACE ═══ -->
+  <div class="view" id="viewWorkspace">
+    <div class="workspace-header">
+      <h1>My Blog Workspace</h1>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="switchView('viewHub')"><i class="ti ti-arrow-left"></i> Back</button>
+        <button class="btn primary" onclick="switchView('viewEditor')"><i class="ti ti-plus"></i> Create New Blog</button>
+      </div>
+    </div>
+
+    <div class="ws-stats">
+      <div class="ws-stat"><div class="ws-num" id="draftCount">0</div><div class="ws-label">Drafts</div></div>
+      <div class="ws-stat"><div class="ws-num" id="publishedCount">0</div><div class="ws-label">Published</div></div>
+    </div>
+
+    <div class="section-head"><h2>Drafts</h2></div>
+    <div id="draftsList"></div>
+
+    <div class="section-head" style="margin-top:24px"><h2>Published</h2></div>
+    <div id="publishedList"></div>
+  </div>
+
+  <!-- ═══ VIEW 3: CREATE / EDIT BLOG ═══ -->
+  <div class="view" id="viewEditor">
+    <div class="editor-header">
+      <h1 id="editorTitle">Create New Blog</h1>
+      <button class="btn" onclick="switchView('viewWorkspace')"><i class="ti ti-arrow-left"></i> Back</button>
+    </div>
+
+    <div class="editor-card">
+      <div class="form-group">
+        <label>Blog Title <span class="required">*</span></label>
+        <input type="text" id="blogTitle" placeholder="Enter your blog title..." autocomplete="off">
+      </div>
+
+      <div class="form-group">
+        <label>Excerpt / Summary <span class="required">*</span></label>
+        <textarea id="blogExcerpt" placeholder="Brief summary of your blog post..."></textarea>
+      </div>
+
+      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+        <div class="form-group">
+          <label>Cover Image</label>
+          <div class="file-upload" onclick="document.getElementById('coverInput').click()">
+            <i class="ti ti-photo"></i>
+            <span>Upload cover</span>
+            <input type="file" id="coverInput" accept="image/*" onchange="previewCover(this)">
+          </div>
+          <div id="coverPreview" style="display:none;margin-top:8px;border-radius:8px;overflow:hidden">
+            <img style="width:100%;height:100px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Inline Images</label>
+          <div class="file-upload" onclick="document.getElementById('inlineImgInput').click()">
+            <i class="ti ti-images"></i>
+            <span>Upload images</span>
+            <input type="file" id="inlineImgInput" accept="image/*" multiple onchange="insertInlineImages(this)">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Content <span class="required">*</span></label>
+        <div class="editor-toolbar">
+          <button onclick="execCmd('bold')" title="Bold"><i class="ti ti-bold"></i></button>
+          <button onclick="execCmd('italic')" title="Italic"><i class="ti ti-italic"></i></button>
+          <button onclick="execCmd('underline')" title="Underline"><i class="ti ti-underline"></i></button>
+          <span class="tb-sep"></span>
+          <button onclick="execCmd('formatBlock','h2')" title="Heading 2"><strong style="font-size:11px">H2</strong></button>
+          <button onclick="execCmd('formatBlock','h3')" title="Heading 3"><strong style="font-size:10px">H3</strong></button>
+          <span class="tb-sep"></span>
+          <button onclick="execCmd('insertUnorderedList')" title="List"><i class="ti ti-list"></i></button>
+          <button onclick="execCmd('insertOrderedList')" title="Ordered List"><i class="ti ti-list-numbers"></i></button>
+          <button onclick="execCmd('formatBlock','blockquote')" title="Quote"><i class="ti ti-blockquote"></i></button>
+          <span class="tb-sep"></span>
+          <button onclick="insertLink()" title="Link"><i class="ti ti-link"></i></button>
+          <button onclick="insertEditorImage()" title="Image"><i class="ti ti-photo"></i></button>
+          <span class="tb-sep"></span>
+          <button onclick="execCmd('removeFormat')" title="Remove Format"><i class="ti ti-clear-formatting"></i></button>
+        </div>
+        <div class="editor-content" id="editorContent" contenteditable="true"><p class="empty-state" style="color:var(--text3)">Start writing your blog post...</p></div>
+      </div>
+
+      <div class="editor-actions">
+        <button class="btn" onclick="saveDraft()"><i class="ti ti-device-floppy"></i> Save as Draft</button>
+        <button class="btn primary" onclick="publishBlog()"><i class="ti ti-send"></i> Publish Blog</button>
+        <button class="btn danger" onclick="switchView('viewWorkspace')"><i class="ti ti-x"></i> Discard</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══ HIDDEN IMAGE INPUT FOR EDITOR ═══ -->
+<input type="file" id="editorImgInput" accept="image/*" style="display:none" onchange="uploadEditorImage(this)">
+
+<script>
+// ─── View Switching ───
+function switchView(id) {
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active')});
+  document.getElementById(id).classList.add('active');
+  if(id==='viewWorkspace') renderWorkspace();
+  if(id==='viewHub') renderBlogs();
+}
+
+// ─── Demo Blogs ───
+var demoBlogs = [
+  {id:1, title:"Getting Started with Web3 Freelancing", excerpt:"Learn how to navigate the world of decentralized freelancing and earn crypto for your skills.", featured:true, author:"Chisom Okafor", date:"Jun 1, 2026", cover:"", tag:"guide"},
+  {id:2, title:"Top 5 Skills Every Blockchain Developer Needs", excerpt:"From smart contracts to dApp development, here are the most in-demand blockchain skills right now.", featured:false, author:"Michael Ade", date:"May 28, 2026", cover:"", tag:"tech"},
+  {id:3, title:"Building Your Brand as a Freelancer", excerpt:"How to stand out in a crowded marketplace with a strong personal brand.", featured:false, author:"Sarah John", date:"May 25, 2026", cover:"", tag:"career"},
+  {id:4, title:"The Future of Decentralized Work", excerpt:"DAOs, token incentives, and the next evolution of remote work coordination.", featured:false, author:"Tunde Bakare", date:"May 22, 2026", cover:"", tag:"insights"},
+  {id:5, title:"How to Price Your Freelance Services", excerpt:"A practical guide to setting rates that reflect your value and attract the right clients.", featured:false, author:"Chioma Nwosu", date:"May 20, 2026", cover:"", tag:"business"}
+];
+
+function getBlogs() {
+  var stored = JSON.parse(localStorage.getItem('ogapay-blogs')||'[]');
+  // Merge demo blogs with stored published blogs
+  var all = demoBlogs.slice();
+  stored.forEach(function(b){
+    if(b.status==='published') all.push(b);
+  });
+  // Sort by date descending
+  all.sort(function(a,b){return new Date(b.date||b.createdAt)-new Date(a.date||a.createdAt)});
+  return all;
+}
+
+function getMyBlogs() {
+  return JSON.parse(localStorage.getItem('ogapay-blogs')||'[]');
+}
+
+// ─── Render Blog Hub ───
+function renderBlogs() {
+  var blogs = getBlogs();
+  var featured = blogs.filter(function(b){return b.featured}).slice(0,2);
+  var latest = blogs.slice(0,6);
+
+  var fg = document.getElementById('featuredGrid');
+  if(featured.length) {
+    fg.innerHTML = featured.map(function(b,i){
+      return blogCardHTML(b, i===0 ? 'featured-card' : '');
+    }).join('');
+  } else {
+    fg.innerHTML = '<div class="post-empty" style="grid-column:1/-1"><div class="pe-icon"><i class="ti ti-book"></i></div><h3>No featured stories</h3></div>';
+  }
+
+  var lg = document.getElementById('latestGrid');
+  lg.innerHTML = latest.slice(0,6).map(function(b){
+    return blogCardHTML(b, '');
+  }).join('');
+  if(!latest.length) {
+    lg.innerHTML = '<div class="post-empty" style="grid-column:1/-1"><div class="pe-icon"><i class="ti ti-book"></i></div><h3>No stories yet</h3><p>Be the first to share your knowledge</p></div>';
+  }
+}
+
+function blogCardHTML(b, extra) {
+  var tag = b.tag||'general';
+  var cover = b.cover || '';
+  var date = b.date || formatDate(b.createdAt);
+  var authorInitial = (b.author||'A').charAt(0).toUpperCase();
+  return '<div class="blog-card '+extra+'" onclick="if(\''+tag+'\'===\'demo\'){}">'+
+    '<div class="bc-cover">'+(cover ? '<img src="'+cover+'" alt="">' : '<i class="ti ti-article"></i>')+'</div>'+
+    '<div class="bc-body"><h3>'+escHtml(b.title)+'</h3><p>'+escHtml(b.excerpt||'')+'</p></div>'+
+    '<div class="bc-foot"><div class="bc-author"><div class="bc-av">'+authorInitial+'</div>'+escHtml(b.author||'Anonymous')+'</div><span>'+date+'</span></div>'+
+  '</div>';
+}
+
+// ─── Render Workspace ───
+function renderWorkspace() {
+  var blogs = getMyBlogs();
+  var drafts = blogs.filter(function(b){return b.status==='draft'});
+  var published = blogs.filter(function(b){return b.status==='published'});
+  document.getElementById('draftCount').textContent = drafts.length;
+  document.getElementById('publishedCount').textContent = published.length;
+
+  var dl = document.getElementById('draftsList');
+  if(drafts.length) {
+    dl.innerHTML = drafts.map(function(b){
+      return '<div class="post-item">'+
+        '<div class="pi-icon" style="background:#66738a15;color:var(--text3)"><i class="ti ti-file"></i></div>'+
+        '<div class="pi-info"><h4>'+escHtml(b.title||'Untitled')+'</h4><div class="pi-meta">Draft · '+formatDate(b.updatedAt||b.createdAt)+'</div></div>'+
+        '<div class="pi-actions"><button class="btn sm" onclick="editBlog('+b.id+')"><i class="ti ti-edit"></i> Edit</button>'+
+        '<button class="btn sm danger" onclick="deleteBlog('+b.id+')"><i class="ti ti-trash"></i></button></div>'+
+      '</div>';
+    }).join('');
+  } else {
+    dl.innerHTML = '<div class="post-empty"><div class="pe-icon"><i class="ti ti-file"></i></div><h3>No drafts yet</h3><p>Create your first blog post</p></div>';
+  }
+
+  var pl = document.getElementById('publishedList');
+  if(published.length) {
+    pl.innerHTML = published.map(function(b){
+      return '<div class="post-item">'+
+        '<div class="pi-icon" style="background:#16a34a15;color:var(--green)"><i class="ti ti-check-circle"></i></div>'+
+        '<div class="pi-info"><h4>'+escHtml(b.title)+'</h4><div class="pi-meta">Published · '+formatDate(b.updatedAt||b.createdAt)+'</div></div>'+
+        '<div class="pi-actions"><span class="btn sm" style="background:#16a34a10;color:var(--green);border-color:transparent"><i class="ti ti-eye"></i> Live</span></div>'+
+      '</div>';
+    }).join('');
+  } else {
+    pl.innerHTML = '<div class="post-empty"><div class="pe-icon"><i class="ti ti-check-circle"></i></div><h3>No published posts</h3><p>When you publish, they\'ll appear here</p></div>';
+  }
+}
+
+// ─── Create / Edit Blog ───
+var editingBlogId = null;
+
+function editBlog(id) {
+  var blogs = getMyBlogs();
+  var blog = blogs.find(function(b){return b.id===id});
+  if(!blog) return;
+  editingBlogId = id;
+  document.getElementById('editorTitle').textContent = 'Edit Blog';
+  document.getElementById('blogTitle').value = blog.title||'';
+  document.getElementById('blogExcerpt').value = blog.excerpt||'';
+  document.getElementById('editorContent').innerHTML = blog.content||'<p class="empty-state" style="color:var(--text3)">Start writing your blog post...</p>';
+  switchView('viewEditor');
+}
+
+function deleteBlog(id) {
+  var blogs = getMyBlogs().filter(function(b){return b.id!==id});
+  localStorage.setItem('ogapay-blogs', JSON.stringify(blogs));
+  renderWorkspace();
+  showToast('Blog deleted');
+}
+
+// ─── Editor Commands ───
+function execCmd(command, value) {
+  document.getElementById('editorContent').focus();
+  if(command==='formatBlock' && value) {
+    document.execCommand(command, false, value);
+  } else {
+    document.execCommand(command, false, value||null);
+  }
+}
+
+function insertLink() {
+  var url = prompt('Enter URL:');
+  if(url) execCmd('createLink', url);
+}
+
+function insertEditorImage() {
+  document.getElementById('editorImgInput').click();
+}
+
+function uploadEditorImage(input) {
+  if(input.files && input.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function(e){
+      execCmd('insertImage', e.target.result);
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+  input.value = '';
+}
+
+function insertInlineImages(input) {
+  if(input.files) {
+    showToast(input.files.length+' image(s) uploaded');
+  }
+  input.value = '';
+}
+
+function previewCover(input) {
+  if(input.files && input.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var el = document.getElementById('coverPreview');
+      el.style.display = 'block';
+      el.querySelector('img').src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+// ─── Save Draft & Publish ───
+function getEditorData() {
+  return {
+    title: document.getElementById('blogTitle').value.trim(),
+    excerpt: document.getElementById('blogExcerpt').value.trim(),
+    content: document.getElementById('editorContent').innerHTML
+  };
+}
+
+function saveDraft() {
+  var data = getEditorData();
+  if(!data.title) { showToast('Please enter a blog title'); return; }
+  saveBlog(data, 'draft');
+  showToast('Draft saved!');
+  switchView('viewWorkspace');
+}
+
+function publishBlog() {
+  var data = getEditorData();
+  if(!data.title) { showToast('Please enter a blog title'); return; }
+  if(!data.content || data.content==='<p class="empty-state" style="color:var(--text3)">Start writing your blog post...</p>') {
+    showToast('Please add some content'); return;
+  }
+  saveBlog(data, 'published');
+  showToast('Blog published!');
+  switchView('viewWorkspace');
+}
+
+function saveBlog(data, status) {
+  var blogs = getMyBlogs();
+  var now = new Date().toISOString();
+  if(editingBlogId) {
+    var idx = blogs.findIndex(function(b){return b.id===editingBlogId});
+    if(idx>=0) {
+      blogs[idx].title = data.title;
+      blogs[idx].excerpt = data.excerpt;
+      blogs[idx].content = data.content;
+      blogs[idx].status = status;
+      blogs[idx].updatedAt = now;
+    }
+    editingBlogId = null;
+  } else {
+    blogs.push({
+      id: Date.now(),
+      title: data.title,
+      excerpt: data.excerpt,
+      content: data.content,
+      status: status,
+      author: 'You',
+      createdAt: now,
+      updatedAt: now
+    });
+  }
+  localStorage.setItem('ogapay-blogs', JSON.stringify(blogs));
+  document.getElementById('editorTitle').textContent = 'Create New Blog';
+  document.getElementById('blogTitle').value = '';
+  document.getElementById('blogExcerpt').value = '';
+  document.getElementById('editorContent').innerHTML = '<p class="empty-state" style="color:var(--text3)">Start writing your blog post...</p>';
+  document.getElementById('coverPreview').style.display = 'none';
+}
+
+// ─── Helpers ───
+function formatDate(d) {
+  if(!d) return '';
+  var date = new Date(d);
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[date.getMonth()]+' '+date.getDate()+', '+date.getFullYear();
+}
+
+function escHtml(s) {
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+// ─── Theme & Nav ───
+(function(){
+  var th; try{th=localStorage.getItem('ogapay-theme')}catch(e){}
+  var t=th||document.documentElement.getAttribute('data-theme')||'light';
+  document.documentElement.setAttribute('data-theme',t);
+  var authed=false; try{authed=localStorage.getItem('ogapay-authenticated')==='true'}catch(e){}
+  document.body.setAttribute('data-auth',authed?'authed':'public');
+  var themeBtn=document.getElementById('themeToggle');
+  if(themeBtn){themeBtn.addEventListener('click',function(){var h=document.documentElement;var n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}})}
+  var menuBtn=document.getElementById('menuBtn');var mobileMenu=document.getElementById('mobileMenu');
+  if(menuBtn&&mobileMenu){menuBtn.addEventListener('click',function(){mobileMenu.classList.add('open')});mobileMenu.querySelectorAll('[data-close-menu]').forEach(function(el){el.addEventListener('click',function(){mobileMenu.classList.remove('open')})})}
+  document.addEventListener('click',function(e){var t=e.target.closest('.oga-drawer-group-toggle');if(t){var g=t.closest('.oga-drawer-group');var o=!g.classList.contains('open');g.classList.toggle('open',o);t.setAttribute('aria-expanded',String(o))}});
+  var p=window.location.pathname.split('/').pop()||'index.html';
+  document.querySelectorAll('[data-navlink]').forEach(function(a){if(a.getAttribute('href')===p)a.classList.add('active')});
+  // Render default view
+  renderBlogs();
+})();
+</script>
+</body>
+</html>

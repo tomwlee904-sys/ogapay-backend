@@ -8,8 +8,14 @@ generator client {
 }
 
 datasource db {
+<<<<<<< HEAD
   provider = "postgresql"
   url      = env("DATABASE_URL")
+=======
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+>>>>>>> da3d470563c3a69861b9040910f41c7e9e88c0fc
 }
 
 // ── ENUMS ─────────────────────────────────────
@@ -84,6 +90,7 @@ enum TaskStatus {
 
 enum TaskSubmissionStatus {
   PENDING
+  SUBMITTED
   APPROVED
   REJECTED
   DISPUTED
@@ -171,12 +178,20 @@ model User {
   blogPosts         BlogPost[]
   ownedCommunities  Community[]       @relation("CommunityOwner")
   communityMemberships CommunityMember[]
+<<<<<<< HEAD
+=======
+  bookmarks           Bookmark[]
+>>>>>>> da3d470563c3a69861b9040910f41c7e9e88c0fc
   communityRequests CommunityRequest[]
   communityChatMessagesSent CommunityChatMessage[] @relation("CommunityChatMessageSender")
   vaultPayouts    VaultPayout[]
   vaultStats     VaultUserStats?
   waitlistEntries           Waitlist[]
+<<<<<<< HEAD
   bookmarks                 Bookmark[]
+=======
+  reports                   Report[]
+>>>>>>> da3d470563c3a69861b9040910f41c7e9e88c0fc
 
   @@map("users")
 }
@@ -268,6 +283,7 @@ model WorkerProfile {
   avgRating       Float       @default(0) @map("avg_rating")
   totalRatings    Int         @default(0) @map("total_ratings")
   skills          String[]
+  categories      String[]
   bio             String?
   isAvailable     Boolean     @default(true) @map("is_available")
   createdAt       DateTime    @default(now()) @map("created_at")
@@ -401,6 +417,25 @@ model Dispute {
   poster          User      @relation("DisputePoster", fields: [posterId], references: [id])
 
   @@map("disputes")
+}
+
+model Report {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  category    String
+  description String
+  targetType  String?   @map("target_type")
+  targetId    String?   @map("target_id")
+  email       String?
+  status      String    @default("open")
+  adminNotes  String?   @map("admin_notes")
+  reviewedBy  String?   @map("reviewed_by")
+  resolvedAt  DateTime? @map("resolved_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("reports")
 }
 
 model StoreItem {
@@ -584,7 +619,11 @@ model Community {
   coverTextColor String? @map("cover_text_color") @default("#3B5BDB")
   accentColor   String?  @map("accent_color") @default("#7C3AED")
   category      String?
+<<<<<<< HEAD
   isActive      Boolean  @default(false) @map("is_active")
+=======
+  isActive      Boolean  @default(true) @map("is_active")
+>>>>>>> da3d470563c3a69861b9040910f41c7e9e88c0fc
   isPublic      Boolean  @default(true) @map("is_public")
   ownerId       String   @map("owner_id")
   twitter       String?  @map("twitter")

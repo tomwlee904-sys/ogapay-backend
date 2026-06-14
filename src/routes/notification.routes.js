@@ -45,4 +45,12 @@ router.patch('/read-all', async (req, res) => {
   successResponse(res, { updated: count }, `${count} notifications marked as read`);
 });
 
+// DELETE /api/v1/notifications/:id
+router.delete('/:id', async (req, res) => {
+  await prisma.notification.deleteMany({
+    where: { id: req.params.id, userId: req.user.id },
+  });
+  successResponse(res, null, 'Notification deleted');
+});
+
 module.exports = router;
