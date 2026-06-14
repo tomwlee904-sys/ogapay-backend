@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
   
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
@@ -214,6 +215,7 @@ function AvatarUpload({ name }: { name: string }) {
 /* ─── Main Component ─── */
 export default function Settings() {
   const navigate = useNavigate()
+  const { logout: authLogout } = useAuth()
  
   // ── profile state ──
   const [profile, setProfile] = useState<ProfileForm>({
@@ -465,9 +467,13 @@ export default function Settings() {
   }
  
   /* ─── Logout ─── */
-  const logout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_BASE}/auth/logout`, { method: 'POST', headers: authHeaders() })
+    } catch {}
     localStorage.clear()
     sessionStorage.clear()
+    authLogout()
     navigate('/login')
   }
  
@@ -659,7 +665,7 @@ export default function Settings() {
                 {navigator.platform || 'Unknown device'} · Just now
               </p>
             </div>
-            <button type="button" onClick={logout} style={{
+            <button type="button" onClick={handleLogout} style={{
               height: 34, padding: '0 14px', borderRadius: 8,
               border: '1px solid var(--border)', background: 'var(--bg2)',
               color: 'var(--text2)', fontWeight: 700, fontSize: 12, cursor: 'pointer',

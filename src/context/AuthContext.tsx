@@ -27,7 +27,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
-    try { localStorage.removeItem('ogapay-authenticated') } catch {}
+    try {
+      localStorage.removeItem('ogapay-authenticated')
+      localStorage.removeItem('token')
+      sessionStorage.removeItem('token')
+    } catch {}
     setIsAuthed(false)
   }
 
