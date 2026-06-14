@@ -164,7 +164,7 @@ const getReferralStats = async (userId) => {
 
   return {
     referralCode: user.referralCode,
-    referralLink: `${process.env.FRONTEND_URL}/join?ref=${user.referralCode}`,
+    referralLink: `${process.env.FRONTEND_URL || 'https://ogapay.vercel.app'}/join?ref=${user.referralCode}`,
     totalReferrals: referrals,
   };
 };
