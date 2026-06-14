@@ -117,7 +117,10 @@ router.get('/me', authenticate, async (req, res) => {
       allComplete: !!(user.firstName && user.lastName && user.isEmailVerified && user.walletAddress),
     };
     const { wallets, kyc, passwordHash, ...safeUser } = user;
+    const userPreferences = (safeUser.preferences && typeof safeUser.preferences === 'object') ? safeUser.preferences : {};
     const response = {
+      twoFactorEnabled: !!userPreferences.twoFactorEnabled,
+      preferences: userPreferences,
       id: safeUser.id, email: safeUser.email, firstName: safeUser.firstName,
       lastName: safeUser.lastName, username: safeUser.username,
       avatar: safeUser.avatarUrl, displayName: safeUser.firstName + ' ' + safeUser.lastName,
@@ -150,6 +153,16 @@ router.post('/reset-password', async (req, res) => {
 
 // POST /api/v1/auth/change-password
 router.post("/change-password", authenticate, async (req, res) => {
+  const result = await authService.changePassword(
+    req.user.id,
+    req.body.currentPassword,
+    req.body.newPassword,
+  );
+  successResponse(res, result, result.message);
+});
+
+// PUT /api/v1/auth/change-password — Settings page uses PUT
+router.put("/change-password", authenticate, async (req, res) => {
   const result = await authService.changePassword(
     req.user.id,
     req.body.currentPassword,
@@ -229,6 +242,50 @@ router.post('/wallet/connect', authenticate, async (req, res) => {
     walletAddress,
     provider: provider || 'phantom',
   }, 'Wallet connected successfully');
+});
+
+// PUT /api/v1/auth/update-preferences — Save user preferences
+router.put('/update-preferences', authenticate, async (req, res) => {
+  const { preferences } = req.body;
+  if (!preferences || typeof preferences !== 'object') {
+    throw require('../utils/apiResponse').ApiError.badRequest('Invalid preferences');
+  }
+  const user = await prisma.user.update({
+    where: { id: req.user.id },
+    data: { preferences },
+  });
+  require('../utils/apiResponse').successResponse(res, { preferences: user.preferences }, 'Preferences updated');
+});
+
+// POST /api/v1/auth/enable-2fa — Enable two-factor authentication
+router.post('/enable-2fa', authenticate, async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+  const prefs = (user?.preferences && typeof user.preferences === 'object') ? user.preferences : {};
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: { preferences: { ...prefs, twoFactorEnabled: true } },
+  });
+  require('../utils/apiResponse').successResponse(res, null, '2FA enabled');
+});
+
+// POST /api/v1/auth/disable-2fa — Disable two-factor authentication
+router.post('/disable-2fa', authenticate, async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+  const prefs = (user?.preferences && typeof user.preferences === 'object') ? user.preferences : {};
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: { preferences: { ...prefs, twoFactorEnabled: false } },
+  });
+  require('../utils/apiResponse').successResponse(res, null, '2FA disabled');
+});
+
+// DELETE /api/v1/auth/delete-account — Delete user account
+router.delete('/delete-account', authenticate, async (req, res) => {
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: { isBanned: true, email: 'deleted_' + req.user.id + '@ogapay.com' },
+  });
+  require('../utils/apiResponse').successResponse(res, null, 'Account deleted successfully');
 });
 
 module.exports = router;

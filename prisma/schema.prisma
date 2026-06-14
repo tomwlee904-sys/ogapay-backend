@@ -8,14 +8,8 @@ generator client {
 }
 
 datasource db {
-<<<<<<< HEAD
   provider = "postgresql"
   url      = env("DATABASE_URL")
-=======
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
->>>>>>> da3d470563c3a69861b9040910f41c7e9e88c0fc
 }
 
 // ── ENUMS ─────────────────────────────────────
@@ -149,6 +143,7 @@ model User {
   isBanned          Boolean   @default(false) @map("is_banned")
   veryVerified      Boolean   @default(false) @map("very_verified")
   veryUniqueId      String?   @unique @map("very_unique_id")
+  preferences       Json?    @default("{}")
   referralCode      String    @unique @map("referral_code")
   referredById      String?   @map("referred_by_id")
   lastLoginAt       DateTime? @map("last_login_at")
@@ -178,18 +173,12 @@ model User {
   blogPosts         BlogPost[]
   ownedCommunities  Community[]       @relation("CommunityOwner")
   communityMemberships CommunityMember[]
-<<<<<<< HEAD
-=======
   bookmarks           Bookmark[]
->>>>>>> da3d470563c3a69861b9040910f41c7e9e88c0fc
   communityRequests CommunityRequest[]
   communityChatMessagesSent CommunityChatMessage[] @relation("CommunityChatMessageSender")
   vaultPayouts    VaultPayout[]
   vaultStats     VaultUserStats?
   waitlistEntries           Waitlist[]
-<<<<<<< HEAD
-  bookmarks                 Bookmark[]
-=======
   reports                   Report[]
   devices                   Device[]
   pairingCodes              PairingCode[]
@@ -654,11 +643,7 @@ model Community {
   coverTextColor String? @map("cover_text_color") @default("#3B5BDB")
   accentColor   String?  @map("accent_color") @default("#7C3AED")
   category      String?
-<<<<<<< HEAD
-  isActive      Boolean  @default(false) @map("is_active")
-=======
   isActive      Boolean  @default(true) @map("is_active")
->>>>>>> da3d470563c3a69861b9040910f41c7e9e88c0fc
   isPublic      Boolean  @default(true) @map("is_public")
   ownerId       String   @map("owner_id")
   twitter       String?  @map("twitter")

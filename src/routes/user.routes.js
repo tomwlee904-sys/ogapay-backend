@@ -109,6 +109,12 @@ router.get('/directory/list', async (req, res) => {
   paginatedResponse(res, users, paginate(page, limit, total));
 });
 
+// PUT /api/v1/users/profile — Settings page alias
+router.put('/profile', authenticate, async (req, res) => {
+  const data = await userService.updateProfile(req.user.id, req.body);
+  successResponse(res, data, 'Profile updated');
+});
+
 // GET /api/v1/users/public/:username/blogs
 router.get('/public/:username/blogs', async (req, res) => {
   const user = await prisma.user.findUnique({ where: { username: req.params.username } });
