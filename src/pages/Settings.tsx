@@ -1,18 +1,28 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
- 
+  
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
- 
+  
 function getToken() {
   return localStorage.getItem('token') || sessionStorage.getItem('token') || ''
 }
- 
+  
 function authHeaders() {
   return {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${getToken()}`,
   }
+}
+
+function apiGet(path: string) {
+  return fetch(`${API_BASE}${path}`, { headers: authHeaders() }).then(r => r.json())
+}
+function apiPost(path: string, body?: any) {
+  return fetch(`${API_BASE}${path}`, { method: 'POST', headers: authHeaders(), body: body ? JSON.stringify(body) : undefined }).then(r => r.json())
+}
+function apiDelete(path: string) {
+  return fetch(`${API_BASE}${path}`, { method: 'DELETE', headers: authHeaders() }).then(r => r.json())
 }
  
 /* ─── Types ─── */
@@ -228,6 +238,13 @@ export default function Settings() {
   const [twoFA, setTwoFA] = useState(false)
   const [twoFASaving, setTwoFASaving] = useState(false)
  
+  // ── devices state ──
+  const [devices, setDevices] = useState<any[]>([])
+  const [devicesLoading, setDevicesLoading] = useState(false)
+  const [pairingCode, setPairingCode] = useState('')
+  const [pairingExpiry, setPairingExpiry] = useState<string | null>(null)
+  const [pairingGenerating, setPairingGenerating] = useState(false)
+
   // ── delete state ──
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [deleteModal, setDeleteModal] = useState(false)
@@ -277,7 +294,50 @@ export default function Settings() {
       setProfileLoading(false)
     }
     load()
+    loadDevices()
   }, [])
+
+  const loadDevices = async () => {
+    setDevicesLoading(true)
+    try {
+      const res = await fetch(`${API_BASE}/devices`, { headers: authHeaders() })
+      const json = await res.json()
+      if (json.success) {
+        setDevices(json.data || [])
+      }
+    } catch {}
+    setDevicesLoading(false)
+  }
+
+  const generatePairingCode = async () => {
+    setPairingGenerating(true)
+    try {
+      const json = await apiPost('/devices/pair/generate')
+      if (json.success) {
+        setPairingCode(json.data.code)
+        setPairingExpiry(new Date(json.data.expiresAt).toLocaleTimeString())
+      } else {
+        showToast(json.message || 'Failed to generate code', 'error')
+      }
+    } catch {
+      showToast('Network error', 'error')
+    }
+    setPairingGenerating(false)
+  }
+
+  const removeDevice = async (id: string) => {
+    try {
+      const json = await apiDelete(`/devices/${id}`)
+      if (json.success) {
+        setDevices(d => d.filter(x => x.id !== id))
+        showToast('Device removed')
+      } else {
+        showToast(json.message || 'Failed to remove device', 'error')
+      }
+    } catch {
+      showToast('Network error', 'error')
+    }
+  }
  
   /* ─── Save profile ─── */
   const saveProfile = async (e: React.FormEvent) => {
@@ -625,6 +685,83 @@ export default function Settings() {
           </button>
         </Card>
  
+        {/* ─── PAIRED DEVICES ─── */}
+        <Card title="Paired Devices" icon="ti-devices">
+          <p style={{ fontSize: 13, color: 'var(--text2)', margin: '0 0 16px' }}>
+            {devices.length} device{devices.length !== 1 ? 's' : ''} linked to your account
+          </p>
+
+          {pairingCode && (
+            <div style={{
+              background: 'rgba(18,21,102,0.06)', border: '1px solid rgba(18,21,102,0.15)',
+              borderRadius: 14, padding: 20, marginBottom: 16, textAlign: 'center',
+            }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Pairing Code (expires {pairingExpiry})
+              </p>
+              <p style={{
+                fontFamily: 'monospace', fontSize: 36, fontWeight: 900,
+                letterSpacing: 8, color: '#121566', margin: '0 0 8px',
+              }}>
+                {pairingCode}
+              </p>
+              <p style={{ fontSize: 11, color: 'var(--text3)', margin: 0 }}>
+                Enter this code on the device you want to link
+              </p>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <button type="button" onClick={generatePairingCode} disabled={pairingGenerating} style={{
+              height: 36, padding: '0 16px', borderRadius: 10, border: 'none',
+              background: '#121566', color: '#fff', fontWeight: 700, fontSize: 12,
+              cursor: pairingGenerating ? 'not-allowed' : 'pointer', opacity: pairingGenerating ? 0.6 : 1,
+            }}>
+              {pairingGenerating ? 'Generating...' : pairingCode ? 'Generate New Code' : 'Link New Device'}
+            </button>
+          </div>
+
+          {devicesLoading ? (
+            <p style={{ fontSize: 13, color: 'var(--text3)', textAlign: 'center', padding: 20 }}>
+              <span className="spinner" style={{ width: 14, height: 14, display: 'inline-block', marginRight: 6 }} /> Loading devices...
+            </p>
+          ) : devices.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {devices.map(d => (
+                <div key={d.id} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '12px 14px', background: 'var(--bg2)', borderRadius: 10,
+                  border: '1px solid var(--border)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <i className="ti ti-device-laptop" style={{ fontSize: 18, color: 'var(--text3)' }} />
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
+                        {d.name || 'Unknown device'}
+                      </p>
+                      <p style={{ fontSize: 11, color: 'var(--text3)', margin: '2px 0 0' }}>
+                        {d.browser && d.os ? `${d.browser} · ${d.os}` : d.os || d.browser || ''}
+                        {d.lastActiveAt ? ` · Last active ${new Date(d.lastActiveAt).toLocaleDateString()}` : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => removeDevice(d.id)} style={{
+                    height: 30, padding: '0 10px', borderRadius: 6,
+                    border: '1px solid rgba(220,38,38,.3)', background: 'rgba(220,38,38,.08)',
+                    color: '#dc2626', fontWeight: 700, fontSize: 11, cursor: 'pointer',
+                  }}>
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : !devicesLoading && (
+            <p style={{ fontSize: 13, color: 'var(--text3)', textAlign: 'center', padding: 20 }}>
+              No devices paired yet
+            </p>
+          )}
+        </Card>
+
         {/* ─── DANGER ZONE ─── */}
         <div style={{
           background: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.2)',

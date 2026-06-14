@@ -120,7 +120,8 @@ export default function Profile() {
               </div>
               <div className="pf-actions">
                 <a href="/app/settings" className="pfa-btn primary"><i className="ti ti-edit" /> Edit Profile</a>
-                <button className="pfa-btn"><i className="ti ti-share" /> Share</button>
+                <a href="/app/wallet" className="pfa-btn"><i className="ti ti-wallet" /> Wallet</a>
+                <a href="/app/settings" className="pfa-btn"><i className="ti ti-devices" /> Devices</a>
               </div>
             </div>
           </div>
