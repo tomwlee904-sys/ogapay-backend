@@ -317,6 +317,44 @@ body{padding-top:60px}
         </button>
       </div>
 
+      <!-- Wallet Connect View (hidden) -->
+      <div id="walletView" style="display:none">
+        <div id="walletDefault">
+          <h3 style="font-family:Outfit,sans-serif;font-size:20px;font-weight:900;color:#0F172A;margin:0 0 4px">Connect Wallet</h3>
+          <p style="font-size:14px;color:#66738a;margin:0 0 20px;line-height:1.5">Link your wallet or sign in another way.</p>
+
+          <button class="auth-btn" onclick="showWalletSub('transaction')">
+            <span class="auth-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+            <strong>Sign in with Transaction</strong>
+          </button>
+
+          <button class="auth-btn" onclick="showWalletSub('pair')">
+            <span class="auth-btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11v6"/><path d="M9 14h6"/></svg></span>
+            <strong>Pair a Device</strong>
+          </button>
+
+          <p style="text-align:center;margin:14px 0 0"><a href="#" onclick="show('default');return false" style="color:#66738a;font-size:13px;text-decoration:none">&larr; Back</a></p>
+        </div>
+
+        <div id="walletTransaction" style="display:none">
+          <h3 style="font-family:Outfit,sans-serif;font-size:20px;font-weight:900;color:#0F172A;margin:0 0 4px">Sign in with Transaction</h3>
+          <p style="font-size:14px;color:#66738a;margin:0 0 16px;line-height:1.5">Enter a transaction reference sent to your email or phone.</p>
+          <input type="text" id="txRef" placeholder="Transaction reference" style="width:100%;height:56px;padding:0 16px;border:1.5px solid #e3e9f2;border-radius:14px;font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;box-sizing:border-box">
+          <button onclick="signInWithTransaction()" style="width:100%;height:56px;border:none;border-radius:14px;background:#4D5DFF;color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer" onmouseover="this.style.background='#3b4de0'" onmouseout="this.style.background='#4D5DFF'">Verify &amp; Sign In</button>
+          <p id="txMessage" style="font-size:13px;color:#66738a;margin:10px 0 0;text-align:center;line-height:1.4"></p>
+          <p style="text-align:center;margin:14px 0 0"><a href="#" onclick="showWalletSub('default');return false" style="color:#66738a;font-size:13px;text-decoration:none">&larr; Back</a></p>
+        </div>
+
+        <div id="walletPair" style="display:none">
+          <h3 style="font-family:Outfit,sans-serif;font-size:20px;font-weight:900;color:#0F172A;margin:0 0 4px">Pair a Device</h3>
+          <p style="font-size:14px;color:#66738a;margin:0 0 16px;line-height:1.5">Enter the pairing code shown on your other device.</p>
+          <input type="text" id="pairCode" placeholder="Pairing code" style="width:100%;height:56px;padding:0 16px;border:1.5px solid #e3e9f2;border-radius:14px;font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;box-sizing:border-box">
+          <button onclick="pairDevice()" style="width:100%;height:56px;border:none;border-radius:14px;background:#4D5DFF;color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer" onmouseover="this.style.background='#3b4de0'" onmouseout="this.style.background='#4D5DFF'">Pair Device</button>
+          <p id="pairMessage" style="font-size:13px;color:#66738a;margin:10px 0 0;text-align:center;line-height:1.4"></p>
+          <p style="text-align:center;margin:14px 0 0"><a href="#" onclick="showWalletSub('default');return false" style="color:#66738a;font-size:13px;text-decoration:none">&larr; Back</a></p>
+        </div>
+      </div>
+
       <!-- Email Login Form (hidden) -->
       <div id="emailLoginForm" style="display:none">
         <input type="email" id="loginEmail" placeholder="Email address" style="width:100%;height:56px;padding:0 16px;border:1.5px solid #e3e9f2;border-radius:14px;font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;box-sizing:border-box">
@@ -399,6 +437,83 @@ function show(view) {
     document.getElementById('signupForm').style.display = 'block';
   } else if (view === 'forgot') {
     document.getElementById('forgotPasswordForm').style.display = 'block';
+  } else if (view === 'wallet') {
+    document.getElementById('walletView').style.display = 'block';
+    showWalletSub('default');
+  }
+}
+
+function showWalletSub(sub) {
+  document.getElementById('walletDefault').style.display = 'none';
+  document.getElementById('walletTransaction').style.display = 'none';
+  document.getElementById('walletPair').style.display = 'none';
+
+  if (sub === 'default') {
+    document.getElementById('walletDefault').style.display = 'block';
+  } else if (sub === 'transaction') {
+    document.getElementById('walletTransaction').style.display = 'block';
+  } else if (sub === 'pair') {
+    document.getElementById('walletPair').style.display = 'block';
+  }
+}
+
+async function signInWithTransaction() {
+  const ref = document.getElementById('txRef').value.trim();
+  const msgEl = document.getElementById('txMessage');
+  const btn = document.querySelector('#walletTransaction button');
+  if (!ref) { msgEl.textContent = 'Please enter a transaction reference.'; return; }
+  msgEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
+  try {
+    const res = await fetch(API_BASE + '/auth/tx-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reference: ref })
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || 'Verification failed');
+    const payload = json.data || json;
+    const access = payload.accessToken || payload.access_token;
+    if (access) localStorage.setItem('ogapay_access_token', access);
+    if (payload.refreshToken) localStorage.setItem('ogapay_refresh_token', payload.refreshToken);
+    localStorage.setItem('ogapay-authenticated', 'true');
+    if (payload.user) localStorage.setItem('ogapay_user', JSON.stringify(payload.user));
+    window.location.href = 'dashboard.html';
+  } catch (err) {
+    msgEl.textContent = err.message;
+    btn.disabled = false;
+    btn.textContent = 'Verify & Sign In';
+  }
+}
+
+async function pairDevice() {
+  const code = document.getElementById('pairCode').value.trim();
+  const msgEl = document.getElementById('pairMessage');
+  const btn = document.querySelector('#walletPair button');
+  if (!code) { msgEl.textContent = 'Please enter a pairing code.'; return; }
+  msgEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Pairing...';
+  try {
+    const res = await fetch(API_BASE + '/auth/pair', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || 'Pairing failed');
+    const payload = json.data || json;
+    const access = payload.accessToken || payload.access_token;
+    if (access) localStorage.setItem('ogapay_access_token', access);
+    if (payload.refreshToken) localStorage.setItem('ogapay_refresh_token', payload.refreshToken);
+    localStorage.setItem('ogapay-authenticated', 'true');
+    if (payload.user) localStorage.setItem('ogapay_user', JSON.stringify(payload.user));
+    window.location.href = 'dashboard.html';
+  } catch (err) {
+    msgEl.textContent = err.message;
+    btn.disabled = false;
+    btn.textContent = 'Pair Device';
   }
 }
 
