@@ -7,6 +7,7 @@ const { authenticate } = require('../middleware/auth');
 const { createUpload, getMulterErrorMessage } = require('../middleware/upload');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const axios = require('axios');
 
 // GET /kyc/status
 router.get('/status', authenticate, async (req, res) => {
@@ -122,20 +123,24 @@ router.post('/very/callback', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing code or userId' });
     }
 
-    // Exchange code for token with VeryAI
-    const tokenRes = await fetch('https://api.very.org/oauth2/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: process.env.VERYAI_CLIENT_ID,
-        client_secret: process.env.VERYAI_CLIENT_SECRET,
-        code,
-        redirect_uri: process.env.VERYAI_REDIRECT_URI,
-      })
-    });
-    const tokenData = await tokenRes.json();
-    const externalUserId = tokenData.external_user_id;
+    let externalUserId;
+    try {
+      const tokenRes = await axios.post(
+        'https://api.very.org/oauth2/token',
+        new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: process.env.VERYAI_CLIENT_ID,
+          client_secret: process.env.VERYAI_CLIENT_SECRET,
+          code,
+          redirect_uri: process.env.VERYAI_REDIRECT_URI,
+        }),
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 10000 }
+      );
+      externalUserId = tokenRes.data?.external_user_id;
+    } catch (veryErr) {
+      console.error('VeryAI token exchange error:', veryErr?.response?.data || veryErr.message);
+      return res.status(502).json({ success: false, message: 'VeryAI token exchange failed: ' + (veryErr?.response?.data?.error || veryErr.message) });
+    }
 
     if (!externalUserId) {
       return res.status(400).json({ success: false, message: 'Failed to get external user ID from VeryAI' });
@@ -154,15 +159,14 @@ router.post('/very/callback', async (req, res) => {
     });
 
     // Recalculate score
-    const calculateOgaScore = (user) => {
-      let score = 0;
-      if (user.isEmailVerified) score += 10;
-      if (user.veryVerified) score += 20;
-      if (user.phone) score += 10;
-      if (user.avatarUrl) score += 5;
-      if (user.firstName && user.lastName) score += 5;
-      return Math.min(score, 100);
-    };
+    const ogaScore = Math.min(
+      (updatedUser.isEmailVerified ? 10 : 0) +
+      (updatedUser.veryVerified ? 20 : 0) +
+      (updatedUser.phone ? 10 : 0) +
+      (updatedUser.avatarUrl ? 5 : 0) +
+      (updatedUser.firstName && updatedUser.lastName ? 5 : 0),
+      100
+    );
 
     const getRank = (score) => {
       if (score >= 80) return 'PLATINUM';
@@ -172,9 +176,7 @@ router.post('/very/callback', async (req, res) => {
       return 'NEWBIE';
     };
 
-    const ogaScore = calculateOgaScore(updatedUser);
-    const rank = getRank(ogaScore);
-    await prisma.user.update({ where: { id: userId }, data: { ogaScore, rank } });
+    await prisma.user.update({ where: { id: userId }, data: { ogaScore, rank: getRank(ogaScore) } });
 
     // Create notification
     await prisma.notification.create({
