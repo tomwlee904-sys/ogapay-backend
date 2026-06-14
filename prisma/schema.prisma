@@ -191,7 +191,8 @@ model User {
   bookmarks                 Bookmark[]
 =======
   reports                   Report[]
->>>>>>> da3d470563c3a69861b9040910f41c7e9e88c0fc
+  devices                   Device[]
+  pairingCodes              PairingCode[]
 
   @@map("users")
 }
@@ -519,6 +520,40 @@ model RefreshToken {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
+}
+
+model Device {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  name        String?                          // "Chrome on Windows"
+  deviceType  String?   @map("device_type")    // DESKTOP | MOBILE | TABLET
+  os          String?
+  browser     String?
+  lastIp      String?   @map("last_ip")
+  lastActiveAt DateTime? @map("last_active_at")
+  pairedAt    DateTime  @default(now()) @map("paired_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("devices")
+}
+
+model PairingCode {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  code      String
+  expiresAt DateTime  @map("expires_at")
+  used      Boolean   @default(false)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([userId])
+  @@map("pairing_codes")
 }
 
 model Conversation {
