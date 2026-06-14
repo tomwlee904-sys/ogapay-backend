@@ -115,15 +115,6 @@ router.patch('/:userId/reject', authenticate, requireAdmin, async (req, res) => 
   }
 });
 
-// GET /kyc/ping — health check for kyc routes
-router.get('/ping', (req, res) => {
-  res.json({ success: true, message: 'pong' });
-});
-
-router.get('/ping-async', async (req, res) => {
-  res.json({ success: true, message: 'pong-async' });
-});
-
 // POST /kyc/very/callback — VeryAI palm verification callback
 router.post('/very/callback', async (req, res) => {
   try {
