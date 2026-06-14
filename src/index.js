@@ -49,6 +49,7 @@ const vaultRoutes = require('./routes/vault.routes');
 const vaultAdminRoutes = require('./routes/vault-admin.routes');
 const blogRoutes = require('./routes/blog.routes');
 const twitterRoutes = require('./routes/twitter.routes');
+const deviceRoutes = require('./routes/device.routes');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -164,6 +165,7 @@ function mountRoutes(base) {
   app.use(`${base}/bookmarks`, bookmarkRoutes);
   app.use(`${base}/reports`, reportRoutes);
   app.use(`${base}/editrequests`, editrequestRoutes);
+  app.use(`${base}/devices`, deviceRoutes);
 }
 mountRoutes(API);
 mountRoutes(API_ALIAS);

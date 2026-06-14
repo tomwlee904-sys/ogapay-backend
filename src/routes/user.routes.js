@@ -163,6 +163,20 @@ router.get('/me/earnings', authenticate, async (req, res) => {
   successResponse(res, result, 'Earnings fetched');
 });
 
+// PATCH /api/v1/users/me/preferences
+router.patch('/me/preferences', authenticate, async (req, res) => {
+  const { preferences } = req.body;
+  if (!preferences || typeof preferences !== 'object') {
+    return res.status(400).json({ success: false, message: 'preferences object required' });
+  }
+  const user = await prisma.user.update({
+    where: { id: req.user.id },
+    data: { preferences },
+    select: { preferences: true },
+  });
+  res.json({ success: true, data: { preferences: user.preferences } });
+});
+
 // DELETE /api/v1/users/me
 router.delete('/me', authenticate, async (req, res) => {
   const { prisma } = require('../config/database');

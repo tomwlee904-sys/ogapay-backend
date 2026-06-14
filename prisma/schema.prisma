@@ -141,6 +141,7 @@ model User {
   isEmailVerified   Boolean   @default(false) @map("is_email_verified")
   isPhoneVerified   Boolean   @default(false) @map("is_phone_verified")
   isBanned          Boolean   @default(false) @map("is_banned")
+  preferences       Json?    @default("{}") @map("preferences")
   referralCode      String    @unique @map("referral_code")
   referredById      String?   @map("referred_by_id")
   lastLoginAt       DateTime? @map("last_login_at")
@@ -177,6 +178,7 @@ model User {
   vaultStats     VaultUserStats?
   waitlistEntries           Waitlist[]
   reports                   Report[]
+  devices                   Device[]
 
   @@map("users")
 }
@@ -784,5 +786,23 @@ model Bookmark {
 
   @@unique([userId, taskId])
   @@map("bookmarks")
+}
+
+model Device {
+  id           String    @id @default(cuid())
+  userId       String    @map("user_id")
+  name         String?
+  browser      String?
+  os           String?
+  code         String?   @unique @map("pairing_code")
+  codeExpiresAt DateTime? @map("code_expires_at")
+  lastActiveAt DateTime? @map("last_active_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([code])
+  @@map("devices")
 }
 
