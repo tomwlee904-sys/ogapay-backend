@@ -169,12 +169,8 @@ router.patch('/me/preferences', authenticate, async (req, res) => {
   if (!preferences || typeof preferences !== 'object') {
     return res.status(400).json({ success: false, message: 'preferences object required' });
   }
-  const user = await prisma.user.update({
-    where: { id: req.user.id },
-    data: { preferences },
-    select: { preferences: true },
-  });
-  res.json({ success: true, data: { preferences: user.preferences } });
+  const user = await userService.updateProfile(req.user.id, { preferences });
+  successResponse(res, { preferences: user.preferences }, 'Preferences updated');
 });
 
 // DELETE /api/v1/users/me
