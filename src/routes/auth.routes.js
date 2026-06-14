@@ -86,6 +86,24 @@ router.post('/logout', authenticate, async (req, res) => {
   successResponse(res, null, 'Logged out successfully');
 });
 
+// POST /api/v1/auth/enable-2fa
+router.post('/enable-2fa', authenticate, async (req, res) => {
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: { isTwoFactorEnabled: true },
+  });
+  successResponse(res, null, 'Two-factor authentication enabled');
+});
+
+// POST /api/v1/auth/disable-2fa
+router.post('/disable-2fa', authenticate, async (req, res) => {
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: { isTwoFactorEnabled: false },
+  });
+  successResponse(res, null, 'Two-factor authentication disabled');
+});
+
 // GET /api/v1/auth/me
 router.get('/me', authenticate, async (req, res) => {
   try {

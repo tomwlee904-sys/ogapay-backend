@@ -142,6 +142,7 @@ model User {
   isPhoneVerified   Boolean   @default(false) @map("is_phone_verified")
   isBanned          Boolean   @default(false) @map("is_banned")
   preferences       Json?    @default("{}") @map("preferences")
+  isTwoFactorEnabled Boolean  @default(false) @map("is_two_factor_enabled")
   referralCode      String    @unique @map("referral_code")
   referredById      String?   @map("referred_by_id")
   lastLoginAt       DateTime? @map("last_login_at")
