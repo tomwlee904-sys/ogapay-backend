@@ -66,6 +66,7 @@ app.use(cors({
     'https://ogapay-five.vercel.app',
     'https://ogapay.vercel.app',
     'https://ogapay.io',
+    'https://ogapay.app',
     'http://localhost:3000',
     'http://localhost:5173',
   ].filter(Boolean),
