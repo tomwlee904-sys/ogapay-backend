@@ -360,11 +360,16 @@ model TaskSubmission {
   startedAt       DateTime?            @map("started_at")
   submittedAt     DateTime?            @map("submitted_at")
   reviewedAt      DateTime?            @map("reviewed_at")
+  flaggedForModeration Boolean         @default(false) @map("flagged_for_moderation")
+  flaggedAt       DateTime?            @map("flagged_at")
+  moderatedById   String?              @map("moderated_by_id")
+  moderatedAt     DateTime?            @map("moderated_at")
   createdAt       DateTime             @default(now()) @map("created_at")
   updatedAt       DateTime             @updatedAt @map("updated_at")
 
   task            Task                 @relation(fields: [taskId], references: [id])
   worker          User                 @relation(fields: [workerId], references: [id])
+  moderator       User?                @relation("Moderator", fields: [moderatedById], references: [id])
   dispute         Dispute?
 
   @@unique([taskId, workerId])

@@ -47,6 +47,7 @@ const pricesRoutes = require('./routes/prices.routes');
 const messageRoutes = require('./routes/message.routes');
 const vaultRoutes = require('./routes/vault.routes');
 const vaultAdminRoutes = require('./routes/vault-admin.routes');
+const adminRoutes = require('./routes/admin.routes');
 const blogRoutes = require('./routes/blog.routes');
 const twitterRoutes = require('./routes/twitter.routes');
 const deviceRoutes = require('./routes/device.routes');
@@ -126,6 +127,32 @@ if (process.env.NODE_ENV !== 'test') {
     }
   });
   logger.info('Cooldown cron scheduled: */15 * * * *');
+
+  // ── Cron: Flag submissions unreviewed for 24h+ every 5 min ──
+  cron.schedule('*/5 * * * *', async () => {
+    try {
+      const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const expired = await prisma.taskSubmission.findMany({
+        where: {
+          status: 'SUBMITTED',
+          submittedAt: { lte: cutoff },
+          flaggedForModeration: false,
+        },
+        select: { id: true },
+      });
+      if (expired.length > 0) {
+        await prisma.taskSubmission.updateMany({
+          where: { id: { in: expired.map(s => s.id) } },
+          data: { flaggedForModeration: true, flaggedAt: new Date() },
+        });
+        logger.info(`Flagged ${expired.length} submissions for 24h+ without review`);
+      }
+    } catch (err) {
+      logger.error(`Moderation flag cron error: ${err.message}`);
+    }
+  });
+  logger.info('Moderation flag cron scheduled: */5 * * * *');
+
   const { scheduleVaultDistribution } = require('./services/vault.cron');
   scheduleVaultDistribution();
 }
@@ -157,6 +184,7 @@ function mountRoutes(base) {
   app.use(`${base}/messages`, messageRoutes);
   app.use(`${base}/vault/admin`, vaultAdminRoutes);
   app.use(`${base}/vault`, vaultRoutes);
+  app.use(`${base}/admin`, adminRoutes);
   app.use(`${base}/blog`, blogRoutes);
   app.use(`${base}/twitter`, twitterRoutes);
   app.use(`${base}/wurker`, wurkerRoutes);
