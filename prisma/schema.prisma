@@ -180,6 +180,7 @@ model User {
   waitlistEntries           Waitlist[]
   reports                   Report[]
   devices                   Device[]
+  moderatedSubmissions      TaskSubmission[] @relation("Moderator")
 
   @@map("users")
 }
