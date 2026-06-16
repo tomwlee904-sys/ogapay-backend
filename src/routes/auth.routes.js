@@ -249,4 +249,41 @@ router.post('/wallet/connect', authenticate, async (req, res) => {
   }, 'Wallet connected successfully');
 });
 
+// POST /api/v1/auth/verify-email
+router.post('/verify-email', async (req, res) => {
+  const { token, userId } = req.body;
+  if (!token || !userId) return res.status(400).json({ success: false, message: 'Missing token or userId' });
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+  if (user.isEmailVerified) return res.json({ success: true, message: 'Email already verified' });
+  if (user.emailVerificationToken !== token) return res.status(400).json({ success: false, message: 'Invalid token' });
+  if (!user.emailVerificationTokenExpiry || user.emailVerificationTokenExpiry < new Date()) {
+    return res.status(400).json({ success: false, message: 'Token expired. Request a new one.' });
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      isEmailVerified: true,
+      emailVerificationToken: null,
+      emailVerificationTokenExpiry: null,
+    },
+  });
+
+  successResponse(res, null, 'Email verified successfully');
+});
+
+// POST /api/v1/auth/resend-verification
+router.post('/resend-verification', authenticate, async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+  if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+  if (user.isEmailVerified) return res.json({ success: true, message: 'Email already verified' });
+
+  const authService = require('../services/auth.service');
+  await authService.sendVerificationEmail(user);
+
+  successResponse(res, null, 'Verification email sent');
+});
+
 module.exports = router;

@@ -1,14 +1,32 @@
 'use strict';
 
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const { prisma } = require('../config/database');
 const { supabase, supabaseAdmin } = require('../config/supabase');
 const { generateTokenPair, verifyRefreshToken } = require('../utils/jwt');
 const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
+const { sendEmail, buildVerificationEmail } = require('./email.service');
 
 const SALT_ROUNDS = 12;
+
+async function sendVerificationEmail(user) {
+  const token = crypto.randomBytes(32).toString('hex');
+  const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { emailVerificationToken: token, emailVerificationTokenExpiry: expiry },
+  });
+
+  const frontend = process.env.FRONTEND_URL || 'https://ogapay.vercel.app';
+  const link = `${frontend}/verify-email?token=${token}&userId=${user.id}`;
+  const email = buildVerificationEmail({ name: user.firstName, link });
+
+  return sendEmail({ to: user.email, ...email });
+}
 
 // Generate a short unique referral code
 const generateReferralCode = () => {
@@ -88,6 +106,10 @@ const register = async ({ firstName, lastName, email, password, username, role, 
   });
 
   logger.info(`New user registered: ${user.email} (${user.role})`);
+
+  // Fire-and-forget verification email (don't block registration)
+  sendVerificationEmail(user).catch(e => logger.warn('Verification email failed:', e.message));
+
   const tokens = generateTokenPair(user);
   await saveRefreshToken(user.id, tokens.refreshToken);
 
