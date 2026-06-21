@@ -27,7 +27,7 @@ const getProfile = async (userId) => {
 // ── Update profile ─────────────────────────────
 
 const updateProfile = async (userId, updates) => {
-  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'username', 'twitter', 'telegram', 'discord', 'website', 'verifiedCreator'];
+  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'username', 'twitter', 'telegram', 'discord', 'website', 'verifiedCreator', 'preferences'];
   const data = Object.fromEntries(
     Object.entries(updates).filter(([k]) => allowed.includes(k))
   );
@@ -66,10 +66,16 @@ const updateProfile = async (userId, updates) => {
     });
   }
 
+  if (Object.keys(data).length === 0) {
+    return prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true, username: true, role: true, verifiedCreator: true, preferences: true },
+    });
+  }
   return prisma.user.update({
     where: { id: userId },
     data,
-    select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true, username: true, role: true, verifiedCreator: true },
+    select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true, username: true, role: true, verifiedCreator: true, preferences: true },
   });
 };
 
