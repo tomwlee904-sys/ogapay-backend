@@ -27,12 +27,10 @@ const getProfile = async (userId) => {
 // ── Update profile ─────────────────────────────
 
 const updateProfile = async (userId, updates) => {
-  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'username', 'twitter', 'telegram', 'discord', 'website', 'verifiedCreator', 'preferences'];
+  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'username', 'twitter', 'telegram', 'discord', 'website', 'preferences'];
   const data = Object.fromEntries(
     Object.entries(updates).filter(([k]) => allowed.includes(k))
   );
-  // Coerce verifiedCreator to Boolean
-  if (data.verifiedCreator !== undefined) data.verifiedCreator = Boolean(data.verifiedCreator);
 
   // Worker-specific updates
   const workerFields = ['bio', 'skills', 'isAvailable', 'nickname', 'description', 'moreAbout', 'challengesParticipated', 'challengesWon', 'categories', 'portfolio', 'tags', 'isPublic'];
@@ -66,16 +64,14 @@ const updateProfile = async (userId, updates) => {
     });
   }
 
+  const selectFields = { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true, username: true, role: true, preferences: true };
   if (Object.keys(data).length === 0) {
-    return prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true, username: true, role: true, verifiedCreator: true, preferences: true },
-    });
+    return prisma.user.findUnique({ where: { id: userId }, select: selectFields });
   }
   return prisma.user.update({
     where: { id: userId },
     data,
-    select: { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true, username: true, role: true, verifiedCreator: true, preferences: true },
+    select: selectFields,
   });
 };
 
