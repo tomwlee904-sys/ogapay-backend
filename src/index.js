@@ -50,6 +50,7 @@ const vaultAdminRoutes = require('./routes/vault-admin.routes');
 const adminRoutes = require('./routes/admin.routes');
 const blogRoutes = require('./routes/blog.routes');
 const twitterRoutes = require('./routes/twitter.routes');
+const socialRoutes = require('./routes/social.routes');
 const deviceRoutes = require('./routes/device.routes');
 
 const app = express();
@@ -193,6 +194,7 @@ function mountRoutes(base) {
   app.use(`${base}/bookmarks`, bookmarkRoutes);
   app.use(`${base}/reports`, reportRoutes);
   app.use(`${base}/editrequests`, editrequestRoutes);
+  app.use(`${base}/social`, socialRoutes);
   app.use(`${base}/devices`, deviceRoutes);
 }
 mountRoutes(API);
