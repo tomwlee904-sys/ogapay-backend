@@ -85,30 +85,6 @@ router.patch(
   },
 );
 
-// POST /api/v1/tasks/:id/submissions/:submissionId/approve — Approve submission
-router.post(
-  '/:id/submissions/:submissionId/approve',
-  authenticate,
-  authorize('POSTER', 'ADMIN'),
-  async (req, res) => {
-    const taskService = require('../services/task.service');
-    const result = await taskService.reviewSubmission(req.user.id, req.params.submissionId, { status: 'APPROVED' });
-    successResponse(res, result, 'Submission approved');
-  },
-);
-
-// POST /api/v1/tasks/:id/submissions/:submissionId/reject — Reject submission
-router.post(
-  '/:id/submissions/:submissionId/reject',
-  authenticate,
-  authorize('POSTER', 'ADMIN'),
-  async (req, res) => {
-    const taskService = require('../services/task.service');
-    const result = await taskService.rejectSubmission(req.user.id, req.params.submissionId, req.body);
-    successResponse(res, result, 'Submission rejected');
-  },
-);
-
 // GET /api/v1/tasks/my/created — Poster's tasks
 router.get('/my/created', authenticate, async (req, res) => {
   const { page = 1, limit = 20, status } = req.query;
