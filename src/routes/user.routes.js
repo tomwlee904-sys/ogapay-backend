@@ -153,7 +153,7 @@ router.get('/public/:username/communities', async (req, res) => {
 
 // GET /api/v1/users/:username
 router.get("/:username", async (req, res) => {
-  const data = await userService.getWorkerPublicProfile(req.params.username);
+  const data = await userService.getPublicProfile(req.params.username);
   successResponse(res, data, 'Profile fetched');
 });
 

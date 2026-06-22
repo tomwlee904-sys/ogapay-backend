@@ -94,46 +94,22 @@ const uploadAvatar = async (userId, file) => {
   return { avatarUrl };
 };
 
-// ── Get public worker profile ──────────────────
+// ── Get public profile by username ─────────────
 
 const getPublicProfile = async (username) => {
   const user = await prisma.user.findUnique({
     where: { username },
-    select: {
-      id: true,
-      username: true,
-      firstName: true,
-      avatarUrl: true,
-      role: true,
-      createdAt: true,
-      workerProfile: {
-        select: {
-          level: true,
-          reputationScore: true,
-          tasksCompleted: true,
-          successRate: true,
-          avgRating: true,
-          totalRatings: true,
-          skills: true,
-          bio: true,
-          isAvailable: true,
-        },
-      },
-      posterProfile: {
-        select: {
-          companyName: true,
-          website: true,
-          totalPosted: true,
-          totalSpent: true,
-          avgRating: true,
-          totalRatings: true,
-          isVerified: true,
-        },
-      },
+    include: {
+      kyc: { select: { status: true, verifiedAt: true } },
+      wallets: { where: { isActive: true } },
+      workerProfile: true,
+      posterProfile: true,
+      _count: { select: { tasksCreated: true, taskSubmissions: true } },
     },
   });
   if (!user) throw ApiError.notFound('User not found');
-  return user;
+  const { passwordHash, ...safeUser } = user;
+  return safeUser;
 };
 
 // ── Get user's transaction history ────────────
