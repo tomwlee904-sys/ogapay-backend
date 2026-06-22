@@ -223,6 +223,7 @@ model KycVerification {
   id                String    @id @default(uuid())
   userId            String    @unique @map("user_id")
   status            KycStatus @default(PENDING)
+  kycTier           Int       @default(0) @map("kyc_tier")
   provider          String?   // "dojah" | "smile_identity"
   providerRef       String?   @map("provider_ref")   // External KYC ID
   idType            String?   @map("id_type")         // NIN, BVN, PASSPORT, etc.
@@ -230,6 +231,7 @@ model KycVerification {
   idFrontUrl        String?   @map("id_front_url")
   idBackUrl         String?   @map("id_back_url")
   selfieUrl         String?   @map("selfie_url")
+  livenessPassed    Boolean   @default(false) @map("liveness_passed")
   dateOfBirth       DateTime? @map("date_of_birth")
   address           String?
   city              String?

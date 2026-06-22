@@ -56,4 +56,16 @@ router.post('/community', authenticate, upload.single('cover'), async (req, res)
   createdResponse(res, { url: data.publicUrl, path: key }, 'Cover uploaded');
 });
 
+// POST /uploads/kyc — Upload KYC document (fallback for frontend upload.ts)
+router.post('/kyc', authenticate, upload.single('file'), async (req, res) => {
+  if (!req.file) throw ApiError.badRequest('No file uploaded');
+  const docType = req.body.type || 'id_front';
+  const allowed = ['id_front', 'id_back', 'selfie'];
+  if (!allowed.includes(docType)) throw ApiError.badRequest('Invalid document type');
+
+  const kycService = require('../services/kyc.service');
+  const url = await kycService.uploadKycDocument(req.user.id, req.file, docType);
+  createdResponse(res, { url }, 'KYC document uploaded');
+});
+
 module.exports = router;
