@@ -11,6 +11,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 const cron = require('node-cron');
+const { prisma } = require('./config/database');
 const taskService = require('./services/task.service');
 const { logger } = require('./utils/logger');
 const { errorHandler } = require('./middleware/errorHandler');
