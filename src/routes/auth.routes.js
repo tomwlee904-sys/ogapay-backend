@@ -5,6 +5,7 @@ const { validate, registerSchema, loginSchema, refreshTokenSchema } = require('.
 const { authenticate } = require('../middleware/auth.middleware');
 const { prisma } = require('../config/database');
 const authService = require('../services/auth.service');
+const twoFactorService = require('../services/2fa.service');
 const { successResponse, createdResponse } = require('../utils/apiResponse');
 const { supabase } = require('../config/supabase');
 
@@ -86,28 +87,45 @@ router.post('/logout', authenticate, async (req, res) => {
   successResponse(res, null, 'Logged out successfully');
 });
 
-// POST /api/v1/auth/setup-2fa — Generate TOTP secret and QR code
-router.post('/setup-2fa', authenticate, async (req, res) => {
-  const result = await authService.setup2FA(req.user.id);
-  successResponse(res, result, 'Scan the QR code with your authenticator app');
+// GET /api/v1/auth/2fa/setup — get QR code and secret
+router.get('/2fa/setup', authenticate, async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    select: { email: true, isTwoFactorEnabled: true },
+  });
+  if (user.isTwoFactorEnabled) {
+    return successResponse(res, { alreadyEnabled: true }, '2FA is already enabled');
+  }
+  const result = await twoFactorService.setup(req.user.id, user.email);
+  successResponse(res, result, '2FA setup initialized');
 });
 
-// POST /api/v1/auth/verify-2fa — Verify TOTP code and enable 2FA
-router.post('/verify-2fa', authenticate, async (req, res) => {
-  const result = await authService.verify2FA(req.user.id, req.body.token);
-  successResponse(res, result, result.message);
+// POST /api/v1/auth/2fa/verify — verify setup code and enable
+router.post('/2fa/verify', authenticate, async (req, res) => {
+  const { token } = req.body;
+  if (!token) throw require('../utils/apiResponse').ApiError.badRequest('Verification code is required');
+  await twoFactorService.verify(req.user.id, token);
+  successResponse(res, null, 'Two-factor authentication enabled');
 });
 
-// POST /api/v1/auth/disable-2fa — Disable 2FA (requires current TOTP code)
-router.post('/disable-2fa', authenticate, async (req, res) => {
-  const result = await authService.disable2FA(req.user.id, req.body.token);
-  successResponse(res, result, result.message);
+// POST /api/v1/auth/2fa/disable — disable 2FA
+router.post('/2fa/disable', authenticate, async (req, res) => {
+  const { token } = req.body;
+  if (!token) throw require('../utils/apiResponse').ApiError.badRequest('Verification code is required');
+  const isValid = await twoFactorService.verifyChallenge(req.user.id, token);
+  if (!isValid) throw require('../utils/apiResponse').ApiError.unauthorized('Invalid 2FA code');
+  await twoFactorService.disable(req.user.id);
+  successResponse(res, null, 'Two-factor authentication disabled');
 });
 
-// POST /api/v1/auth/2fa-challenge — Complete login with 2FA code
-router.post('/2fa-challenge', async (req, res) => {
-  const result = await authService.verify2FALogin(req.body.twoFactorToken, req.body.token);
-  successResponse(res, result, 'Login successful');
+// POST /api/v1/auth/2fa/challenge — verify 2FA during login
+router.post('/2fa/challenge', async (req, res) => {
+  const { userId, challengeToken, token } = req.body;
+  if (!userId || !challengeToken || !token) {
+    throw require('../utils/apiResponse').ApiError.badRequest('userId, challengeToken, and token are required');
+  }
+  const result = await authService.verify2FAChallenge(userId, challengeToken, token);
+  successResponse(res, result, '2FA verification successful');
 });
 
 // GET /api/v1/auth/me

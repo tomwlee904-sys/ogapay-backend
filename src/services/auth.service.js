@@ -3,15 +3,14 @@
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
-const { authenticator } = require('otplib');
-const QRCode = require('qrcode');
-const jwt = require('jsonwebtoken');
 const { prisma } = require('../config/database');
 const { supabase, supabaseAdmin } = require('../config/supabase');
 const { generateTokenPair, verifyRefreshToken } = require('../utils/jwt');
 const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
 const { sendEmail, buildVerificationEmail } = require('./email.service');
+
+const twoFactorService = require('./2fa.service');
 
 const SALT_ROUNDS = 12;
 
@@ -139,15 +138,18 @@ const login = async ({ email, password }, ipAddress, userAgent) => {
     data: { lastLoginAt: new Date() },
   });
 
-  // If 2FA is enabled, issue a short-lived 2FA challenge token instead of full tokens
   if (user.isTwoFactorEnabled) {
-    const twoFactorToken = jwt.sign(
-      { sub: user.id, scope: '2fa' },
-      process.env.JWT_SECRET || 'ogapay-dev-secret',
-      { expiresIn: '5m' },
-    );
-    logger.info(`User 2FA required: ${user.email}`);
-    return { require2FA: true, twoFactorToken, user: sanitizeUser(user) };
+    const challengeToken = crypto.randomBytes(32).toString('hex');
+    const challengeExpiry = new Date(Date.now() + 5 * 60 * 1000);
+
+    await prisma.twoFactorChallenge.upsert({
+      where: { userId: user.id },
+      create: { userId: user.id, token: challengeToken, expiresAt: challengeExpiry },
+      update: { token: challengeToken, expiresAt: challengeExpiry },
+    });
+
+    logger.info(`2FA required for user: ${user.email}`);
+    return { requiresTwoFactor: true, challengeToken, userId: user.id };
   }
 
   const tokens = generateTokenPair(user);
@@ -312,91 +314,9 @@ const sanitizeUser = (user) => ({
   role: user.role,
   referralCode: user.referralCode,
   isEmailVerified: user.isEmailVerified,
-  isTwoFactorEnabled: user.isTwoFactorEnabled || false,
+  isTwoFactorEnabled: user.isTwoFactorEnabled,
   createdAt: user.createdAt,
 });
-
-// ── 2FA Setup ──────────────────────────────────
-
-const setup2FA = async (userId) => {
-  const secret = authenticator.generateSecret();
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) throw ApiError.notFound('User not found');
-
-  const serviceName = 'OgaPay';
-  const otpauth = authenticator.keyuri(user.email, serviceName, secret);
-  const qrCodeDataUrl = await QRCode.toDataURL(otpauth);
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: { twoFactorSecret: secret },
-  });
-
-  return { secret, qrCodeDataUrl };
-};
-
-// ── Verify 2FA & Enable ────────────────────────
-
-const verify2FA = async (userId, token) => {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) throw ApiError.notFound('User not found');
-  if (!user.twoFactorSecret) throw ApiError.badRequest('2FA not set up. Call setup-2fa first.');
-
-  const isValid = authenticator.check(token, user.twoFactorSecret);
-  if (!isValid) throw ApiError.badRequest('Invalid authentication code');
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: { isTwoFactorEnabled: true },
-  });
-
-  return { message: 'Two-factor authentication enabled' };
-};
-
-// ── Disable 2FA ────────────────────────────────
-
-const disable2FA = async (userId, token) => {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) throw ApiError.notFound('User not found');
-  if (!user.twoFactorSecret) throw ApiError.badRequest('2FA is not configured');
-
-  const isValid = authenticator.check(token, user.twoFactorSecret);
-  if (!isValid) throw ApiError.badRequest('Invalid authentication code');
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: { isTwoFactorEnabled: false, twoFactorSecret: null },
-  });
-
-  return { message: 'Two-factor authentication disabled' };
-};
-
-// ── 2FA Login Challenge ────────────────────────
-
-const verify2FALogin = async (twoFactorToken, otpToken) => {
-  let payload;
-  try {
-    payload = jwt.verify(twoFactorToken, process.env.JWT_SECRET || 'ogapay-dev-secret');
-  } catch {
-    throw ApiError.unauthorized('Invalid or expired 2FA token');
-  }
-  if (payload.scope !== '2fa') throw ApiError.unauthorized('Invalid token scope');
-
-  const user = await prisma.user.findUnique({
-    where: { id: payload.sub },
-    include: { kyc: { select: { status: true } } },
-  });
-  if (!user) throw ApiError.unauthorized('User not found');
-  if (!user.twoFactorSecret) throw ApiError.badRequest('2FA is not configured');
-
-  const isValid = authenticator.check(otpToken, user.twoFactorSecret);
-  if (!isValid) throw ApiError.badRequest('Invalid authentication code');
-
-  const tokens = generateTokenPair(user);
-  await saveRefreshToken(user.id, tokens.refreshToken);
-
-  return { user: sanitizeUser(user), tokens };
-};
 
 
 // ── Forgot Password ────────────────────────────
@@ -484,4 +404,43 @@ const changePassword = async (userId, currentPassword, newPassword) => {
   return { message: 'Password changed successfully' };
 };
 
-module.exports = { register, login, googleExchange, refreshTokens, logout, forgotPassword, resetPassword, changePassword, setup2FA, verify2FA, disable2FA, verify2FALogin };
+const verify2FAChallenge = async (userId, challengeToken, twoFactorCode) => {
+  const challenge = await prisma.twoFactorChallenge.findUnique({
+    where: { userId },
+  });
+
+  if (!challenge || challenge.token !== challengeToken) {
+    throw ApiError.unauthorized('Invalid challenge');
+  }
+
+  if (challenge.expiresAt < new Date()) {
+    await prisma.twoFactorChallenge.delete({ where: { id: challenge.id } });
+    throw ApiError.unauthorized('Challenge expired. Please log in again.');
+  }
+
+  const isValid = await twoFactorService.verifyChallenge(userId, twoFactorCode);
+  if (!isValid) {
+    throw ApiError.unauthorized('Invalid 2FA code');
+  }
+
+  await prisma.twoFactorChallenge.delete({ where: { id: challenge.id } });
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { kyc: { select: { status: true } } },
+  });
+  if (!user) throw ApiError.notFound('User not found');
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { lastLoginAt: new Date() },
+  });
+
+  const tokens = generateTokenPair(user);
+  await saveRefreshToken(user.id, tokens.refreshToken);
+
+  logger.info(`2FA challenge passed for user: ${user.email}`);
+  return { user: sanitizeUser(user), tokens };
+};
+
+module.exports = { register, login, googleExchange, refreshTokens, logout, forgotPassword, resetPassword, changePassword, verify2FAChallenge };
