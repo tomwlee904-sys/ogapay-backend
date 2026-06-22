@@ -113,9 +113,9 @@ async function main() {
   console.log(`  Status: ${earn.status}`);
   await test('Earnings returns 200', () => assert(earn.ok));
   if (earn.ok) {
-    const total = Number(earn.body.data?.totalEarnings || 0);
-    await test('totalEarnings is a valid number', () => assert(total > 0, `got ${total}`));
-    console.log('  totalEarnings:', total);
+    const total = Number(earn.body.data?.totalEarned || 0);
+    await test('totalEarned > 0', () => assert(total > 0, `got ${total}`));
+    console.log('  totalEarned:', total);
   }
 
   // ═══════════════════════════════════════════════
