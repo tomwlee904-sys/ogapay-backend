@@ -27,8 +27,31 @@ router.post('/', authenticate, async (req, res) => {
 router.patch('/:id', authenticate, async (req, res) => {
   const camp = await prisma.campaign.findFirst({ where: { id: req.params.id, userId: req.user.id } });
   if (!camp) throw ApiError.notFound('Campaign not found');
-  const updated = await prisma.campaign.update({ where: { id: req.params.id }, data: req.body });
+  const { name, description, platforms, budget, currency, status } = req.body;
+  const data = {};
+  if (name !== undefined) data.name = name;
+  if (description !== undefined) data.description = description;
+  if (platforms !== undefined) data.platforms = platforms;
+  if (budget !== undefined) data.budget = parseFloat(budget);
+  if (currency !== undefined) data.currency = currency;
+  if (status !== undefined) data.status = status;
+  const updated = await prisma.campaign.update({ where: { id: req.params.id }, data });
   successResponse(res, updated, 'Campaign updated');
+});
+
+router.get('/:id/stats', authenticate, async (req, res) => {
+  const camp = await prisma.campaign.findFirst({ where: { id: req.params.id, userId: req.user.id } });
+  if (!camp) throw ApiError.notFound('Campaign not found');
+  successResponse(res, {
+    spend: Number(camp.spend),
+    impressions: camp.impressions,
+    clicks: camp.clicks,
+    conversions: camp.conversions,
+    budget: Number(camp.budget),
+    remaining: Number(camp.budget) - Number(camp.spend),
+    ctr: camp.impressions > 0 ? ((camp.clicks / camp.impressions) * 100).toFixed(2) : '0.00',
+    conversionRate: camp.clicks > 0 ? ((camp.conversions / camp.clicks) * 100).toFixed(2) : '0.00',
+  });
 });
 
 module.exports = router;

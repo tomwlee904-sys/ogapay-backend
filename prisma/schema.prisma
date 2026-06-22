@@ -182,8 +182,39 @@ model User {
   waitlistEntries           Waitlist[]
   reports                   Report[]
   devices                   Device[]
+  campaigns                 Campaign[]
   twoFactorChallenge        TwoFactorChallenge?
   moderatedSubmissions      TaskSubmission[] @relation("Moderator")
+
+  // OAuth fields
+  linkedinOAuthToken         String?   @map("linkedin_oauth_token")
+  linkedinOAuthRefreshToken  String?   @map("linkedin_oauth_refresh_token")
+  linkedinOAuthTokenExpiry   DateTime? @map("linkedin_oauth_token_expiry")
+  linkedinOAuthUserId        String?   @map("linkedin_oauth_user_id")
+  linkedinOAuthHandle        String?   @map("linkedin_oauth_handle")
+  linkedinOAuthConnected     Boolean   @default(false) @map("linkedin_oauth_connected")
+
+  githubOAuthToken           String?   @map("github_oauth_token")
+  githubOAuthUserId          String?   @map("github_oauth_user_id")
+  githubOAuthHandle          String?   @map("github_oauth_handle")
+  githubOAuthConnected       Boolean   @default(false) @map("github_oauth_connected")
+
+  twitterOAuthToken          String?   @map("twitter_oauth_token")
+  twitterOAuthTokenSecret    String?   @map("twitter_oauth_token_secret")
+  twitterOAuthUserId         String?   @map("twitter_oauth_user_id")
+  twitterOAuthHandle         String?   @map("twitter_oauth_handle")
+  twitterOAuthConnected      Boolean   @default(false) @map("twitter_oauth_connected")
+
+  googleOAuthToken           String?   @map("google_oauth_token")
+  googleOAuthRefreshToken    String?   @map("google_oauth_refresh_token")
+  googleOAuthTokenExpiry     DateTime? @map("google_oauth_token_expiry")
+  googleOAuthUserId          String?   @map("google_oauth_user_id")
+  googleOAuthHandle          String?   @map("google_oauth_handle")
+  googleOAuthConnected       Boolean   @default(false) @map("google_oauth_connected")
+
+  telegramOAuthChatId        String?   @map("telegram_oauth_chat_id")
+  telegramOAuthHandle        String?   @map("telegram_oauth_handle")
+  telegramOAuthConnected     Boolean   @default(false) @map("telegram_oauth_connected")
 
   @@map("users")
 }
@@ -672,6 +703,30 @@ model CommunityMember {
 
   @@unique([communityId, userId])
   @@map("community_members")
+}
+
+model Campaign {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  name        String
+  description String?
+  platforms   String[]
+  budget      Decimal   @db.Decimal(20, 2)
+  currency    String    @default("NGN")
+  status      String    @default("ACTIVE")
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  spend       Decimal   @default(0) @db.Decimal(20, 2)
+  impressions Int       @default(0)
+  clicks      Int       @default(0)
+  conversions Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("campaigns")
 }
 
 model WalletNonce {

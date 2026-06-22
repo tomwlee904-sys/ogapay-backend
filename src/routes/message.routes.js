@@ -36,7 +36,16 @@ router.get('/', authenticate, async (req, res) => {
     orderBy: { conversation: { updatedAt: 'desc' } },
   });
 
-  const conversations = participants.map(p => {
+  const convIds = participants.map(p => p.conversationId);
+  const unreadCounts = convIds.length > 0
+    ? await Promise.all(convIds.map(cid =>
+        prisma.message.count({
+          where: { conversationId: cid, senderId: { not: userId }, readAt: null },
+        })
+      ))
+    : [];
+
+  const conversations = participants.map((p, i) => {
     const conv = p.conversation;
     const lastMsg = conv.messages[0] || null;
     return {
@@ -54,7 +63,7 @@ router.get('/', authenticate, async (req, res) => {
         createdAt: lastMsg.createdAt,
         senderId: lastMsg.senderId,
       } : null,
-      unread: 0, // TODO: implement read receipts
+      unread: unreadCounts[i] || 0,
       updatedAt: conv.updatedAt,
     };
   });
@@ -169,6 +178,12 @@ router.get('/:conversationId', authenticate, async (req, res) => {
     include: {
       sender: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
     },
+  });
+
+  // Mark messages as read
+  await prisma.message.updateMany({
+    where: { conversationId, senderId: { not: userId }, readAt: null },
+    data: { readAt: new Date() },
   });
 
   successResponse(res, messages);
