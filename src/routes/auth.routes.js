@@ -86,22 +86,28 @@ router.post('/logout', authenticate, async (req, res) => {
   successResponse(res, null, 'Logged out successfully');
 });
 
-// POST /api/v1/auth/enable-2fa
-router.post('/enable-2fa', authenticate, async (req, res) => {
-  await prisma.user.update({
-    where: { id: req.user.id },
-    data: { isTwoFactorEnabled: true },
-  });
-  successResponse(res, null, 'Two-factor authentication enabled');
+// POST /api/v1/auth/setup-2fa — Generate TOTP secret and QR code
+router.post('/setup-2fa', authenticate, async (req, res) => {
+  const result = await authService.setup2FA(req.user.id);
+  successResponse(res, result, 'Scan the QR code with your authenticator app');
 });
 
-// POST /api/v1/auth/disable-2fa
+// POST /api/v1/auth/verify-2fa — Verify TOTP code and enable 2FA
+router.post('/verify-2fa', authenticate, async (req, res) => {
+  const result = await authService.verify2FA(req.user.id, req.body.token);
+  successResponse(res, result, result.message);
+});
+
+// POST /api/v1/auth/disable-2fa — Disable 2FA (requires current TOTP code)
 router.post('/disable-2fa', authenticate, async (req, res) => {
-  await prisma.user.update({
-    where: { id: req.user.id },
-    data: { isTwoFactorEnabled: false },
-  });
-  successResponse(res, null, 'Two-factor authentication disabled');
+  const result = await authService.disable2FA(req.user.id, req.body.token);
+  successResponse(res, result, result.message);
+});
+
+// POST /api/v1/auth/2fa-challenge — Complete login with 2FA code
+router.post('/2fa-challenge', async (req, res) => {
+  const result = await authService.verify2FALogin(req.body.twoFactorToken, req.body.token);
+  successResponse(res, result, 'Login successful');
 });
 
 // GET /api/v1/auth/me
