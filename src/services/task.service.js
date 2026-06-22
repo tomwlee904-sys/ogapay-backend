@@ -249,29 +249,37 @@ const reviewSubmission = async (posterId, submissionId, { status, posterNotes, r
 
   if (!submission) throw ApiError.notFound('Submission not found');
   if (submission.task.posterId !== posterId) throw ApiError.forbidden('Not your task');
-  if (submission.status !== 'SUBMITTED') throw ApiError.badRequest('Submission not ready for review');
   if (!submission.submittedAt) throw ApiError.badRequest('Worker has not submitted yet');
 
   return prisma.$transaction(async (db) => {
-    const updated = await db.taskSubmission.update({
-      where: { id: submissionId },
+    const { count } = await db.taskSubmission.updateMany({
+      where: { id: submissionId, status: 'SUBMITTED' },
       data: {
         status,
         posterNotes,
         rating,
         feedback,
         reviewedAt: new Date(),
-        ...(status === 'APPROVED' && { paidAt: new Date() }),
       },
     });
 
+    if (count === 0) {
+      throw ApiError.conflict('Submission was already reviewed');
+    }
+
+    const updated = await db.taskSubmission.findUnique({
+      where: { id: submissionId },
+    });
+
     if (status === 'APPROVED') {
-      // Release payment to worker
+      // Release payment to worker (uses tx for atomicity)
       await releaseEscrow(
         submission.taskId,
         submission.workerId,
         parseFloat(submission.task.reward),
         submission.task.currency,
+        submissionId,
+        db,
       );
 
       // Update worker reputation
@@ -491,12 +499,18 @@ const rejectSubmission = async (posterId, submissionId, { posterNotes }) => {
 
   if (!submission) throw ApiError.notFound('Submission not found');
   if (submission.task.posterId !== posterId) throw ApiError.forbidden('Not your task');
-  if (!['SUBMITTED', 'PENDING'].includes(submission.status)) throw ApiError.badRequest('Submission cannot be rejected');
-
   return prisma.$transaction(async (db) => {
-    const updated = await db.taskSubmission.update({
-      where: { id: submissionId },
+    const { count } = await db.taskSubmission.updateMany({
+      where: { id: submissionId, status: { in: ['SUBMITTED', 'PENDING'] } },
       data: { status: 'REJECTED', reviewedAt: new Date(), posterNotes: posterNotes || undefined },
+    });
+
+    if (count === 0) {
+      throw ApiError.conflict('Submission was already reviewed or cannot be rejected');
+    }
+
+    const updated = await db.taskSubmission.findUnique({
+      where: { id: submissionId },
     });
 
     await db.workerProfile.update({
@@ -557,14 +571,34 @@ const autoCompleteExpiredCooldowns = async () => {
         lte: new Date(Date.now() - 24 * 60 * 60 * 1000),
       },
     },
+    include: {
+      submissions: {
+        where: { status: 'PENDING' },
+        select: { id: true, workerId: true },
+      },
+    },
   });
 
   for (const task of expired) {
+    const pendingSubs = task.submissions;
+
     await prisma.$transaction(async (db) => {
-      await db.taskSubmission.updateMany({
-        where: { taskId: task.id, status: 'PENDING' },
-        data: { status: 'APPROVED' },
-      });
+      for (const sub of pendingSubs) {
+        const { count } = await db.taskSubmission.updateMany({
+          where: { id: sub.id, status: 'PENDING' },
+          data: { status: 'APPROVED', reviewedAt: new Date() },
+        });
+        if (count === 0) continue;
+
+        await releaseEscrow(
+          task.id,
+          sub.workerId,
+          parseFloat(task.reward),
+          task.currency,
+          sub.id,
+          db,
+        );
+      }
 
       await db.task.update({
         where: { id: task.id },
@@ -576,7 +610,7 @@ const autoCompleteExpiredCooldowns = async () => {
           userId: task.posterId,
           type: 'COOLDOWN_EXPIRED',
           title: '⏰ Cooldown Expired',
-          body: `Cooldown expired for "${task.title}". Pending submissions auto-approved.`,
+          body: `Cooldown expired for "${task.title}". Pending submissions auto-approved and paid.`,
           data: { taskId: task.id },
         },
       });

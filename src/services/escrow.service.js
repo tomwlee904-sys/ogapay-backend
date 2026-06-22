@@ -73,23 +73,25 @@ const lockFundsForTask = async (userId, taskId, amount, currency) => {
   return escrowResult;
 };
 
-const releaseEscrow = async (taskId, workerId, amount, currency) => {
-  const task = await prisma.task.findUnique({
+const releaseEscrow = async (taskId, workerId, amount, currency, submissionId, tx) => {
+  const client = tx || prisma;
+
+  const task = await client.task.findUnique({
     where: { id: taskId },
     select: { posterId: true },
   });
   if (!task) throw ApiError.notFound('Task not found');
 
   const [workerWallet, posterWallet] = await Promise.all([
-    prisma.wallet.findUnique({ where: { userId_currency: { userId: workerId, currency } } }),
-    prisma.wallet.findUnique({ where: { userId_currency: { userId: task.posterId, currency } } }),
+    client.wallet.findUnique({ where: { userId_currency: { userId: workerId, currency } } }),
+    client.wallet.findUnique({ where: { userId_currency: { userId: task.posterId, currency } } }),
   ]);
   if (!workerWallet) throw ApiError.notFound('Worker wallet not found');
   if (!posterWallet) throw ApiError.notFound('Poster wallet not found');
 
   const reference = `OGA-PAY-${uuidv4().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
 
-  const escrowResult = await prisma.$transaction(async (db) => {
+  const execute = async (db) => {
     await db.wallet.update({
       where: { id: posterWallet.id },
       data: {
@@ -136,7 +138,12 @@ const releaseEscrow = async (taskId, workerId, amount, currency) => {
     });
 
     logger.info(`Escrow released: task ${taskId} -> worker ${workerId} - ${amount} ${currency}`);
-  });
+  };
+
+  if (tx) {
+    return execute(tx);
+  }
+  return prisma.$transaction(execute);
 };
 
 const refundEscrow = async (taskId, reason = 'TASK_CANCELLED') => {

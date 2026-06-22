@@ -150,6 +150,18 @@ const getReferralStats = async (userId) => {
   };
 };
 
+// ── Get earnings ──────────────────────────────
+
+const getEarnings = async (userId) => {
+  const transactions = await prisma.transaction.findMany({
+    where: { userId, type: 'TASK_PAYMENT', status: 'COMPLETED' },
+    include: { task: { select: { id: true, title: true } } },
+    orderBy: { completedAt: 'desc' },
+  });
+  const totalEarned = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+  return { transactions, totalEarned };
+};
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -157,4 +169,5 @@ module.exports = {
   getPublicProfile,
   getTransactionHistory,
   getReferralStats,
+  getEarnings,
 };
