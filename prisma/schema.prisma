@@ -182,6 +182,7 @@ model User {
   waitlistEntries           Waitlist[]
   reports                   Report[]
   devices                   Device[]
+  twoFactorChallenge        TwoFactorChallenge?
   moderatedSubmissions      TaskSubmission[] @relation("Moderator")
 
   @@map("users")
