@@ -155,7 +155,6 @@ const getReferralStats = async (userId) => {
 const getEarnings = async (userId) => {
   const transactions = await prisma.transaction.findMany({
     where: { userId, type: 'TASK_PAYMENT', status: 'COMPLETED' },
-    include: { task: { select: { id: true, title: true } } },
     orderBy: { completedAt: 'desc' },
   });
   const totalEarned = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
