@@ -59,6 +59,24 @@ assert(
   'passwordHash not destructured out'
 );
 
+// 7. Communities endpoint orderBy uses createdAt (not joinedAt — that field doesn't exist)
+const communitiesRouteMatch = routeSrc.match(/\/public\/:username\/communities[\s\S]*?orderBy:\s*\{[^}]+}/);
+if (communitiesRouteMatch) {
+  const orderByBlock = communitiesRouteMatch[0];
+  assert(
+    'Communities endpoint orderBy uses createdAt not joinedAt',
+    /createdAt/.test(orderByBlock) && !/joinedAt/.test(orderByBlock),
+    `Found orderBy: ${orderByBlock.match(/orderBy:\s*\{[^}]+\}/)?.[0] || 'not found'}`
+  );
+} else {
+  // Fallback: check entire file
+  assert(
+    'Communities endpoint does NOT use joinedAt in orderBy',
+    !/joinedAt/.test(routeSrc),
+    'Found stale joinedAt reference in route file'
+  );
+}
+
 // 6. getPublicProfile includes wallets, kyc, workerProfile, posterProfile, _count
 const getPublicFn = serviceSrc.match(/const getPublicProfile[\s\S]*?^\};/m)?.[0] || '';
 assert(

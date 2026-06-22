@@ -134,7 +134,7 @@ router.get('/public/:username/communities', async (req, res) => {
         include: { _count: { select: { members: true } } },
       },
     },
-    orderBy: { joinedAt: 'desc' },
+    orderBy: { createdAt: 'desc' },
   });
 
   successResponse(res, memberships.map(m => ({

@@ -56,18 +56,14 @@ async function main() {
 
   console.log(`  Test user: ${testUser.username}\n`);
 
-  // ═══════════════════════════════════════════════════
-  // 1. AUTH
-  // ═══════════════════════════════════════════════════
+  // ── 1. AUTH ──
   console.log('  ── 1. AUTH ──');
-
   let token;
   await step('Register test user', async () => {
     const res = await api('POST', '/auth/register', testUser);
     const data = res.data || res;
     if (!(data.user?.id || data.id)) throw new Error('No userId: ' + JSON.stringify(data));
   });
-
   await step('Login test user', async () => {
     const res = await api('POST', '/auth/login', { email: testUser.email, password: testUser.password });
     const data = res.data || res;
@@ -75,99 +71,86 @@ async function main() {
     if (!token) throw new Error('No accessToken: ' + JSON.stringify(data));
   });
 
-  // ═══════════════════════════════════════════════════
-  // 2. PROFILE FETCH TESTS
-  // ═══════════════════════════════════════════════════
-  console.log('\n  ── 2. PROFILE FETCH TESTS ──');
-
-  // 2a. Happy path — fetch own profile
-  console.log('\n  ── 2a. Happy path ──');
-  await step('GET /users/me returns valid profile', async () => {
+  // ── 2. PROFILE ──
+  console.log('\n  ── 2. PROFILE ──');
+  let profile;
+  await step('GET /users/me returns 200', async () => {
     const res = await api('GET', '/users/me', undefined, token);
-    const p = res.data || res;
-    if (!p.username) throw new Error('Profile missing username');
+    profile = res.data || res;
+    if (!profile.username) throw new Error('Profile missing username');
   });
-  await step('GET /users/:username returns valid profile', async () => {
+  await step('GET /users/:username returns 200 (no 500)', async () => {
     const res = await api('GET', '/users/' + testUser.username, undefined, token);
     const p = res.data || res;
     if (!p.username) throw new Error('Profile missing username');
   });
+  await step('Profile includes firstName + lastName', async () => {
+    if (!profile.firstName) throw new Error('Missing firstName');
+    if (!profile.lastName) throw new Error('Missing lastName');
+  });
+  await step('Profile includes walletAddress field', async () => {
+    // Field may be null but must exist on the response object
+    if (!('walletAddress' in profile) && !('wallet_address' in profile)) {
+      throw new Error('walletAddress field absent from profile');
+    }
+  });
 
-  // 2b. Backend failure — non-existent user
-  console.log('\n  ── 2b. Backend failure (404) ──');
-  await step('Non-existent user returns error gracefully', async () => {
+  // ── 3. PUBLIC BLOGS ──
+  console.log('\n  ── 3. PUBLIC BLOGS ──');
+  await step('GET /users/public/:username/blogs returns 200', async () => {
+    const res = await api('GET', '/users/public/' + testUser.username + '/blogs', undefined, token);
+    const data = res.data || res;
+    if (!Array.isArray(data)) throw new Error('Expected array, got ' + typeof data);
+  });
+
+  // ── 4. PUBLIC COMMUNITIES ──
+  console.log('\n  ── 4. PUBLIC COMMUNITIES ──');
+  await step('GET /users/public/:username/communities returns 200', async () => {
+    const res = await api('GET', '/users/public/' + testUser.username + '/communities', undefined, token);
+    const data = res.data || res;
+    if (!Array.isArray(data)) throw new Error('Expected array, got ' + typeof data);
+  });
+
+  // ── 5. PROFILE WITH NO CONTENT ──
+  console.log('\n  ── 5. NO CONTENT ──');
+  await step('Profile fetch 200 for user with no blogs/communities', async () => {
+    const res = await api('GET', '/users/' + testUser.username, undefined, token);
+    const p = res.data || res;
+    if (!p.username) throw new Error('Profile fetch failed');
+  });
+
+  // ── 6. NON-EXISTENT USER ──
+  console.log('\n  ── 6. NOT FOUND ──');
+  await step('Profile: non-existent user returns 404', async () => {
     try {
       await api('GET', '/users/zz_nonexistent_99999', undefined, token);
-      throw new Error('Expected error but got success');
+      throw new Error('Expected 404');
     } catch (e) {
-      if (e.message.includes('500')) {
-        // Backend bug: returns 500 instead of 404
-        // Frontend handles this via .catch() — still acceptable
-        return;
-      }
-      if (e.message.includes('404') || e.message.includes('Not Found') || e.message.includes('not found')) return;
+      if (!e.message.includes('404')) throw new Error('Expected 404, got: ' + e.message);
+    }
+  });
+  await step('Communities: non-existent user returns 404', async () => {
+    try {
+      await api('GET', '/users/public/zz_nonexistent_99999/communities', undefined, token);
+      throw new Error('Expected 404');
+    } catch (e) {
+      if (!e.message.includes('404')) throw new Error('Expected 404, got: ' + e.message);
+    }
+  });
+  await step('Blogs: non-existent user returns 404', async () => {
+    try {
+      await api('GET', '/users/public/zz_nonexistent_99999/blogs', undefined, token);
+      throw new Error('Expected 404');
+    } catch (e) {
+      if (!e.message.includes('404')) throw new Error('Expected 404, got: ' + e.message);
     }
   });
 
-  // 2c. Frontend normalization patterns (simulated)
-  console.log('\n  ── 2c. Frontend data normalization ──');
-  await step('displayName handles missing first/last name', async () => {
-    // Simulate what the frontend does (UserProfile.tsx lines 42-44)
-    const cases = [
-      { firstName: undefined, lastName: undefined, username: 'user1' },
-      { firstName: 'John', lastName: undefined, username: 'user2' },
-      { firstName: undefined, lastName: 'Doe', username: 'user3' },
-      { firstName: 'John', lastName: 'Doe', username: 'user4' },
-    ];
-    for (const c of cases) {
-      const first = c.firstName ?? undefined;
-      const last = c.lastName ?? undefined;
-      const displayName = [first, last].filter(Boolean).join(' ') || `@${c.username}`;
-      if (c.firstName === undefined && c.lastName === undefined && displayName !== `@${c.username}`)
-        throw new Error(`Expected @${c.username}, got "${displayName}"`);
-    }
-  });
-
-  await step('snake_case fallback patterns work', async () => {
-    // Simulate frontend normalization
-    const profile = { wallet_address: 'abc123', cover_url: 'http://example.com/cover.jpg', accent_color: '#ff0000', member_count: 42, average_rating: 4.5 };
-    const wallet = profile.walletAddress || profile.wallet_address;
-    const cover = profile.coverUrl || profile.cover_url;
-    const accent = profile.accentColor || profile.accent_color;
-    const members = profile.memberCount ?? profile.member_count;
-    const rating = profile.averageRating ?? profile.average_rating;
-    if (wallet !== 'abc123') throw new Error('wallet fallback failed');
-    if (cover !== 'http://example.com/cover.jpg') throw new Error('cover fallback failed');
-    if (accent !== '#ff0000') throw new Error('accent fallback failed');
-    if (members !== 42) throw new Error('members fallback failed');
-    if (rating !== 4.5) throw new Error('rating fallback failed');
-  });
-
-  await step('camelCase preferred over snake_case', async () => {
-    const profile = { walletAddress: 'camel', wallet_address: 'snake', coverUrl: 'c.jpg', cover_url: 's.jpg' };
-    const wallet = profile.walletAddress || profile.wallet_address;
-    const cover = profile.coverUrl || profile.cover_url;
-    if (wallet !== 'camel') throw new Error('camelCase not preferred for wallet');
-    if (cover !== 'c.jpg') throw new Error('camelCase not preferred for cover');
-  });
-
-  await step('fetch .catch() prevents crash', async () => {
-    // Simulate the Promise.all pattern from UserProfile.tsx
-    const safeFetch = (url) =>
-      fetch(url).then(r => r.json()).catch(() => ({ success: false }));
-    const result = await safeFetch('https://nonexistent.invalid/api');
-    if (result.success !== false) throw new Error('Expected success: false on fetch failure');
-  });
-
-  // ═══════════════════════════════════════════════════
-  // 3. CLEANUP
-  // ═══════════════════════════════════════════════════
-  console.log('\n  ── 3. CLEANUP ──');
+  // ── 7. CLEANUP ──
+  console.log('\n  ── 7. CLEANUP ──');
   try { await api('DELETE', '/users/me', undefined, token); } catch { try { await api('PATCH', '/users/me', { isActive: false }, token); } catch {} }
 
-  // ═══════════════════════════════════════════════════
-  // RESULTS
-  // ═══════════════════════════════════════════════════
+  // ── RESULTS ──
   console.log('\n  ════════════════════════════════════════════');
   console.log('   OgaPay Profile Test Results');
   console.log('  ════════════════════════════════════════════');
