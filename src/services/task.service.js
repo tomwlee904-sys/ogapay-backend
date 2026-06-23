@@ -87,16 +87,35 @@ const createTask = async (posterId, taskData) => {
 const listTasks = async ({ category, status = 'OPEN', page = 1, limit = 20, search, currency, minReward, maxReward, sortBy = 'createdAt', sortOrder = 'desc' }) => {
   const skip = (page - 1) * limit;
 
-  const where = {
-    status,
-    ...(category && { category }),
-    ...(currency && { currency }),
-    ...(search && {
+  const now = new Date();
+  const where = {};
+  if (status === 'ACTIVE') {
+    where.status = { in: ['OPEN', 'COOLING_DOWN'] };
+  } else {
+    where.status = status;
+  }
+
+  // Expired tasks excluded from OPEN/ACTIVE listings
+  const andClauses = [];
+  if (status === 'OPEN' || status === 'ACTIVE') {
+    andClauses.push({ OR: [{ expiresAt: null }, { expiresAt: { gte: now } }] });
+  }
+
+  if (category) where.category = category;
+  if (currency) where.currency = currency;
+
+  if (search) {
+    andClauses.push({
       OR: [
         { title: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
       ],
-    }),
+    });
+  }
+
+  if (minReward) where.reward = { ...where.reward, gte: minReward };
+  if (maxReward) where.reward = { ...where.reward, lte: maxReward };
+  if (andClauses.length > 0) where.AND = andClauses;
     ...(minReward && { reward: { gte: minReward } }),
     ...(maxReward && { reward: { lte: maxReward } }),
   };
@@ -147,6 +166,13 @@ const getTask = async (taskId, userId) => {
 
   if (!task) throw ApiError.notFound('Task not found');
 
+  // Override status to EXPIRED if deadline has passed and task is still OPEN
+  const now = new Date();
+  const isExpired = task.expiresAt && new Date(task.expiresAt) < now;
+  if (isExpired && task.status === 'OPEN') {
+    task.status = 'EXPIRED';
+  }
+
   // Check if current user has already applied
   let userSubmission = null;
   if (userId) {
@@ -166,6 +192,7 @@ const applyToTask = async (workerId, taskId) => {
   const task = await prisma.task.findUnique({ where: { id: taskId } });
   if (!task) throw ApiError.notFound('Task not found');
   if (task.status !== 'OPEN') throw ApiError.badRequest(`Task is ${task.status.toLowerCase()}, not accepting applications`);
+  if (task.expiresAt && new Date(task.expiresAt) < new Date()) throw ApiError.badRequest('Task has expired');
   if (task.posterId === workerId) throw ApiError.badRequest('You cannot apply to your own task');
 
   const submission = await prisma.$transaction(async (db) => {
@@ -219,6 +246,8 @@ const submitTask = async (workerId, taskId, { proof, workerNotes, attachments })
   });
 
   if (!submission) throw ApiError.notFound('Submission not found. Apply to the task first.');
+  if (submission.task.status !== 'OPEN') throw ApiError.badRequest(`Task is ${submission.task.status.toLowerCase()}, submissions closed`);
+  if (submission.task.expiresAt && new Date(submission.task.expiresAt) < new Date()) throw ApiError.badRequest('Task has expired');
   if (submission.status !== 'PENDING') throw ApiError.badRequest(`Submission already ${submission.status.toLowerCase()}`);
 
   const updated = await prisma.$transaction(async (db) => {
@@ -454,6 +483,7 @@ const getFeaturedTasks = async () => {
     where: {
       status: { in: ['OPEN', 'COOLING_DOWN'] },
       featured: true,
+      OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }],
     },
     include: {
       poster: {
