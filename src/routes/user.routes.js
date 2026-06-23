@@ -41,6 +41,13 @@ router.post('/avatar', authenticate, upload.single('avatar'), async (req, res) =
   successResponse(res, data, 'Avatar updated');
 });
 
+// POST /api/v1/users/cover
+router.post('/cover', authenticate, upload.single('cover'), async (req, res) => {
+  if (!req.file) throw require('../utils/apiResponse').ApiError.badRequest('No file uploaded');
+  const data = await userService.uploadCover(req.user.id, req.file);
+  successResponse(res, data, 'Cover photo updated');
+});
+
 // POST /api/v1/users/wallet — Save wallet connection (for non-Solana wallets)
 router.post('/wallet', authenticate, async (req, res) => {
   const { walletAddress, provider } = req.body;

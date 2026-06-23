@@ -27,7 +27,7 @@ const getProfile = async (userId) => {
 // ── Update profile ─────────────────────────────
 
 const updateProfile = async (userId, updates) => {
-  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'username', 'twitter', 'telegram', 'discord', 'website', 'preferences'];
+  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'coverUrl', 'username', 'twitter', 'telegram', 'discord', 'website', 'preferences'];
   const data = Object.fromEntries(
     Object.entries(updates).filter(([k]) => allowed.includes(k))
   );
@@ -92,6 +92,25 @@ const uploadAvatar = async (userId, file) => {
 
   await prisma.user.update({ where: { id: userId }, data: { avatarUrl } });
   return { avatarUrl };
+};
+
+// ── Upload cover photo to Supabase Storage ──────
+
+const uploadCover = async (userId, file) => {
+  const ext = file.mimetype.split('/')[1];
+  const path = `covers/${userId}/cover.${ext}`;
+
+  const { error } = await supabaseAdmin.storage
+    .from('public-assets')
+    .upload(path, file.buffer, { contentType: file.mimetype, upsert: true });
+
+  if (error) throw ApiError.internal('Failed to upload cover');
+
+  const { data } = supabaseAdmin.storage.from('public-assets').getPublicUrl(path);
+  const coverUrl = `${data.publicUrl}?t=${Date.now()}`;
+
+  await prisma.user.update({ where: { id: userId }, data: { coverUrl } });
+  return { coverUrl };
 };
 
 // ── Get public profile by username ─────────────
@@ -165,6 +184,7 @@ module.exports = {
   getProfile,
   updateProfile,
   uploadAvatar,
+  uploadCover,
   getPublicProfile,
   getTransactionHistory,
   getReferralStats,

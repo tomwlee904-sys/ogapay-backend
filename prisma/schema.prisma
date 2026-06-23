@@ -118,6 +118,7 @@ model User {
   lastName          String    @map("last_name")
   username          String    @unique
   avatarUrl         String?   @map("avatar_url")
+  coverUrl          String?   @map("cover_url")
   twitter           String?   @map("twitter")
   telegram          String?   @map("telegram")
   discord           String?   @map("discord")
