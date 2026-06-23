@@ -29,7 +29,7 @@ async function createWorker() {
       email: `wk${Date.now()}${Math.random().toString(36).slice(2,5)}@mailtest.xyz`,
       password: 'Strong!Pass1',
       firstName: 'Wkr', lastName: 'Aud',
-      username: `wkr${Date.now()}`,
+      username: `wkr${Date.now()}${Math.random().toString(36).slice(2,8)}`,
       role: 'WORKER',
     }),
   });
