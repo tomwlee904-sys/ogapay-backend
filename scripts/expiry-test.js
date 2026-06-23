@@ -1,8 +1,8 @@
 'use strict';
 
 const BASE = 'https://ogapay.app/api/v1';
-const POST_EMAIL = 'post1782189842700@mailtest.xyz';
-const POSTER_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MjNlZTk0Ny1iNWQxLTQ2M2EtYmJhNi1hNDVhYmIyMjliZWYiLCJlbWFpbCI6InBvc3QxNzgyMTg5ODQyNzAwQG1haWx0ZXN0Lnh5eiIsInJvbGUiOiJQT1NURVIiLCJpYXQiOjE3ODIxODk4NDYsImV4cCI6MTc4Mjc5NDY0Nn0.fY9zDkShobe8x6lHyfxT3LqeA25e3IwchxAFLP6vUeY';
+const POST_EMAIL = 'post1782191007429@mailtest.xyz';
+const POSTER_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MjAwNTBjOC0zYzM0LTQyMWMtYmIwMy1iMjE2NDZiN2RiZWYiLCJlbWFpbCI6InBvc3QxNzgyMTkxMDA3NDI5QG1haWx0ZXN0Lnh5eiIsInJvbGUiOiJQT1NURVIiLCJpYXQiOjE3ODIxOTEwMTMsImV4cCI6MTc4Mjc5NTgxM30.PS80xidNxc4SWDIlofoSyeXcLXr9zBp8rsEM0yhNXzc';
 
 const api = async (path, opts = {}) => {
   const res = await fetch(`${BASE}${path}`, { ...opts, headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) } });
