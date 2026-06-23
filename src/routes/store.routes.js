@@ -72,7 +72,7 @@ router.get('/workers', async (req, res) => {
   const { page = 1, limit = 20, search, sort, category } = req.query;
   const skip = (page - 1) * limit;
 
-  const where = { isAvailable: true };
+  const where = { isAvailable: true, user: { isBanned: false } };
   if (search) {
     where.OR = [
       { bio: { contains: search, mode: 'insensitive' } },
