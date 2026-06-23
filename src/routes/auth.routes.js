@@ -112,8 +112,11 @@ router.post('/2fa/verify', authenticate, async (req, res) => {
 router.post('/2fa/disable', authenticate, async (req, res) => {
   const { token } = req.body;
   if (!token) throw require('../utils/apiResponse').ApiError.badRequest('Verification code is required');
-  const isValid = await twoFactorService.verifyChallenge(req.user.id, token);
-  if (!isValid) throw require('../utils/apiResponse').ApiError.unauthorized('Invalid 2FA code');
+  const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { twoFactorSecret: true } });
+  if (user?.twoFactorSecret) {
+    const isValid = await twoFactorService.verifyChallenge(req.user.id, token);
+    if (!isValid) throw require('../utils/apiResponse').ApiError.unauthorized('Invalid 2FA code');
+  }
   await twoFactorService.disable(req.user.id);
   successResponse(res, null, 'Two-factor authentication disabled');
 });
