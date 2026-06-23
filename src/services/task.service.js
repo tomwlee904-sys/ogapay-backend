@@ -167,24 +167,28 @@ const applyToTask = async (workerId, taskId) => {
   if (!task) throw ApiError.notFound('Task not found');
   if (task.status !== 'OPEN') throw ApiError.badRequest(`Task is ${task.status.toLowerCase()}, not accepting applications`);
   if (task.posterId === workerId) throw ApiError.badRequest('You cannot apply to your own task');
-  if (task.currentWorkers >= task.maxWorkers) throw ApiError.badRequest('Task has reached maximum workers');
-
-  const existing = await prisma.taskSubmission.findUnique({
-    where: { taskId_workerId: { taskId, workerId } },
-  });
-  if (existing) throw ApiError.conflict('You have already applied to this task');
 
   const submission = await prisma.$transaction(async (db) => {
+    // Atomic capacity check inside the transaction
+    const { count: capCheck } = await db.task.updateMany({
+      where: { id: taskId, currentWorkers: { lt: task.maxWorkers } },
+      data: { currentWorkers: { increment: 1 } },
+    });
+    if (capCheck === 0) throw ApiError.badRequest('Task has reached maximum workers');
+
+    // Atomic duplicate check — try to create, let unique constraint serve as final guard
+    const existing = await db.taskSubmission.findUnique({
+      where: { taskId_workerId: { taskId, workerId } },
+    });
+    if (existing) throw ApiError.conflict('You have already applied to this task');
+
     const sub = await db.taskSubmission.create({
       data: { taskId, workerId, startedAt: new Date() },
     });
 
     await db.task.update({
       where: { id: taskId },
-      data: {
-        currentWorkers: { increment: 1 },
-        submissionsCount: { increment: 1 },
-      },
+      data: { submissionsCount: { increment: 1 } },
     });
 
     await db.notification.create({
@@ -200,7 +204,7 @@ const applyToTask = async (workerId, taskId) => {
     return sub;
   });
 
-  // Trigger cooldown if all slots filled
+  // Trigger cooldown if all slots filled (re-query fresh count inside)
   await triggerCooldownIfFull(task, taskId);
 
   return submission;
