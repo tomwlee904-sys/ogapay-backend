@@ -116,9 +116,6 @@ const listTasks = async ({ category, status = 'OPEN', page = 1, limit = 20, sear
   if (minReward) where.reward = { ...where.reward, gte: minReward };
   if (maxReward) where.reward = { ...where.reward, lte: maxReward };
   if (andClauses.length > 0) where.AND = andClauses;
-    ...(minReward && { reward: { gte: minReward } }),
-    ...(maxReward && { reward: { lte: maxReward } }),
-  };
 
   const [tasks, total] = await Promise.all([
     prisma.task.findMany({
