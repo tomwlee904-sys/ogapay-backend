@@ -27,13 +27,13 @@ const getProfile = async (userId) => {
 // ── Update profile ─────────────────────────────
 
 const updateProfile = async (userId, updates) => {
-  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'coverUrl', 'username', 'twitter', 'telegram', 'discord', 'website', 'preferences'];
+  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'coverUrl', 'username', 'twitter', 'telegram', 'discord', 'website', 'preferences', 'isPublic'];
   const data = Object.fromEntries(
     Object.entries(updates).filter(([k]) => allowed.includes(k))
   );
 
   // Worker-specific updates
-  const workerFields = ['bio', 'skills', 'isAvailable', 'nickname', 'description', 'moreAbout', 'challengesParticipated', 'challengesWon', 'categories', 'portfolio', 'tags', 'isPublic'];
+  const workerFields = ['bio', 'skills', 'isAvailable', 'categories'];
   const hasWorkerUpdate = workerFields.some(f => updates[f] !== undefined);
   if (hasWorkerUpdate) {
     const workerData = {};
@@ -42,9 +42,6 @@ const updateProfile = async (userId, updates) => {
         workerData[field] = updates[field];
       }
     }
-    // Coerce Int fields
-    if (workerData.challengesParticipated !== undefined) workerData.challengesParticipated = parseInt(workerData.challengesParticipated, 10) || 0;
-    if (workerData.challengesWon !== undefined) workerData.challengesWon = parseInt(workerData.challengesWon, 10) || 0;
     // Upsert to handle missing WorkerProfile
     await prisma.workerProfile.upsert({
       where: { userId },
@@ -64,7 +61,7 @@ const updateProfile = async (userId, updates) => {
     });
   }
 
-  const selectFields = { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true, username: true, role: true, preferences: true };
+  const selectFields = { id: true, email: true, firstName: true, lastName: true, phone: true, avatarUrl: true, coverUrl: true, username: true, role: true, preferences: true };
   if (Object.keys(data).length === 0) {
     return prisma.user.findUnique({ where: { id: userId }, select: selectFields });
   }
