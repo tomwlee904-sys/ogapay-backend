@@ -113,22 +113,8 @@ const requireEmailVerified = (req, res, next) => {
   }
   next();
 };
-  const kycStatus = req.user?.kyc?.status;
-  if (kycStatus !== 'APPROVED') {
-    throw ApiError.forbidden('KYC verification required to access this feature');
-  }
-  next();
-};
 
-// Require verified email
-const requireEmailVerified = (req, res, next) => {
-  if (!req.user?.isEmailVerified) {
-    throw ApiError.forbidden('Please verify your email address first');
-  }
-  next();
-};
-
-// Optional auth — attaches user if token present, continues regardless
+// Optional auth Optional auth — attaches user if token present, continues regardless
 const optionalAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) return next();
