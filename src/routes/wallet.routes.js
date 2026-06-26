@@ -285,9 +285,21 @@ router.post('/deposit', validate(depositSchema), async (req, res) => {
 });
 
 // POST /api/v1/wallets/withdraw
+// POST /api/v1/wallets/withdraw
 router.post('/withdraw', requireKyc, validate(withdrawSchema), async (req, res) => {
+  const { amount } = req.body;
+
+  // Check withdrawal limit based on KYC level
+  const kycTier = req.user?.kyc?.kycTier ?? 0;
+  const MAX_WITHDRAWAL = kycTier >= 2 ? 20000 : (kycTier >= 1 ? 10000 : 0);
+
+  if (Number(amount) > MAX_WITHDRAWAL) {
+    throw ApiError.badRequest(`Withdrawal limit is ₦${MAX_WITHDRAWAL.toLocaleString()} for your KYC level. Upgrade to Level 2 (BVN) for higher limits.`);
+  }
+
   const data = await walletService.initiateWithdrawal(req.user.id, req.body);
   successResponse(res, data, 'Withdrawal request submitted. Processing within 24 hours.');
 });
+
 
 module.exports = router;

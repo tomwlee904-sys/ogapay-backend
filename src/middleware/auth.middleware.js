@@ -86,8 +86,33 @@ const authorize = (...roles) => (req, res, next) => {
   next();
 };
 
-// Require KYC approval
+// Require KYC approval — Level 1 (NIN) minimum
 const requireKyc = (req, res, next) => {
+  const kycStatus = req.user?.kyc?.status;
+  const kycTier = req.user?.kyc?.kycTier ?? 0;
+  if (kycStatus !== 'APPROVED' || kycTier < 1) {
+    throw ApiError.forbidden('Level 1 KYC verification (NIN) required to access this feature');
+  }
+  next();
+};
+
+// Require Level 2 KYC (BVN)
+const requireKycLevel2 = (req, res, next) => {
+  const kycStatus = req.user?.kyc?.status;
+  const kycTier = req.user?.kyc?.kycTier ?? 0;
+  if (kycStatus !== 'APPROVED' || kycTier < 2) {
+    throw ApiError.forbidden('Level 2 KYC verification (BVN) required for this feature');
+  }
+  next();
+};
+
+// Require verified email
+const requireEmailVerified = (req, res, next) => {
+  if (!req.user?.isEmailVerified) {
+    throw ApiError.forbidden('Please verify your email address first');
+  }
+  next();
+};
   const kycStatus = req.user?.kyc?.status;
   if (kycStatus !== 'APPROVED') {
     throw ApiError.forbidden('KYC verification required to access this feature');
@@ -147,4 +172,4 @@ const optionalAuth = async (req, res, next) => {
   next();
 };
 
-module.exports = { authenticate, authorize, requireKyc, requireEmailVerified, optionalAuth };
+module.exports = { authenticate, authorize, requireKyc, requireKycLevel2, requireEmailVerified, optionalAuth };

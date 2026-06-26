@@ -17,20 +17,6 @@ const dojahHeaders = () => ({
   Accept: 'application/json',
 });
 
-const verifyBvnWithDojah = async (bvn) => {
-  try {
-    const { data } = await axios.get(`${DOJAH_BASE}/api/v1/kyc/bvn`, {
-      params: { bvn },
-      headers: dojahHeaders(),
-    });
-    if (data.entity) return { verified: true, data: data.entity };
-    return { verified: false, reason: 'BVN not found' };
-  } catch (err) {
-    logger.error('Dojah BVN verification error:', err.response?.data || err.message);
-    return { verified: false, reason: 'Verification service unavailable' };
-  }
-};
-
 const verifyNinWithDojah = async (nin) => {
   try {
     const { data } = await axios.get(`${DOJAH_BASE}/api/v1/kyc/nin`, {
@@ -45,47 +31,63 @@ const verifyNinWithDojah = async (nin) => {
   }
 };
 
-const verifySelfieWithDojah = async (selfieUrl, idFrontUrl) => {
+const verifyBvnWithDojah = async (bvn) => {
   try {
-    const { data } = await axios.post(`${DOJAH_BASE}/api/v1/kyc/selfie/verify`,
-      { selfie_image: selfieUrl, front_image: idFrontUrl },
-      { headers: dojahHeaders() },
-    );
-    const match = data?.entity?.match || data?.entity?.confidence;
-    return { verified: match > 50, confidence: match || 0 };
+    const { data } = await axios.get(`${DOJAH_BASE}/api/v1/kyc/bvn`, {
+      params: { bvn },
+      headers: dojahHeaders(),
+    });
+    if (data.entity) return { verified: true, data: data.entity };
+    return { verified: false, reason: 'BVN not found' };
   } catch (err) {
-    logger.error('Dojah selfie verification error:', err.response?.data || err.message);
-    return { verified: false, reason: 'Liveness check unavailable' };
+    logger.error('Dojah BVN verification error:', err.response?.data || err.message);
+    return { verified: false, reason: 'Verification service unavailable' };
   }
 };
 
-// ── Tier definitions ──────────────────────────
-// Tier 1 — BVN verification
-// Tier 2 — NIN + selfie
-// Tier 3 — Address + document uploads
+// ── New KYC Level definitions ─────────────────
+// Level 0 — No verification
+// Level 1 — NIN verified (can earn, withdraw up to ₦10,000)
+// Level 2 — BVN verified (higher limits, max OgaScore)
 
-const TIER_THRESHOLDS = { 1: 'BVN', 2: 'NIN', 3: 'ADDRESS' };
+const KYC_LEVELS = {
+  NONE: 0,
+  NIN_VERIFIED: 1,   // Level 1 — NIN only, no selfie
+  BVN_VERIFIED: 2,   // Level 2 — BVN upgrade
+};
 
 // ── Submit KYC with live Dojah verification ───
 
 const submitKyc = async (userId, { idType, idNumber, dateOfBirth, address, city, state }) => {
   const existing = await prisma.kycVerification.findUnique({ where: { userId } });
-  if (existing?.status === 'APPROVED') throw ApiError.badRequest('KYC already approved');
 
-  // Determine which tier this submission targets
-  let targetTier = 1;
-  if (idType === 'NIN') targetTier = 2;
-  if (idType === 'PASSPORT' || idType === 'DRIVERS_LICENSE' || idType === 'VOTERS_CARD') targetTier = 3;
+  // Determine which level this submission targets
+  let targetLevel = 0;
+  if (idType === 'NIN') targetLevel = KYC_LEVELS.NIN_VERIFIED;
+  if (idType === 'BVN') targetLevel = KYC_LEVELS.BVN_VERIFIED;
+
+  // Cannot submit BVN if NIN is not already verified
+  if (idType === 'BVN') {
+    if (!existing || existing.status !== 'APPROVED' || existing.kycTier < KYC_LEVELS.NIN_VERIFIED) {
+      throw ApiError.badRequest('Please verify your NIN first before upgrading to BVN verification.');
+    }
+    if (existing.kycTier >= KYC_LEVELS.BVN_VERIFIED) {
+      throw ApiError.badRequest('BVN already verified.');
+    }
+  }
+
+  if (idType === 'NIN' && existing?.status === 'APPROVED' && existing.kycTier >= KYC_LEVELS.NIN_VERIFIED) {
+    throw ApiError.badRequest('NIN already verified.');
+  }
 
   // Live verification based on ID type
   let verification;
-  if (idType === 'BVN') {
-    verification = await verifyBvnWithDojah(idNumber);
-  } else if (idType === 'NIN') {
+  if (idType === 'NIN') {
     verification = await verifyNinWithDojah(idNumber);
+  } else if (idType === 'BVN') {
+    verification = await verifyBvnWithDojah(idNumber);
   }
 
-  // If we got a match from Dojah, extract enriched data
   let enrichedData = {};
   let autoApprove = false;
 
@@ -103,77 +105,64 @@ const submitKyc = async (userId, { idType, idNumber, dateOfBirth, address, city,
 
   // Upsert KYC record
   const status = autoApprove ? 'APPROVED' : 'SUBMITTED';
-  const tier = autoApprove ? targetTier : (existing?.kycTier || 0);
+  const newTier = autoApprove
+    ? Math.max(targetLevel, existing?.kycTier || 0)
+    : (existing?.kycTier || 0);
+
+  const kycData = {
+    kycTier: newTier,
+    idType,
+    idNumber,
+    dateOfBirth: enrichedData.dateOfBirth || (dateOfBirth ? new Date(dateOfBirth) : null),
+    address,
+    city,
+    state,
+    status,
+    provider: 'dojah',
+    providerRef: enrichedData.providerRef,
+    submittedAt: new Date(),
+    verifiedAt: autoApprove ? new Date() : null,
+    rejectionReason: null,
+    // Clear selfie-related fields since we no longer require them
+    selfieUrl: null,
+    livenessPassed: false,
+  };
 
   await prisma.kycVerification.upsert({
     where: { userId },
-    create: {
-      userId,
-      kycTier: tier,
-      idType,
-      idNumber,
-      dateOfBirth: enrichedData.dateOfBirth || (dateOfBirth ? new Date(dateOfBirth) : null),
-      address,
-      city,
-      state,
-      status,
-      provider: 'dojah',
-      providerRef: enrichedData.providerRef,
-      submittedAt: new Date(),
-      verifiedAt: autoApprove ? new Date() : null,
-    },
-    update: {
-      kycTier: tier,
-      idType,
-      idNumber,
-      dateOfBirth: enrichedData.dateOfBirth || (dateOfBirth ? new Date(dateOfBirth) : null),
-      address,
-      city,
-      state,
-      status,
-      provider: 'dojah',
-      providerRef: enrichedData.providerRef,
-      submittedAt: new Date(),
-      verifiedAt: autoApprove ? new Date() : null,
-      rejectionReason: null,
-    },
+    create: { userId, ...kycData },
+    update: kycData,
   });
 
-  // Upgrade tier if auto-approved and user already had a lower tier
-  if (autoApprove && existing && targetTier > existing.kycTier) {
-    await prisma.kycVerification.update({
-      where: { userId },
-      data: { kycTier: targetTier, status: 'APPROVED' },
-    });
+  const message = autoApprove
+    ? `Level ${newTier} verified successfully!`
+    : 'Verification submitted. We\'ll notify you once verified.';
+
+  // Send notification if auto-approved
+  if (autoApprove) {
+    const levelName = newTier >= KYC_LEVELS.BVN_VERIFIED ? 'Level 2' : 'Level 1';
+    await prisma.notification.create({
+      data: {
+        userId,
+        type: 'KYC_APPROVED',
+        title: `${levelName} Verification Approved`,
+        body: `Your ${idType} has been verified. You're now at ${levelName}!`,
+      },
+    }).catch(() => {});
   }
 
-  await prisma.notification.create({
-    data: {
-      userId,
-      type: autoApprove ? 'KYC_APPROVED' : 'KYC_SUBMITTED',
-      title: autoApprove ? 'Verification Approved!' : 'Verification Submitted',
-      body: autoApprove
-        ? `Your ${idType} has been verified automatically. You've reached Tier ${targetTier}!`
-        : 'Your documents are under review. You will be notified once verified.',
-    },
-  });
-
-  logger.info(`KYC ${idType} submitted for user ${userId} — auto-approved: ${autoApprove}`);
-  return {
-    message: autoApprove
-      ? `Verification successful! You've completed Tier ${targetTier}.`
-      : 'KYC submitted successfully. Verification takes 1-24 hours.',
-    status,
-    tier,
-  };
+  return { status, tier: newTier, level: newTier, message };
 };
 
-// ── Upload KYC documents to Supabase Storage ───
+// ── Upload KYC document (ID image) ─────────────
 
-const uploadKycDocument = async (userId, file, documentType) => {
-  const fileName = `kyc/${userId}/${documentType}_${Date.now()}.${file.mimetype.split('/')[1] || 'jpg'}`;
+const uploadKycDocument = async (userId, file, type) => {
+  const allowed = ['id_front', 'id_back'];
+  if (!allowed.includes(type)) throw ApiError.badRequest('Invalid document type. Only id_front and id_back are supported.');
 
-  const { error } = await supabaseAdmin.storage
+  const fileName = `kyc/${userId}/${type}_${Date.now()}.${file.originalname?.split('.').pop() || 'jpg'}`;
+
+  const { data, error } = await supabaseAdmin.storage
     .from(KYC_BUCKET)
     .upload(fileName, file.buffer, {
       contentType: file.mimetype,
@@ -183,26 +172,11 @@ const uploadKycDocument = async (userId, file, documentType) => {
   if (error) throw ApiError.internal('Failed to upload document');
 
   const { data: urlData } = supabaseAdmin.storage.from(KYC_BUCKET).getPublicUrl(fileName);
-  const url = urlData.publicUrl;
+  const url = urlData?.publicUrl;
 
-  const fieldMap = {
-    id_front: 'idFrontUrl',
-    id_back: 'idBackUrl',
-    selfie: 'selfieUrl',
-  };
-
-  const updateData = { [fieldMap[documentType]]: url };
-
-  // If uploading selfie, verify liveness against existing ID front
-  if (documentType === 'selfie') {
-    const kyc = await prisma.kycVerification.findUnique({ where: { userId } });
-    if (kyc?.idFrontUrl) {
-      const liveness = await verifySelfieWithDojah(url, kyc.idFrontUrl);
-      if (liveness.verified) {
-        updateData.livenessPassed = true;
-      }
-    }
-  }
+  const updateData = {};
+  if (type === 'id_front') updateData.idFrontUrl = url;
+  if (type === 'id_back') updateData.idBackUrl = url;
 
   await prisma.kycVerification.upsert({
     where: { userId },
@@ -234,8 +208,32 @@ const getKycStatus = async (userId) => {
     },
   });
 
-  if (!kyc) throw ApiError.notFound('KYC record not found');
-  return kyc;
+  if (!kyc) {
+    return {
+      status: 'NONE',
+      kycTier: 0,
+      level: 0,
+      idType: null,
+      idNumber: null,
+      submittedAt: null,
+      verifiedAt: null,
+      rejectionReason: null,
+    };
+  }
+
+  return {
+    ...kyc,
+    level: kyc.kycTier,
+    withdrawalLimit: kyc.kycTier >= KYC_LEVELS.BVN_VERIFIED ? 20000 : (kyc.kycTier >= KYC_LEVELS.NIN_VERIFIED ? 10000 : 0),
+  };
+};
+
+// ── Get withdrawal limit for a user ────────────
+
+const getWithdrawalLimit = (kycTier) => {
+  if (kycTier >= KYC_LEVELS.BVN_VERIFIED) return 20000;  // Level 2: ₦20,000
+  if (kycTier >= KYC_LEVELS.NIN_VERIFIED) return 10000;   // Level 1: ₦10,000
+  return 0;                                                 // No KYC: can't withdraw
 };
 
 // ── Handle Dojah webhook callback ──────────────
@@ -247,7 +245,6 @@ const handleDojahWebhook = async (payload) => {
   const reference = data?.reference || data?.verification_id || data?.user_id;
   if (!reference) return { received: true };
 
-  // Find KYC record by providerRef
   const kyc = await prisma.kycVerification.findFirst({
     where: { providerRef: reference },
   });
@@ -267,9 +264,9 @@ const handleDojahWebhook = async (payload) => {
         userId: kyc.userId,
         type: 'KYC_APPROVED',
         title: 'Verification Approved',
-        body: 'Your identity has been verified successfully!',
+        body: `Your identity has been verified! You're at Level ${newTier}.`,
       },
-    });
+    }).catch(() => {});
     logger.info(`KYC auto-approved via webhook for user ${kyc.userId}`);
   } else if (event === 'verification.failed' || event === 'kyc.rejected') {
     const reason = data?.reason || data?.message || 'Documents did not pass verification';
@@ -284,7 +281,7 @@ const handleDojahWebhook = async (payload) => {
         title: 'Verification Rejected',
         body: reason,
       },
-    });
+    }).catch(() => {});
     logger.info(`KYC rejected via webhook for user ${kyc.userId}: ${reason}`);
   }
 
@@ -311,19 +308,20 @@ const adminReviewKyc = async (adminId, userId, { action, rejectionReason, tierUp
     },
   });
 
+  const levelName = newTier >= KYC_LEVELS.BVN_VERIFIED ? 'Level 2' : 'Level 1';
   await prisma.notification.create({
     data: {
       userId,
       type: newStatus === 'APPROVED' ? 'KYC_APPROVED' : 'KYC_REJECTED',
-      title: newStatus === 'APPROVED' ? 'KYC Approved!' : 'KYC Rejected',
+      title: newStatus === 'APPROVED' ? `${levelName} Approved!` : 'KYC Rejected',
       body: newStatus === 'APPROVED'
-        ? `Your identity has been verified. You've reached Tier ${newTier}!`
+        ? `Your identity has been verified. You've reached ${levelName}!`
         : `Your KYC was rejected: ${rejectionReason || 'Please resubmit with clear documents.'}`,
     },
-  });
+  }).catch(() => {});
 
-  logger.info(`KYC ${newStatus} (Tier ${newTier}) for user ${userId} by admin ${adminId}`);
-  return { status: newStatus, tier: newTier };
+  logger.info(`KYC ${newStatus} (Level ${newTier}) for user ${userId} by admin ${adminId}`);
+  return { status: newStatus, tier: newTier, level: newTier };
 };
 
 // ── Admin: List pending KYC submissions ────────
@@ -352,6 +350,7 @@ module.exports = {
   verifyNinWithDojah,
   uploadKycDocument,
   getKycStatus,
+  getWithdrawalLimit,
   adminReviewKyc,
   listPendingKyc,
   handleDojahWebhook,
