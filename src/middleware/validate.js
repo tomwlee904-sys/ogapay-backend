@@ -85,12 +85,19 @@ const depositSchema = z.object({
 });
 
 const withdrawSchema = z.object({
-  amount: z.number().positive(),
-  currency: z.enum(['NGN', 'USDC', 'USDT', 'ETH', 'MATIC']).default('NGN'),
+  amount: z.number().positive().min(100),
+  currency: z.enum(['NGN', 'USDC', 'USDT', 'ETH', 'MATIC', 'SOL']).default('NGN'),
   bankCode: z.string().optional(),
+  bankName: z.string().optional(),
   accountNumber: z.string().optional(),
+  accountName: z.string().optional(),
   walletAddress: z.string().optional(),
-});
+}).refine(data => {
+  if (data.currency === 'NGN' && !data.accountNumber) {
+    return false;
+  }
+  return true;
+}, { message: 'Account number is required for NGN withdrawals' });
 
 const kycSubmitSchema = z.object({
   idType: z.enum(['NIN', 'BVN', 'PASSPORT', 'DRIVERS_LICENSE', 'VOTERS_CARD']),

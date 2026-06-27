@@ -137,7 +137,10 @@ async function sendUsdc(toAddress, amountUsdc) {
   tx.sign(platform);
 
   const sig = await connection.sendRawTransaction(tx.serialize());
-  await connection.confirmTransaction(sig, 'confirmed');
+  const confirmation = await connection.confirmTransaction(sig, 'confirmed');
+  if (confirmation.value.err) {
+    throw new Error(`USDC transfer failed on-chain: ${JSON.stringify(confirmation.value.err)}`);
+  }
   return sig;
 }
 
@@ -160,7 +163,10 @@ async function sendSol(toAddress, amountSol) {
   tx.sign(platform);
 
   const sig = await connection.sendRawTransaction(tx.serialize());
-  await connection.confirmTransaction(sig, 'confirmed');
+  const confirmation = await connection.confirmTransaction(sig, 'confirmed');
+  if (confirmation.value.err) {
+    throw new Error(`SOL transfer failed on-chain: ${JSON.stringify(confirmation.value.err)}`);
+  }
   return sig;
 }
 

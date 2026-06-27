@@ -247,10 +247,32 @@ const submitTask = async (workerId, taskId, { proof, workerNotes, attachments })
   if (submission.task.expiresAt && new Date(submission.task.expiresAt) < new Date()) throw ApiError.badRequest('Task has expired');
   if (submission.status !== 'PENDING') throw ApiError.badRequest(`Submission already ${submission.status.toLowerCase()}`);
 
+  // Normalize input values
+  const normalizedProof = (proof && typeof proof === 'string') ? proof.trim() : ''
+  const normalizedNotes = (workerNotes && typeof workerNotes === 'string') ? workerNotes.trim() : ''
+  const normalizedAttachments = Array.isArray(attachments) ? attachments.filter(Boolean) : []
+
+  // Auto-set proof fallback when attachments exist but no link was provided
+  let finalProof = normalizedProof
+  if (!finalProof && normalizedAttachments.length > 0) {
+    finalProof = 'Proof attached'
+  }
+
+  // Require at least one of proof, notes, or attachments
+  if (!finalProof && !normalizedNotes && normalizedAttachments.length === 0) {
+    throw ApiError.badRequest('Please provide a proof link, note, or upload at least one screenshot/file.')
+  }
+
   const updated = await prisma.$transaction(async (db) => {
     const sub = await db.taskSubmission.update({
       where: { id: submission.id },
-      data: { proof, workerNotes, attachments, submittedAt: new Date(), status: 'SUBMITTED' },
+      data: {
+        proof: finalProof || null,
+        workerNotes: normalizedNotes || null,
+        attachments: normalizedAttachments,
+        submittedAt: new Date(),
+        status: 'SUBMITTED',
+      },
     });
 
     await db.notification.create({
@@ -611,32 +633,16 @@ const autoCompleteExpiredCooldowns = async () => {
   });
 
   for (const task of expired) {
-    const pendingSubs = task.submissions;
-
-    await prisma.$transaction(async (db) => {
-      for (const sub of pendingSubs) {
-        const { count } = await db.taskSubmission.updateMany({
-          where: { id: sub.id, status: 'PENDING' },
-          data: { status: 'APPROVED', reviewedAt: new Date() },
-        });
-        if (count === 0) continue;
-
-        await releaseEscrow(
-          task.id,
-          sub.workerId,
-          parseFloat(task.reward),
-          task.currency,
-          sub.id,
-          db,
-        );
-      }
-
-      await db.task.update({
+    await prisma.$transaction([
+      prisma.taskSubmission.updateMany({
+        where: { taskId: task.id, status: 'PENDING' },
+        data: { status: 'APPROVED', reviewedAt: new Date() },
+      }),
+      prisma.task.update({
         where: { id: task.id },
         data: { status: 'COMPLETED' },
-      });
-
-      await db.notification.create({
+      }),
+      prisma.notification.create({
         data: {
           userId: task.posterId,
           type: 'COOLDOWN_EXPIRED',
@@ -644,8 +650,8 @@ const autoCompleteExpiredCooldowns = async () => {
           body: `Cooldown expired for "${task.title}". Pending submissions auto-approved and paid.`,
           data: { taskId: task.id },
         },
-      });
-    });
+      }),
+    ]);
   }
 
   return expired.length;

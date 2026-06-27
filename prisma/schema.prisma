@@ -49,6 +49,10 @@ enum TransactionType {
   TRANSFER
   EARNING
   TASK_REWARD
+  REFUND
+  ESCROW
+  SYSTEM_CREDIT
+  SYSTEM_DEBIT
 }
 
 enum TransactionStatus {
@@ -109,187 +113,193 @@ enum PaymentProvider {
 // ── MODELS ────────────────────────────────────
 
 model User {
-  id                String    @id @default(uuid())
-  supabaseId        String?   @unique @map("supabase_id")
-  email             String    @unique
-  passwordHash      String?   @map("password_hash")
-  phone             String?   @unique
-  firstName         String    @map("first_name")
-  lastName          String    @map("last_name")
-  username          String    @unique
-  avatarUrl         String?   @map("avatar_url")
-  coverUrl          String?   @map("cover_url")
-  twitter           String?   @map("twitter")
-  telegram          String?   @map("telegram")
-  discord           String?   @map("discord")
-  website           String?   @map("website")
-  twitterId         String?   @map("twitter_id")
-  twitterUsername   String?   @map("twitter_username")
-  isPublic           Boolean  @default(true) @map("is_public")
-  emailNotifications  Boolean  @default(true) @map("email_notifications")
-  pushNotifications   Boolean  @default(true) @map("push_notifications")
-  currency            String   @default("NGN")
-  connectedAccounts   Json?    @default("{}") @map("connected_accounts")
-  ogaScore            Int      @default(0) @map("oga_score")
-  walletAddress       String?  @map("wallet_address")
-  walletProvider      String?  @map("wallet_provider")
-  walletConnectedAt   DateTime? @map("wallet_connected_at")
-  onboardingComplete  Boolean  @default(false) @map("onboarding_complete")
-  workerProfileBio    String?  @map("worker_profile_bio")
-  bankAccount         String?  @map("bank_account")
-  bankName            String?  @map("bank_name")
-  role               UserRole  @default(WORKER)
-  isEmailVerified   Boolean   @default(false) @map("is_email_verified")
-  isPhoneVerified   Boolean   @default(false) @map("is_phone_verified")
-  isBanned          Boolean   @default(false) @map("is_banned")
-  preferences       Json?    @default("{}") @map("preferences")
-  isTwoFactorEnabled Boolean  @default(false) @map("is_two_factor_enabled")
-  twoFactorSecret     String?  @map("two_factor_secret")
-  twoFactorBackupCodes String[] @default([]) @map("two_factor_backup_codes")
-  referralCode      String    @unique @map("referral_code")
-  referredById      String?   @map("referred_by_id")
-  lastLoginAt       DateTime? @map("last_login_at")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
+  id                   String    @id @default(uuid())
+  supabaseId           String?   @unique @map("supabase_id")
+  email                String    @unique
+  passwordHash         String?   @map("password_hash")
+  phone                String?   @unique
+  firstName            String    @map("first_name")
+  lastName             String    @map("last_name")
+  username             String    @unique
+  avatarUrl            String?   @map("avatar_url")
+  coverUrl             String?   @map("cover_url")
+  twitter              String?   @map("twitter")
+  telegram             String?   @map("telegram")
+  discord              String?   @map("discord")
+  website              String?   @map("website")
+  twitterId            String?   @map("twitter_id")
+  twitterUsername      String?   @map("twitter_username")
+  isPublic             Boolean   @default(true) @map("is_public")
+  emailNotifications   Boolean   @default(true) @map("email_notifications")
+  pushNotifications    Boolean   @default(true) @map("push_notifications")
+  currency             String    @default("NGN")
+  connectedAccounts    Json?     @default("{}") @map("connected_accounts")
+  ogaScore             Int       @default(0) @map("oga_score")
+  walletAddress        String?   @map("wallet_address")
+  walletProvider       String?   @map("wallet_provider")
+  walletConnectedAt    DateTime? @map("wallet_connected_at")
+  onboardingComplete   Boolean   @default(false) @map("onboarding_complete")
+  workerProfileBio     String?   @map("worker_profile_bio")
+  bankAccount          String?   @map("bank_account")
+  bankName             String?   @map("bank_name")
+  role                 UserRole  @default(WORKER)
+  isEmailVerified      Boolean   @default(false) @map("is_email_verified")
+  isPhoneVerified      Boolean   @default(false) @map("is_phone_verified")
+  isBanned             Boolean   @default(false) @map("is_banned")
+  preferences          Json?     @default("{}") @map("preferences")
+  isTwoFactorEnabled   Boolean   @default(false) @map("is_two_factor_enabled")
+  twoFactorSecret      String?   @map("two_factor_secret")
+  twoFactorBackupCodes String[]  @default([]) @map("two_factor_backup_codes")
+  referralCode         String    @unique @map("referral_code")
+  referredById         String?   @map("referred_by_id")
+  referralRewardedAt   DateTime? @map("referral_rewarded_at")
+  lastLoginAt          DateTime? @map("last_login_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  referredBy        User?             @relation("Referrals", fields: [referredById], references: [id])
-  referrals         User[]            @relation("Referrals")
-  kyc               KycVerification?
-  wallets           Wallet[]
-  workerProfile     WorkerProfile?
-  posterProfile     PosterProfile?
-  tasksCreated      Task[]            @relation("TaskPoster")
-  taskSubmissions   TaskSubmission[]
-  transactions      Transaction[]
-  notifications     Notification[]
-  refreshTokens     RefreshToken[]
-  storePurchases    StorePurchase[]
-  storeItems        StoreItem[]       @relation("StoreSeller")
-  storeReviews      StoreReview[]
-  conversations      ConversationParticipant[]
-  messagesSent       Message[]         @relation("MessageSender")
-  disputesAsWorker  Dispute[]         @relation("DisputeWorker")
-  disputesAsPoster  Dispute[]         @relation("DisputePoster")
-  vaultDocuments    VaultDocument[]
-  blogPosts         BlogPost[]
-  ownedCommunities  Community[]       @relation("CommunityOwner")
-  communityMemberships CommunityMember[]
-  bookmarks           Bookmark[]
-  communityRequests CommunityRequest[]
-  communityChatMessagesSent CommunityChatMessage[] @relation("CommunityChatMessageSender")
-  vaultPayouts    VaultPayout[]
-  vaultStats     VaultUserStats?
+  referredBy                User?                     @relation("Referrals", fields: [referredById], references: [id])
+  referrals                 User[]                    @relation("Referrals")
+  kyc                       KycVerification?
+  wallets                   Wallet[]
+  workerProfile             WorkerProfile?
+  posterProfile             PosterProfile?
+  tasksCreated              Task[]                    @relation("TaskPoster")
+  taskSubmissions           TaskSubmission[]
+  transactions              Transaction[]
+  notifications             Notification[]
+  refreshTokens             RefreshToken[]
+  storePurchases            StorePurchase[]
+  storeItems                StoreItem[]               @relation("StoreSeller")
+  storeReviews              StoreReview[]
+  conversations             ConversationParticipant[]
+  messagesSent              Message[]                 @relation("MessageSender")
+  disputesAsWorker          Dispute[]                 @relation("DisputeWorker")
+  disputesAsPoster          Dispute[]                 @relation("DisputePoster")
+  vaultDocuments            VaultDocument[]
+  blogPosts                 BlogPost[]
+  ownedCommunities          Community[]               @relation("CommunityOwner")
+  communityMemberships      CommunityMember[]
+  bookmarks                 Bookmark[]
+  communityRequests         CommunityRequest[]
+  communityChatMessagesSent CommunityChatMessage[]    @relation("CommunityChatMessageSender")
+  vaultPayouts              VaultPayout[]
+  vaultStats                VaultUserStats?
   waitlistEntries           Waitlist[]
   reports                   Report[]
   devices                   Device[]
   campaigns                 Campaign[]
   twoFactorChallenge        TwoFactorChallenge?
-  moderatedSubmissions      TaskSubmission[] @relation("Moderator")
+  moderatedSubmissions      TaskSubmission[]          @relation("Moderator")
+  flutterwaveCustomer       FlutterwaveCustomer?
+  virtualAccounts           VirtualAccount[]
+  bankAccounts              BankAccount[]
+  auditLogs                 AuditLog[]
 
   // OAuth fields
-  linkedinOAuthToken         String?   @map("linkedin_oauth_token")
-  linkedinOAuthRefreshToken  String?   @map("linkedin_oauth_refresh_token")
-  linkedinOAuthTokenExpiry   DateTime? @map("linkedin_oauth_token_expiry")
-  linkedinOAuthUserId        String?   @map("linkedin_oauth_user_id")
-  linkedinOAuthHandle        String?   @map("linkedin_oauth_handle")
-  linkedinOAuthConnected     Boolean   @default(false) @map("linkedin_oauth_connected")
+  linkedinOAuthToken        String?   @map("linkedin_oauth_token")
+  linkedinOAuthRefreshToken String?   @map("linkedin_oauth_refresh_token")
+  linkedinOAuthTokenExpiry  DateTime? @map("linkedin_oauth_token_expiry")
+  linkedinOAuthUserId       String?   @map("linkedin_oauth_user_id")
+  linkedinOAuthHandle       String?   @map("linkedin_oauth_handle")
+  linkedinOAuthConnected    Boolean   @default(false) @map("linkedin_oauth_connected")
 
-  githubOAuthToken           String?   @map("github_oauth_token")
-  githubOAuthUserId          String?   @map("github_oauth_user_id")
-  githubOAuthHandle          String?   @map("github_oauth_handle")
-  githubOAuthConnected       Boolean   @default(false) @map("github_oauth_connected")
+  githubOAuthToken     String? @map("github_oauth_token")
+  githubOAuthUserId    String? @map("github_oauth_user_id")
+  githubOAuthHandle    String? @map("github_oauth_handle")
+  githubOAuthConnected Boolean @default(false) @map("github_oauth_connected")
 
-  twitterOAuthToken          String?   @map("twitter_oauth_token")
-  twitterOAuthTokenSecret    String?   @map("twitter_oauth_token_secret")
-  twitterOAuthUserId         String?   @map("twitter_oauth_user_id")
-  twitterOAuthHandle         String?   @map("twitter_oauth_handle")
-  twitterOAuthConnected      Boolean   @default(false) @map("twitter_oauth_connected")
+  twitterOAuthToken       String? @map("twitter_oauth_token")
+  twitterOAuthTokenSecret String? @map("twitter_oauth_token_secret")
+  twitterOAuthUserId      String? @map("twitter_oauth_user_id")
+  twitterOAuthHandle      String? @map("twitter_oauth_handle")
+  twitterOAuthConnected   Boolean @default(false) @map("twitter_oauth_connected")
 
-  googleOAuthToken           String?   @map("google_oauth_token")
-  googleOAuthRefreshToken    String?   @map("google_oauth_refresh_token")
-  googleOAuthTokenExpiry     DateTime? @map("google_oauth_token_expiry")
-  googleOAuthUserId          String?   @map("google_oauth_user_id")
-  googleOAuthHandle          String?   @map("google_oauth_handle")
-  googleOAuthConnected       Boolean   @default(false) @map("google_oauth_connected")
+  googleOAuthToken        String?   @map("google_oauth_token")
+  googleOAuthRefreshToken String?   @map("google_oauth_refresh_token")
+  googleOAuthTokenExpiry  DateTime? @map("google_oauth_token_expiry")
+  googleOAuthUserId       String?   @map("google_oauth_user_id")
+  googleOAuthHandle       String?   @map("google_oauth_handle")
+  googleOAuthConnected    Boolean   @default(false) @map("google_oauth_connected")
 
-  telegramOAuthChatId        String?   @map("telegram_oauth_chat_id")
-  telegramOAuthHandle        String?   @map("telegram_oauth_handle")
-  telegramOAuthConnected     Boolean   @default(false) @map("telegram_oauth_connected")
+  telegramOAuthChatId    String? @map("telegram_oauth_chat_id")
+  telegramOAuthHandle    String? @map("telegram_oauth_handle")
+  telegramOAuthConnected Boolean @default(false) @map("telegram_oauth_connected")
 
   @@map("users")
 }
 
 model KycVerification {
-  id                String    @id @default(uuid())
-  userId            String    @unique @map("user_id")
-  status            KycStatus @default(PENDING)
-  kycTier           Int       @default(0) @map("kyc_tier")
-  provider          String?   // "dojah" | "smile_identity"
-  providerRef       String?   @map("provider_ref")   // External KYC ID
-  idType            String?   @map("id_type")         // NIN, BVN, PASSPORT, etc.
-  idNumber          String?   @map("id_number")
-  idFrontUrl        String?   @map("id_front_url")
-  idBackUrl         String?   @map("id_back_url")
-  selfieUrl         String?   @map("selfie_url")
-  livenessPassed    Boolean   @default(false) @map("liveness_passed")
-  dateOfBirth       DateTime? @map("date_of_birth")
-  address           String?
-  city              String?
-  state             String?
-  country           String    @default("NG")
-  rejectionReason   String?   @map("rejection_reason")
-  verifiedAt        DateTime? @map("verified_at")
-  submittedAt       DateTime? @map("submitted_at")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
+  id              String    @id @default(uuid())
+  userId          String    @unique @map("user_id")
+  status          KycStatus @default(PENDING)
+  kycTier         Int       @default(0) @map("kyc_tier")
+  provider        String? // "dojah" | "smile_identity"
+  providerRef     String?   @map("provider_ref") // External KYC ID
+  idType          String?   @map("id_type") // NIN, BVN, PASSPORT, etc.
+  idNumber        String?   @map("id_number")
+  idFrontUrl      String?   @map("id_front_url")
+  idBackUrl       String?   @map("id_back_url")
+  selfieUrl       String?   @map("selfie_url")
+  livenessPassed  Boolean   @default(false) @map("liveness_passed")
+  dateOfBirth     DateTime? @map("date_of_birth")
+  address         String?
+  city            String?
+  state           String?
+  country         String    @default("NG")
+  rejectionReason String?   @map("rejection_reason")
+  verifiedAt      DateTime? @map("verified_at")
+  submittedAt     DateTime? @map("submitted_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("kyc_verifications")
 }
 
 model Wallet {
-  id              String         @id @default(uuid())
-  userId          String         @map("user_id")
-  currency        WalletCurrency
-  balance         Decimal        @default(0) @db.Decimal(20, 8)
-  lockedBalance   Decimal        @default(0) @db.Decimal(20, 8) @map("locked_balance")
-  walletAddress   String?        @map("wallet_address")   // For crypto wallets
-  isActive        Boolean        @default(true) @map("is_active")
-  createdAt       DateTime       @default(now()) @map("created_at")
-  updatedAt       DateTime       @updatedAt @map("updated_at")
+  id             String         @id @default(uuid())
+  userId         String         @map("user_id")
+  currency       WalletCurrency
+  balance        Decimal        @default(0) @db.Decimal(20, 8)
+  lockedBalance  Decimal        @default(0) @map("locked_balance") @db.Decimal(20, 8)
+  pendingBalance Decimal        @default(0) @map("pending_balance") @db.Decimal(20, 8)
+  walletAddress  String?        @map("wallet_address") // For crypto wallets
+  isActive       Boolean        @default(true) @map("is_active")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
 
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions    Transaction[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
 
   @@unique([userId, currency])
   @@map("wallets")
 }
 
 model Transaction {
-  id              String            @id @default(uuid())
-  userId          String            @map("user_id")
-  walletId        String            @map("wallet_id")
-  type            TransactionType
-  status          TransactionStatus @default(PENDING)
-  amount          Decimal           @db.Decimal(20, 8)
-  fee             Decimal           @default(0) @db.Decimal(20, 8)
-  currency        WalletCurrency
-  reference       String            @unique
-  externalRef     String?           @map("external_ref")  // Paystack/Flutterwave ref
-  provider        PaymentProvider?
-  metadata        Json?
-  description     String?
-  balanceBefore   Decimal           @db.Decimal(20, 8) @map("balance_before")
-  balanceAfter    Decimal           @db.Decimal(20, 8) @map("balance_after")
-  taskId          String?           @map("task_id")
-  completedAt     DateTime?         @map("completed_at")
-  createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
+  id            String            @id @default(uuid())
+  userId        String            @map("user_id")
+  walletId      String            @map("wallet_id")
+  type          TransactionType
+  status        TransactionStatus @default(PENDING)
+  amount        Decimal           @db.Decimal(20, 8)
+  fee           Decimal           @default(0) @db.Decimal(20, 8)
+  currency      WalletCurrency
+  reference     String            @unique
+  externalRef   String?           @map("external_ref") // Paystack/Flutterwave ref
+  provider      PaymentProvider?
+  metadata      Json?
+  description   String?
+  balanceBefore Decimal           @map("balance_before") @db.Decimal(20, 8)
+  balanceAfter  Decimal           @map("balance_after") @db.Decimal(20, 8)
+  taskId        String?           @map("task_id")
+  completedAt   DateTime?         @map("completed_at")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
 
-  user            User              @relation(fields: [userId], references: [id])
-  wallet          Wallet            @relation(fields: [walletId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+  wallet Wallet @relation(fields: [walletId], references: [id])
 
   @@index([userId])
   @@index([reference])
@@ -302,7 +312,7 @@ model WorkerProfile {
   userId          String      @unique @map("user_id")
   level           WorkerLevel @default(BEGINNER)
   reputationScore Float       @default(0) @map("reputation_score")
-  totalEarned     Decimal     @default(0) @db.Decimal(20, 8) @map("total_earned")
+  totalEarned     Decimal     @default(0) @map("total_earned") @db.Decimal(20, 8)
   tasksCompleted  Int         @default(0) @map("tasks_completed")
   tasksRejected   Int         @default(0) @map("tasks_rejected")
   successRate     Float       @default(0) @map("success_rate")
@@ -315,63 +325,63 @@ model WorkerProfile {
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @updatedAt @map("updated_at")
 
-  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("worker_profiles")
 }
 
 model PosterProfile {
-  id              String    @id @default(uuid())
-  userId          String    @unique @map("user_id")
-  companyName     String?   @map("company_name")
-  website         String?
-  totalPosted     Int       @default(0) @map("total_posted")
-  totalSpent      Decimal   @default(0) @db.Decimal(20, 8) @map("total_spent")
-  avgRating       Float     @default(0) @map("avg_rating")
-  totalRatings    Int       @default(0) @map("total_ratings")
-  isVerified      Boolean   @default(false) @map("is_verified")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id           String   @id @default(uuid())
+  userId       String   @unique @map("user_id")
+  companyName  String?  @map("company_name")
+  website      String?
+  totalPosted  Int      @default(0) @map("total_posted")
+  totalSpent   Decimal  @default(0) @map("total_spent") @db.Decimal(20, 8)
+  avgRating    Float    @default(0) @map("avg_rating")
+  totalRatings Int      @default(0) @map("total_ratings")
+  isVerified   Boolean  @default(false) @map("is_verified")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("poster_profiles")
 }
 
 model Task {
-  id              String        @id @default(uuid())
-  posterId        String        @map("poster_id")
-  title           String
-  description     String
-  category        TaskCategory
-  status          TaskStatus    @default(DRAFT)
-  reward          Decimal       @db.Decimal(20, 8)
-  currency        WalletCurrency @default(NGN)
-  maxWorkers      Int           @default(1) @map("max_workers")
-  currentWorkers  Int           @default(0) @map("current_workers")
-  deadline        DateTime?
-  instructions    String?
-  proofRequired   String?       @map("proof_required")
-  tags            String[]
-  attachments     Json?         // Array of file URLs
-  escrowed        Boolean       @default(false)
-  escrowTxId      String?       @map("escrow_tx_id")
-  platformFee     Decimal       @default(0) @db.Decimal(20, 8) @map("platform_fee")
-  views           Int           @default(0)
-  isRemote        Boolean       @default(true) @map("is_remote")
-  estimatedTime   Int?          @map("estimated_time") // minutes
-  submissionsCount Int          @default(0) @map("submissions_count")
-  featured        Boolean       @default(false)
-  cooldownStartedAt DateTime?   @map("cooldown_started_at")
-  cooldownDurationHours Int     @default(24) @map("cooldown_duration_hours")
-  minSorsaScore   Int           @default(0) @map("min_sorsa_score")
-  requiresLinkedin Boolean      @default(false) @map("requires_linkedin")
-  requiresWallet  Boolean       @default(false) @map("requires_wallet")
-  createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
-  expiresAt       DateTime?     @map("expires_at")
+  id                    String         @id @default(uuid())
+  posterId              String         @map("poster_id")
+  title                 String
+  description           String
+  category              TaskCategory
+  status                TaskStatus     @default(DRAFT)
+  reward                Decimal        @db.Decimal(20, 8)
+  currency              WalletCurrency @default(NGN)
+  maxWorkers            Int            @default(1) @map("max_workers")
+  currentWorkers        Int            @default(0) @map("current_workers")
+  deadline              DateTime?
+  instructions          String?
+  proofRequired         String?        @map("proof_required")
+  tags                  String[]
+  attachments           Json? // Array of file URLs
+  escrowed              Boolean        @default(false)
+  escrowTxId            String?        @map("escrow_tx_id")
+  platformFee           Decimal        @default(0) @map("platform_fee") @db.Decimal(20, 8)
+  views                 Int            @default(0)
+  isRemote              Boolean        @default(true) @map("is_remote")
+  estimatedTime         Int?           @map("estimated_time") // minutes
+  submissionsCount      Int            @default(0) @map("submissions_count")
+  featured              Boolean        @default(false)
+  cooldownStartedAt     DateTime?      @map("cooldown_started_at")
+  cooldownDurationHours Int            @default(24) @map("cooldown_duration_hours")
+  minSorsaScore         Int            @default(0) @map("min_sorsa_score")
+  requiresLinkedin      Boolean        @default(false) @map("requires_linkedin")
+  requiresWallet        Boolean        @default(false) @map("requires_wallet")
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @updatedAt @map("updated_at")
+  expiresAt             DateTime?      @map("expires_at")
 
-  poster          User          @relation("TaskPoster", fields: [posterId], references: [id])
+  poster          User             @relation("TaskPoster", fields: [posterId], references: [id])
   submissions     TaskSubmission[]
   disputes        Dispute[]
   waitlistEntries Waitlist[]
@@ -384,31 +394,31 @@ model Task {
 }
 
 model TaskSubmission {
-  id              String               @id @default(uuid())
-  taskId          String               @map("task_id")
-  workerId        String               @map("worker_id")
-  status          TaskSubmissionStatus @default(PENDING)
-  proof           String?              // Text proof / link
-  attachments     Json?                // Array of uploaded file URLs
-  workerNotes     String?              @map("worker_notes")
-  posterNotes     String?              @map("poster_notes")
-  rating          Int?                 // Poster rates worker 1-5
-  feedback        String?
-  paidAt          DateTime?            @map("paid_at")
-  startedAt       DateTime?            @map("started_at")
-  submittedAt     DateTime?            @map("submitted_at")
-  reviewedAt      DateTime?            @map("reviewed_at")
-  flaggedForModeration Boolean         @default(false) @map("flagged_for_moderation")
-  flaggedAt       DateTime?            @map("flagged_at")
-  moderatedById   String?              @map("moderated_by_id")
-  moderatedAt     DateTime?            @map("moderated_at")
-  createdAt       DateTime             @default(now()) @map("created_at")
-  updatedAt       DateTime             @updatedAt @map("updated_at")
+  id                   String               @id @default(uuid())
+  taskId               String               @map("task_id")
+  workerId             String               @map("worker_id")
+  status               TaskSubmissionStatus @default(PENDING)
+  proof                String? // Text proof / link
+  attachments          Json? // Array of uploaded file URLs
+  workerNotes          String?              @map("worker_notes")
+  posterNotes          String?              @map("poster_notes")
+  rating               Int? // Poster rates worker 1-5
+  feedback             String?
+  paidAt               DateTime?            @map("paid_at")
+  startedAt            DateTime?            @map("started_at")
+  submittedAt          DateTime?            @map("submitted_at")
+  reviewedAt           DateTime?            @map("reviewed_at")
+  flaggedForModeration Boolean              @default(false) @map("flagged_for_moderation")
+  flaggedAt            DateTime?            @map("flagged_at")
+  moderatedById        String?              @map("moderated_by_id")
+  moderatedAt          DateTime?            @map("moderated_at")
+  createdAt            DateTime             @default(now()) @map("created_at")
+  updatedAt            DateTime             @updatedAt @map("updated_at")
 
-  task            Task                 @relation(fields: [taskId], references: [id])
-  worker          User                 @relation(fields: [workerId], references: [id])
-  moderator       User?                @relation("Moderator", fields: [moderatedById], references: [id])
-  dispute         Dispute?
+  task      Task     @relation(fields: [taskId], references: [id])
+  worker    User     @relation(fields: [workerId], references: [id])
+  moderator User?    @relation("Moderator", fields: [moderatedById], references: [id])
+  dispute   Dispute?
 
   @@unique([taskId, workerId])
   @@map("task_submissions")
@@ -420,32 +430,32 @@ model Waitlist {
   userId    String   @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
 
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([taskId, userId])
   @@map("waitlist_entries")
 }
 
 model Dispute {
-  id              String    @id @default(uuid())
-  taskId          String    @map("task_id")
-  submissionId    String    @unique @map("submission_id")
-  workerId        String    @map("worker_id")
-  posterId        String    @map("poster_id")
-  reason          String
-  workerEvidence  String?   @map("worker_evidence")
-  posterEvidence  String?   @map("poster_evidence")
-  resolution      String?
-  resolvedById    String?   @map("resolved_by_id")
-  resolvedAt      DateTime? @map("resolved_at")
-  outcome         String?   // "WORKER_WON" | "POSTER_WON" | "SPLIT"
-  createdAt       DateTime  @default(now()) @map("created_at")
+  id             String    @id @default(uuid())
+  taskId         String    @map("task_id")
+  submissionId   String    @unique @map("submission_id")
+  workerId       String    @map("worker_id")
+  posterId       String    @map("poster_id")
+  reason         String
+  workerEvidence String?   @map("worker_evidence")
+  posterEvidence String?   @map("poster_evidence")
+  resolution     String?
+  resolvedById   String?   @map("resolved_by_id")
+  resolvedAt     DateTime? @map("resolved_at")
+  outcome        String? // "WORKER_WON" | "POSTER_WON" | "SPLIT"
+  createdAt      DateTime  @default(now()) @map("created_at")
 
-  task            Task      @relation(fields: [taskId], references: [id])
-  submission      TaskSubmission @relation(fields: [submissionId], references: [id])
-  worker          User      @relation("DisputeWorker", fields: [workerId], references: [id])
-  poster          User      @relation("DisputePoster", fields: [posterId], references: [id])
+  task       Task           @relation(fields: [taskId], references: [id])
+  submission TaskSubmission @relation(fields: [submissionId], references: [id])
+  worker     User           @relation("DisputeWorker", fields: [workerId], references: [id])
+  poster     User           @relation("DisputePoster", fields: [posterId], references: [id])
 
   @@map("disputes")
 }
@@ -464,45 +474,45 @@ model Report {
   resolvedAt  DateTime? @map("resolved_at")
   createdAt   DateTime  @default(now()) @map("created_at")
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("reports")
 }
 
 model StoreItem {
-  id              String    @id @default(uuid())
-  sellerId        String?   @map("seller_id")
-  name            String
-  description     String
-  price           Decimal   @db.Decimal(20, 8)
-  currency        WalletCurrency @default(NGN)
-  imageUrl        String?   @map("image_url")
-  category        String
-  isActive        Boolean   @default(true) @map("is_active")
-  stock           Int?
-  metadata        Json?
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id          String         @id @default(uuid())
+  sellerId    String?        @map("seller_id")
+  name        String
+  description String
+  price       Decimal        @db.Decimal(20, 8)
+  currency    WalletCurrency @default(NGN)
+  imageUrl    String?        @map("image_url")
+  category    String
+  isActive    Boolean        @default(true) @map("is_active")
+  stock       Int?
+  metadata    Json?
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
 
-  seller          User?     @relation("StoreSeller", fields: [sellerId], references: [id])
-  purchases       StorePurchase[]
-  reviews         StoreReview[]
+  seller    User?           @relation("StoreSeller", fields: [sellerId], references: [id])
+  purchases StorePurchase[]
+  reviews   StoreReview[]
 
   @@map("store_items")
 }
 
 model StorePurchase {
-  id          String    @id @default(uuid())
-  userId      String    @map("user_id")
-  itemId      String    @map("item_id")
-  quantity    Int       @default(1)
-  totalPrice  Decimal   @db.Decimal(20, 8) @map("total_price")
-  currency    WalletCurrency
-  status      String    @default("PENDING")
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id         String         @id @default(uuid())
+  userId     String         @map("user_id")
+  itemId     String         @map("item_id")
+  quantity   Int            @default(1)
+  totalPrice Decimal        @map("total_price") @db.Decimal(20, 8)
+  currency   WalletCurrency
+  status     String         @default("PENDING")
+  createdAt  DateTime       @default(now()) @map("created_at")
 
-  user        User      @relation(fields: [userId], references: [id])
-  item        StoreItem @relation(fields: [itemId], references: [id])
+  user User      @relation(fields: [userId], references: [id])
+  item StoreItem @relation(fields: [itemId], references: [id])
 
   @@map("store_purchases")
 }
@@ -515,59 +525,59 @@ model StoreReview {
   comment   String?
   createdAt DateTime @default(now()) @map("created_at")
 
-  user      User      @relation(fields: [userId], references: [id])
-  item      StoreItem @relation(fields: [itemId], references: [id])
+  user User      @relation(fields: [userId], references: [id])
+  item StoreItem @relation(fields: [itemId], references: [id])
 
   @@unique([itemId, userId])
   @@map("store_reviews")
 }
 
 model Notification {
-  id          String    @id @default(uuid())
-  userId      String    @map("user_id")
-  type        String
-  title       String
-  body        String
-  data        Json?
-  isRead      Boolean   @default(false) @map("is_read")
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead])
   @@map("notifications")
 }
 
 model RefreshToken {
-  id          String    @id @default(uuid())
-  userId      String    @map("user_id")
-  token       String    @unique
-  expiresAt   DateTime  @map("expires_at")
-  userAgent   String?   @map("user_agent")
-  ipAddress   String?   @map("ip_address")
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  userAgent String?  @map("user_agent")
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
 }
 
 model TwoFactorChallenge {
-  id        String    @id @default(uuid())
-  userId    String    @unique @map("user_id")
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
   token     String
-  expiresAt DateTime  @map("expires_at")
-  createdAt DateTime  @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("two_factor_challenges")
 }
 
 model Conversation {
-  id          String    @id @default(uuid())
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   participants ConversationParticipant[]
   messages     Message[]
@@ -576,67 +586,67 @@ model Conversation {
 }
 
 model ConversationParticipant {
-  id             String       @id @default(uuid())
-  conversationId String       @map("conversation_id")
-  userId         String       @map("user_id")
-  joinedAt       DateTime     @default(now()) @map("joined_at")
+  id             String   @id @default(uuid())
+  conversationId String   @map("conversation_id")
+  userId         String   @map("user_id")
+  joinedAt       DateTime @default(now()) @map("joined_at")
 
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([conversationId, userId])
   @@map("conversation_participants")
 }
 
 model Message {
-  id             String       @id @default(uuid())
-  conversationId String       @map("conversation_id")
-  senderId       String       @map("sender_id")
+  id             String    @id @default(uuid())
+  conversationId String    @map("conversation_id")
+  senderId       String    @map("sender_id")
   content        String
-  readAt         DateTime?    @map("read_at")
-  createdAt      DateTime     @default(now()) @map("created_at")
+  readAt         DateTime? @map("read_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
 
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User         @relation("MessageSender", fields: [senderId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("MessageSender", fields: [senderId], references: [id])
 
   @@index([conversationId, createdAt])
   @@map("messages")
 }
 
 model VaultDocument {
-  id              String    @id @default(uuid())
-  userId          String    @map("user_id")
-  name            String
-  type            String
-  size            Int
-  url             String
-  isVerified      Boolean   @default(false) @map("is_verified")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  name       String
+  type       String
+  size       Int
+  url        String
+  isVerified Boolean  @default(false) @map("is_verified")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("vault_documents")
 }
 
 model BlogPost {
-  id              String    @id @default(uuid())
-  authorId        String    @map("author_id")
-  title           String
-  content         String
-  excerpt         String?
-  category        String?
-  slug            String    @unique
-  coverImage      String?   @map("cover_image")
-  tags            String[]
-  viewCount       Int       @default(0) @map("view_count")
-  isPublished     Boolean   @default(false) @map("is_published")
-  publishedAt     DateTime? @map("published_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id          String    @id @default(uuid())
+  authorId    String    @map("author_id")
+  title       String
+  content     String
+  excerpt     String?
+  category    String?
+  slug        String    @unique
+  coverImage  String?   @map("cover_image")
+  tags        String[]
+  viewCount   Int       @default(0) @map("view_count")
+  isPublished Boolean   @default(false) @map("is_published")
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  author          User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([authorId])
   @@index([isPublished, publishedAt])
@@ -652,29 +662,29 @@ model NewsletterSubscriber {
 }
 
 model Community {
-  id            String   @id @default(uuid())
-  name          String
-  slug          String   @unique
-  description   String?
-  iconUrl       String?  @map("icon_url")
-  coverImage    String?  @map("cover_image")
-  coverColor    String?  @map("cover_color") @default("#EBF0FF")
-  coverTextColor String? @map("cover_text_color") @default("#3B5BDB")
-  accentColor   String?  @map("accent_color") @default("#7C3AED")
-  category      String?
-  isActive      Boolean  @default(true) @map("is_active")
-  isPublic      Boolean  @default(true) @map("is_public")
-  ownerId       String   @map("owner_id")
-  twitter       String?  @map("twitter")
-  telegram      String?  @map("telegram")
-  discord       String?  @map("discord")
-  metadata      Json?
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(uuid())
+  name           String
+  slug           String   @unique
+  description    String?
+  iconUrl        String?  @map("icon_url")
+  coverImage     String?  @map("cover_image")
+  coverColor     String?  @default("#EBF0FF") @map("cover_color")
+  coverTextColor String?  @default("#3B5BDB") @map("cover_text_color")
+  accentColor    String?  @default("#7C3AED") @map("accent_color")
+  category       String?
+  isActive       Boolean  @default(true) @map("is_active")
+  isPublic       Boolean  @default(true) @map("is_public")
+  ownerId        String   @map("owner_id")
+  twitter        String?  @map("twitter")
+  telegram       String?  @map("telegram")
+  discord        String?  @map("discord")
+  metadata       Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  owner       User                    @relation("CommunityOwner", fields: [ownerId], references: [id])
-  members     CommunityMember[]
-  requests    CommunityRequest[]
+  owner        User                   @relation("CommunityOwner", fields: [ownerId], references: [id])
+  members      CommunityMember[]
+  requests     CommunityRequest[]
   chatMessages CommunityChatMessage[]
 
   @@map("communities")
@@ -687,8 +697,8 @@ model CommunityChatMessage {
   text        String
   createdAt   DateTime @default(now()) @map("created_at")
 
-  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  sender      User      @relation("CommunityChatMessageSender", fields: [senderId], references: [id])
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  sender    User      @relation("CommunityChatMessageSender", fields: [senderId], references: [id])
 
   @@index([communityId, createdAt])
   @@map("community_chat_messages")
@@ -701,8 +711,8 @@ model CommunityMember {
   role        String   @default("MEMBER")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([communityId, userId])
   @@map("community_members")
@@ -726,7 +736,7 @@ model Campaign {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("campaigns")
@@ -743,11 +753,11 @@ model WalletNonce {
 }
 
 model TwitterOAuthState {
-  id            String   @id
-  userId        String   @map("user_id")
-  codeVerifier  String   @map("code_verifier")
-  expiresAt     DateTime @map("expires_at")
-  createdAt     DateTime @default(now()) @map("created_at")
+  id           String   @id
+  userId       String   @map("user_id")
+  codeVerifier String   @map("code_verifier")
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   @@map("twitter_oauth_states")
 }
@@ -761,8 +771,8 @@ model CommunityRequest {
   respondedAt DateTime? @map("responded_at")
   createdAt   DateTime  @default(now()) @map("created_at")
 
-  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([communityId, userId])
   @@map("community_requests")
@@ -771,54 +781,50 @@ model CommunityRequest {
 // ── Vault Revenue Distribution Models ─────────
 // $PAY token holder revenue sharing (WURK-style vault)
 
-
-
-
-
 model VaultPool {
-  id                  String    @id @default(uuid())
-  totalNgp            Decimal   @default(0) @db.Decimal(20, 2) @map("total_ngn")
-  totalPay            Decimal   @default(0) @db.Decimal(20, 8) @map("total_pay")
-  lastDistributionAt  DateTime? @map("last_distribution_at")
-  nextDistributionAt  DateTime? @map("next_distribution_at")
-  createdAt           DateTime  @default(now()) @map("created_at")
-  updatedAt           DateTime  @updatedAt @map("updated_at")
+  id                 String    @id @default(uuid())
+  totalNgp           Decimal   @default(0) @map("total_ngn") @db.Decimal(20, 2)
+  totalPay           Decimal   @default(0) @map("total_pay") @db.Decimal(20, 8)
+  lastDistributionAt DateTime? @map("last_distribution_at")
+  nextDistributionAt DateTime? @map("next_distribution_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
 
-  distributions       VaultDistribution[]
+  distributions VaultDistribution[]
 
   @@map("vault_pool")
 }
 
 model VaultDistribution {
-  id              String           @id @default(uuid())
-  poolId          String           @map("pool_id")
-  totalNgp        Decimal          @default(0) @db.Decimal(20, 2) @map("total_ngn")
-  totalPay        Decimal          @default(0) @db.Decimal(20, 8) @map("total_pay")
-  eligibleCount   Int              @default(0) @map("eligible_count")
-  totalPayWeight  Decimal          @default(0) @db.Decimal(30, 8) @map("total_pay_weight")
-  distributedAt   DateTime         @default(now()) @map("distributed_at")
+  id             String   @id @default(uuid())
+  poolId         String   @map("pool_id")
+  totalNgp       Decimal  @default(0) @map("total_ngn") @db.Decimal(20, 2)
+  totalPay       Decimal  @default(0) @map("total_pay") @db.Decimal(20, 8)
+  eligibleCount  Int      @default(0) @map("eligible_count")
+  totalPayWeight Decimal  @default(0) @map("total_pay_weight") @db.Decimal(30, 8)
+  distributedAt  DateTime @default(now()) @map("distributed_at")
 
-  pool            VaultPool        @relation(fields: [poolId], references: [id], onDelete: Cascade)
-  payouts         VaultPayout[]
+  pool    VaultPool     @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  payouts VaultPayout[]
 
   @@index([distributedAt])
   @@map("vault_distributions")
 }
 
 model VaultPayout {
-  id              String           @id @default(uuid())
-  distributionId  String           @map("distribution_id")
-  userId          String           @map("user_id")
-  payHolding      Decimal          @default(0) @db.Decimal(30, 8) @map("pay_holding")
-  payWeight       Decimal          @default(0) @db.Decimal(30, 8) @map("pay_weight")
-  shareNgp        Decimal          @default(0) @db.Decimal(20, 2) @map("share_ngn")
-  sharePay        Decimal          @default(0) @db.Decimal(20, 8) @map("share_pay")
-  status          String           @default("pending")  // pending | paid | failed
-  paidAt          DateTime?        @map("paid_at")
-  createdAt       DateTime         @default(now()) @map("created_at")
+  id             String    @id @default(uuid())
+  distributionId String    @map("distribution_id")
+  userId         String    @map("user_id")
+  payHolding     Decimal   @default(0) @map("pay_holding") @db.Decimal(30, 8)
+  payWeight      Decimal   @default(0) @map("pay_weight") @db.Decimal(30, 8)
+  shareNgp       Decimal   @default(0) @map("share_ngn") @db.Decimal(20, 2)
+  sharePay       Decimal   @default(0) @map("share_pay") @db.Decimal(20, 8)
+  status         String    @default("pending") // pending | paid | failed
+  paidAt         DateTime? @map("paid_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
 
-  distribution    VaultDistribution @relation(fields: [distributionId], references: [id], onDelete: Cascade)
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  distribution VaultDistribution @relation(fields: [distributionId], references: [id], onDelete: Cascade)
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([distributionId])
@@ -826,28 +832,28 @@ model VaultPayout {
 }
 
 model VaultUserStats {
-  userId              String           @id
-  totalEarnedNgp      Decimal          @default(0) @db.Decimal(20, 2) @map("total_earned_ngn")
-  totalEarnedPay      Decimal          @default(0) @db.Decimal(20, 8) @map("total_earned_pay")
-  distributionsReceived Int           @default(0) @map("distributions_received")
-  payBalance           Decimal         @default(0) @db.Decimal(30, 8) @map("pay_balance")
-  isEligible           Boolean         @default(false) @map("is_eligible")
-  lastActiveAt         DateTime?       @map("last_active_at")
-  updatedAt            DateTime        @updatedAt @map("updated_at")
+  userId                String    @id
+  totalEarnedNgp        Decimal   @default(0) @map("total_earned_ngn") @db.Decimal(20, 2)
+  totalEarnedPay        Decimal   @default(0) @map("total_earned_pay") @db.Decimal(20, 8)
+  distributionsReceived Int       @default(0) @map("distributions_received")
+  payBalance            Decimal   @default(0) @map("pay_balance") @db.Decimal(30, 8)
+  isEligible            Boolean   @default(false) @map("is_eligible")
+  lastActiveAt          DateTime? @map("last_active_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
 
-  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("vault_user_stats")
 }
 
 model VaultRevenueLog {
-  id              String    @id @default(uuid())
-  source          String    // task_fee | store_commission | service_cut | other
-  sourceId        String?   @map("source_id")
-  amountNgp       Decimal   @default(0) @db.Decimal(20, 2) @map("amount_ngn")
-  amountPay       Decimal   @default(0) @db.Decimal(20, 8) @map("amount_pay")
-  description     String?
-  recordedAt      DateTime  @default(now()) @map("recorded_at")
+  id          String   @id @default(uuid())
+  source      String // task_fee | store_commission | service_cut | other
+  sourceId    String?  @map("source_id")
+  amountNgp   Decimal  @default(0) @map("amount_ngn") @db.Decimal(20, 2)
+  amountPay   Decimal  @default(0) @map("amount_pay") @db.Decimal(20, 8)
+  description String?
+  recordedAt  DateTime @default(now()) @map("recorded_at")
 
   @@index([recordedAt])
   @@map("vault_revenue_log")
@@ -861,28 +867,101 @@ model Bookmark {
   metadata  Json?
   createdAt DateTime @default(now()) @map("created_at")
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@unique([userId, taskId])
   @@map("bookmarks")
 }
 
 model Device {
-  id           String    @id @default(cuid())
-  userId       String    @map("user_id")
-  name         String?
-  browser      String?
-  os           String?
-  code         String?   @unique @map("pairing_code")
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  name          String?
+  browser       String?
+  os            String?
+  code          String?   @unique @map("pairing_code")
   codeExpiresAt DateTime? @map("code_expires_at")
-  lastActiveAt DateTime? @map("last_active_at")
-  createdAt    DateTime  @default(now()) @map("created_at")
+  lastActiveAt  DateTime? @map("last_active_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
 
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([code])
   @@map("devices")
 }
 
+model FlutterwaveCustomer {
+  id            String   @id @default(uuid())
+  userId        String   @unique @map("user_id")
+  flutterwaveId Int      @map("flutterwave_id") // Flutterwave customer ID
+  customerEmail String   @map("customer_email")
+  customerPhone String?  @map("customer_phone")
+  customerName  String?  @map("customer_name")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  virtualAccounts VirtualAccount[]
+
+  @@map("flutterwave_customers")
+}
+
+model VirtualAccount {
+  id                    String   @id @default(uuid())
+  userId                String   @map("user_id")
+  flutterwaveCustomerId String   @map("flutterwave_customer_id")
+  accountNumber         String   @map("account_number")
+  bankName              String   @map("bank_name")
+  bankCode              String?  @map("bank_code")
+  accountName           String?  @map("account_name")
+  orderRef              String?  @map("order_ref") // Flutterwave order reference
+  isActive              Boolean  @default(true) @map("is_active")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flutterwaveCustomer FlutterwaveCustomer @relation(fields: [flutterwaveCustomerId], references: [id])
+
+  @@unique([accountNumber, bankName])
+  @@map("virtual_accounts")
+}
+
+model BankAccount {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
+  bankName      String    @map("bank_name")
+  bankCode      String    @map("bank_code")
+  accountNumber String    @map("account_number")
+  accountName   String    @map("account_name")
+  isDefault     Boolean   @default(false) @map("is_default")
+  isVerified    Boolean   @default(false) @map("is_verified")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at") // Soft delete
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("bank_accounts")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  action      String // deposit | withdrawal | transfer | create_dva | add_bank | etc.
+  description String?
+  amount      Decimal? @db.Decimal(20, 8)
+  currency    String?
+  reference   String?
+  metadata    Json?
+  ipAddress   String?  @map("ip_address")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+  @@map("audit_logs")
+}

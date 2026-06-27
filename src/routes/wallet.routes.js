@@ -9,8 +9,10 @@ const { validate, depositSchema, withdrawSchema } = require('../middleware/valid
 const { prisma } = require('../config/database');
 const walletService = require('../services/wallet.service');
 const solanaService = require('../services/solana.service');
+const flutterwaveService = require('../services/flutterwave.service');
 const { successResponse, createdResponse, ApiError } = require('../utils/apiResponse');
 const { v4: uuidv4 } = require('uuid');
+const { checkIdempotency, setIdempotency } = require('../utils/idempotency');
 
 const router = express.Router();
 
@@ -176,6 +178,10 @@ router.post('/fund/swap', authenticate, async (req, res) => {
 
 // ─── Crypto withdrawal ───────────────────────────────────────
 router.post('/withdraw/crypto', authenticate, requireKyc, async (req, res) => {
+  const idempotencyKey = req.headers['idempotency-key'];
+  const cached = checkIdempotency(idempotencyKey);
+  if (cached) return successResponse(res, cached, 'Withdrawal already submitted (idempotent)');
+
   const { amount, currency, toAddress } = req.body;
   if (!amount || amount <= 0) throw ApiError.badRequest('Valid amount required');
   if (!toAddress) throw ApiError.badRequest('toAddress required');
@@ -212,47 +218,15 @@ router.post('/withdraw/crypto', authenticate, requireKyc, async (req, res) => {
       currency,
       reference: ref,
       externalRef: txSig,
-      balanceBefore: Number(wallet.balance) + amount,
-      balanceAfter: Number(wallet.balance),
+      balanceBefore: Number(wallet.balance),
+      balanceAfter: Number(wallet.balance) - amount,
       description: `${currency} withdrawal to ${toAddress}`,
     },
   });
 
-  successResponse(res, { signature: txSig, reference: ref });
-});
-
-// POST /api/v1/wallet/credit — no-auth wallet credit (testing phase)
-router.post('/credit', async (req, res) => {
-  const { email, amount, currency = 'NGN' } = req.body;
-  if (!email || !amount || amount <= 0) throw ApiError.badRequest('email and positive amount required');
-
-  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
-  if (!user) throw ApiError.notFound('User not found');
-
-  const wallet = await prisma.wallet.upsert({
-    where: { userId_currency: { userId: user.id, currency } },
-    update: { balance: { increment: parseFloat(amount) } },
-    create: { userId: user.id, currency, balance: parseFloat(amount), lockedBalance: 0, isActive: true },
-  });
-
-  const reference = `OGA-CREDIT-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
-  await prisma.transaction.create({
-    data: {
-      userId: user.id,
-      walletId: wallet.id,
-      type: 'DEPOSIT',
-      status: 'COMPLETED',
-      amount: parseFloat(amount),
-      currency,
-      reference,
-      balanceBefore: parseFloat(wallet.balance) - parseFloat(amount),
-      balanceAfter: parseFloat(wallet.balance),
-      description: 'Manual wallet credit',
-      completedAt: new Date(),
-    },
-  });
-
-  successResponse(res, { email, amount, currency, newBalance: parseFloat(wallet.balance) });
+  const result = { signature: txSig, reference: ref };
+  setIdempotency(idempotencyKey, result);
+  successResponse(res, result, 'Crypto withdrawal processed');
 });
 
 // All remaining wallet routes require auth
@@ -271,6 +245,7 @@ router.get('/balance', async (req, res) => {
     acc[wallet.currency] = {
       balance: Number(wallet.balance),
       lockedBalance: Number(wallet.lockedBalance),
+      pendingBalance: Number(wallet.pendingBalance),
       available: Math.max(0, Number(wallet.balance) - Number(wallet.lockedBalance)),
     };
     return acc;
@@ -287,6 +262,10 @@ router.post('/deposit', validate(depositSchema), async (req, res) => {
 // POST /api/v1/wallets/withdraw
 // POST /api/v1/wallets/withdraw
 router.post('/withdraw', requireKyc, validate(withdrawSchema), async (req, res) => {
+  const idempotencyKey = req.headers['idempotency-key'];
+  const cached = checkIdempotency(idempotencyKey);
+  if (cached) return successResponse(res, cached, 'Withdrawal already submitted (idempotent)');
+
   const { amount } = req.body;
 
   // Check withdrawal limit based on KYC level
@@ -298,8 +277,84 @@ router.post('/withdraw', requireKyc, validate(withdrawSchema), async (req, res) 
   }
 
   const data = await walletService.initiateWithdrawal(req.user.id, req.body);
+  setIdempotency(idempotencyKey, data);
   successResponse(res, data, 'Withdrawal request submitted. Processing within 24 hours.');
 });
 
+// ─── DVA (Virtual Account) ─────────────────────────────────
+
+// GET /api/v1/wallets/dva — get current virtual account
+router.get('/dva', async (req, res) => {
+  const dva = await flutterwaveService.getVirtualAccount(req.user.id);
+  successResponse(res, dva || null, 'Virtual account fetched');
+});
+
+// POST /api/v1/wallets/dva — create a new virtual account
+router.post('/dva', async (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.ip;
+  const dva = await flutterwaveService.createVirtualAccount(req.user.id, ip);
+  createdResponse(res, dva, 'Virtual account created');
+});
+
+// ─── Banks ─────────────────────────────────────────────────
+
+// GET /api/v1/wallets/banks/list — list all banks (Flutterwave)
+router.get('/banks/list', async (req, res) => {
+  const country = req.query.country || 'NG';
+  const banks = await flutterwaveService.listBanks(country);
+  successResponse(res, banks, 'Banks fetched');
+});
+
+// POST /api/v1/wallets/banks/verify — verify account number
+router.post('/banks/verify', async (req, res) => {
+  const { accountNumber, bankCode } = req.body;
+  if (!accountNumber || !bankCode) throw ApiError.badRequest('accountNumber and bankCode required');
+  const result = await flutterwaveService.verifyAccountNumber(accountNumber, bankCode);
+  successResponse(res, result, 'Account verified');
+});
+
+// GET /api/v1/wallets/banks — user's saved bank accounts
+router.get('/banks', async (req, res) => {
+  const banks = await flutterwaveService.getUserBankAccounts(req.user.id);
+  successResponse(res, banks, 'Bank accounts fetched');
+});
+
+// POST /api/v1/wallets/banks — add a bank account
+router.post('/banks', async (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.ip;
+  const bank = await flutterwaveService.addBankAccount(req.user.id, req.body, ip);
+  createdResponse(res, bank, 'Bank account added');
+});
+
+// PUT /api/v1/wallets/banks/:id/default — set default bank
+router.put('/banks/:id/default', async (req, res) => {
+  const result = await flutterwaveService.setDefaultBankAccount(req.user.id, req.params.id);
+  successResponse(res, result, 'Default bank updated');
+});
+
+// DELETE /api/v1/wallets/banks/:id — remove a bank account
+router.delete('/banks/:id', async (req, res) => {
+  const result = await flutterwaveService.deleteBankAccount(req.user.id, req.params.id);
+  successResponse(res, result, 'Bank account removed');
+});
+
+// ─── Enhanced Withdrawal via Flutterwave Transfer ──────────
+
+// POST /api/v1/wallets/transfer — withdraw to saved bank via Flutterwave Transfer
+router.post('/transfer', requireKyc, async (req, res) => {
+  const idempotencyKey = req.headers['idempotency-key'];
+  const cached = checkIdempotency(idempotencyKey);
+  if (cached) return successResponse(res, cached, 'Transfer already submitted (idempotent)');
+
+  const { bankAccountId, amount, currency } = req.body;
+  if (!bankAccountId || !amount || !currency) {
+    throw ApiError.badRequest('bankAccountId, amount, and currency required');
+  }
+
+  const ip = req.headers['x-forwarded-for'] || req.ip;
+  const data = await flutterwaveService.initiateTransfer(req.user.id, { bankAccountId, amount, currency }, ip);
+  setIdempotency(idempotencyKey, data);
+  successResponse(res, data, 'Withdrawal submitted. Processing transfer.');
+});
 
 module.exports = router;

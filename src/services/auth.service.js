@@ -52,6 +52,7 @@ const register = async ({ firstName, lastName, email, password, username, role, 
   if (referralCode) {
     const referrer = await prisma.user.findUnique({ where: { referralCode } });
     if (!referrer) throw ApiError.badRequest('Invalid referral code');
+    if (referrer.email === email) throw ApiError.badRequest('You cannot refer yourself');
     referredById = referrer.id;
   }
 

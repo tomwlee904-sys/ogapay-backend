@@ -154,15 +154,22 @@ const getTransactionHistory = async (userId, { page = 1, limit = 20, type, curre
 // ── Get referral stats ─────────────────────────
 
 const getReferralStats = async (userId) => {
-  const [user, referrals] = await Promise.all([
+  const [user, totalReferrals, rewardedReferrals, bonusSum] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { referralCode: true } }),
     prisma.user.count({ where: { referredById: userId } }),
+    prisma.user.count({ where: { referredById: userId, referralRewardedAt: { not: null } } }),
+    prisma.transaction.aggregate({
+      where: { userId, type: 'REFERRAL_BONUS', status: 'COMPLETED' },
+      _sum: { amount: true },
+    }),
   ]);
 
   return {
     referralCode: user.referralCode,
     referralLink: `${process.env.FRONTEND_URL}/join?ref=${user.referralCode}`,
-    totalReferrals: referrals,
+    totalReferrals,
+    rewardedReferrals,
+    totalEarned: bonusSum._sum.amount || 0,
   };
 };
 

@@ -5,6 +5,7 @@ const { prisma } = require('../config/database');
 const { supabaseAdmin } = require('../config/supabase');
 const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
+const walletService = require('./wallet.service');
 
 const DOJAH_BASE = process.env.DOJAH_BASE_URL || 'https://api.dojah.io';
 const KYC_BUCKET = process.env.SUPABASE_KYC_BUCKET || 'Kyc-Documents';
@@ -45,7 +46,7 @@ const verifyBvnWithDojah = async (bvn) => {
   }
 };
 
-// ── New KYC Level definitions ─────────────────
+// ── KYC Level definitions ────────────────────
 // Level 0 — No verification
 // Level 1 — NIN verified (can earn, withdraw up to ₦10,000)
 // Level 2 — BVN verified (higher limits, max OgaScore)
@@ -56,15 +57,19 @@ const KYC_LEVELS = {
   BVN_VERIFIED: 2,   // Level 2 — BVN upgrade
 };
 
+const TIER_THRESHOLDS = { 1: 'NIN', 2: 'BVN', 3: 'ADDRESS' };
+
 // ── Submit KYC with live Dojah verification ───
 
 const submitKyc = async (userId, { idType, idNumber, dateOfBirth, address, city, state }) => {
   const existing = await prisma.kycVerification.findUnique({ where: { userId } });
 
-  // Determine which level this submission targets
+  // Determine which level/tier this submission targets
   let targetLevel = 0;
+  let targetTier = 1;
   if (idType === 'NIN') targetLevel = KYC_LEVELS.NIN_VERIFIED;
-  if (idType === 'BVN') targetLevel = KYC_LEVELS.BVN_VERIFIED;
+  if (idType === 'BVN') { targetLevel = KYC_LEVELS.BVN_VERIFIED; targetTier = 2; }
+  if (idType === 'PASSPORT' || idType === 'DRIVERS_LICENSE' || idType === 'VOTERS_CARD') targetTier = 3;
 
   // Cannot submit BVN if NIN is not already verified
   if (idType === 'BVN') {
@@ -151,6 +156,12 @@ const submitKyc = async (userId, { idType, idNumber, dateOfBirth, address, city,
     }).catch(() => {});
   }
 
+  // Referral reward on milestone (KYC Tier 1+)
+  if (autoApprove) {
+    walletService.rewardForReferral(userId).catch(e => logger.warn('Referral reward check failed:', e.message));
+  }
+
+  logger.info(`KYC ${idType} submitted for user ${userId} — auto-approved: ${autoApprove}`);
   return { status, tier: newTier, level: newTier, message };
 };
 
@@ -267,6 +278,7 @@ const handleDojahWebhook = async (payload) => {
         body: `Your identity has been verified! You're at Level ${newTier}.`,
       },
     }).catch(() => {});
+    walletService.rewardForReferral(kyc.userId).catch(e => logger.warn('Referral reward check failed:', e.message));
     logger.info(`KYC auto-approved via webhook for user ${kyc.userId}`);
   } else if (event === 'verification.failed' || event === 'kyc.rejected') {
     const reason = data?.reason || data?.message || 'Documents did not pass verification';
@@ -319,6 +331,11 @@ const adminReviewKyc = async (adminId, userId, { action, rejectionReason, tierUp
         : `Your KYC was rejected: ${rejectionReason || 'Please resubmit with clear documents.'}`,
     },
   }).catch(() => {});
+
+  // Referral reward when admin approves KYC
+  if (action === 'approve') {
+    walletService.rewardForReferral(userId).catch(e => logger.warn('Referral reward check failed:', e.message));
+  }
 
   logger.info(`KYC ${newStatus} (Level ${newTier}) for user ${userId} by admin ${adminId}`);
   return { status: newStatus, tier: newTier, level: newTier };

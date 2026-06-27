@@ -6,6 +6,7 @@ const { authenticate } = require('../middleware/auth.middleware');
 const { prisma } = require('../config/database');
 const authService = require('../services/auth.service');
 const twoFactorService = require('../services/2fa.service');
+const walletService = require('../services/wallet.service');
 const { successResponse, createdResponse } = require('../utils/apiResponse');
 const { supabase } = require('../config/supabase');
 
@@ -297,6 +298,9 @@ router.post('/verify-email', async (req, res) => {
       emailVerificationTokenExpiry: null,
     },
   });
+
+  // Fire-and-forget referral reward check
+  walletService.rewardForReferral(userId).catch(e => logger.warn('Referral reward check failed:', e.message));
 
   successResponse(res, null, 'Email verified successfully');
 });

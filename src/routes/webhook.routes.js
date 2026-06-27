@@ -3,6 +3,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const { confirmDeposit } = require('../services/wallet.service');
+const flutterwaveService = require('../services/flutterwave.service');
 const { logger } = require('../utils/logger');
 
 const router = express.Router();
@@ -24,7 +25,6 @@ router.post('/paystack', async (req, res) => {
   const event = JSON.parse(req.body);
   logger.info(`Paystack webhook: ${event.event}`, { ref: event.data?.reference });
 
-  // Always respond 200 first (Paystack requires it within 5s)
   res.status(200).json({ received: true });
 
   try {
@@ -32,8 +32,6 @@ router.post('/paystack', async (req, res) => {
       const { reference } = event.data;
       await confirmDeposit(reference, event.data.id);
     }
-    // Add more event types as needed:
-    // transfer.success, transfer.failed, refund.processed, etc.
   } catch (err) {
     logger.error('Paystack webhook processing error:', err.message);
   }
@@ -58,20 +56,14 @@ router.post('/flutterwave', async (req, res) => {
     if (event.event === 'charge.completed' && event.data.status === 'successful') {
       const reference = event.data.tx_ref;
       await confirmDeposit(reference, String(event.data.id));
+    } else if (event.event === 'va.credit_notification') {
+      await flutterwaveService.handleDvaCredit(event);
+    } else if (event.event === 'transfer.completed') {
+      await flutterwaveService.handleTransferUpdate(event);
     }
   } catch (err) {
     logger.error('Flutterwave webhook processing error:', err.message);
   }
-});
-
-// ── Crypto deposit monitor (manual trigger for dev) ─
-router.post('/crypto/confirm', async (req, res) => {
-  if (process.env.NODE_ENV !== 'development') {
-    return res.status(403).json({ message: 'Only available in development' });
-  }
-  const { reference, providerRef } = req.body;
-  const tx = await confirmDeposit(reference, providerRef);
-  res.json({ success: true, data: tx });
 });
 
 module.exports = router;

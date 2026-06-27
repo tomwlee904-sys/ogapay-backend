@@ -128,7 +128,11 @@ const confirmDeposit = async (reference, providerRef) => {
 
 // ── Withdraw ───────────────────────────────────
 
-const initiateWithdrawal = async (userId, { amount, currency, bankCode, accountNumber, walletAddress }) => {
+const initiateWithdrawal = async (userId, { amount, currency, bankCode, bankName, accountNumber, accountName, walletAddress }) => {
+  if (currency === 'NGN' && amount < 5000) {
+    throw ApiError.badRequest('Minimum NGN withdrawal is ₦5,000');
+  }
+
   const wallet = await prisma.wallet.findUnique({
     where: { userId_currency: { userId, currency } },
   });
@@ -163,7 +167,7 @@ const initiateWithdrawal = async (userId, { amount, currency, bankCode, accountN
         balanceBefore: wallet.balance,
         balanceAfter: parseFloat(wallet.balance) - amount,
         description: `Withdrawal via ${currency === 'NGN' ? 'bank transfer' : 'crypto'}`,
-        metadata: { bankCode, accountNumber, walletAddress, netAmount },
+        metadata: { bankCode, bankName, accountNumber, accountName, walletAddress, netAmount },
       },
     });
 
@@ -216,6 +220,78 @@ const initializeFlutterwavePayment = async (payload) => {
   return data.data;
 };
 
+// ── Referral reward ─────────────────────────────
+const REFERRAL_BONUS_AMOUNT = 1000;
+
+const rewardForReferral = async (userId) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, referredById: true, referralRewardedAt: true, isEmailVerified: true, firstName: true },
+  });
+
+  if (!user || !user.referredById) return null;
+  if (user.referralRewardedAt) return null;
+
+  // Milestone check: email verified OR KYC approved at any tier
+  const kyc = await prisma.kycVerification.findUnique({
+    where: { userId },
+    select: { status: true, kycTier: true },
+  });
+
+  const milestoneReached = user.isEmailVerified || (kyc?.status === 'APPROVED' && (kyc?.kycTier || 0) >= 1);
+  if (!milestoneReached) return null;
+
+  return prisma.$transaction(async (db) => {
+    const referrerWallet = await db.wallet.findUnique({
+      where: { userId_currency: { userId: user.referredById, currency: 'NGN' } },
+    });
+    if (!referrerWallet) return null;
+
+    const newBalance = parseFloat(referrerWallet.balance) + REFERRAL_BONUS_AMOUNT;
+    const reference = `OGA-REF-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
+
+    await db.wallet.update({
+      where: { id: referrerWallet.id },
+      data: { balance: newBalance },
+    });
+
+    await db.transaction.create({
+      data: {
+        userId: user.referredById,
+        walletId: referrerWallet.id,
+        type: 'REFERRAL_BONUS',
+        status: 'COMPLETED',
+        amount: REFERRAL_BONUS_AMOUNT,
+        currency: 'NGN',
+        reference,
+        balanceBefore: referrerWallet.balance,
+        balanceAfter: newBalance,
+        description: `Referral bonus for ${user.firstName}'s milestone`,
+        completedAt: new Date(),
+        metadata: { referredUserId: userId },
+      },
+    });
+
+    await db.user.update({
+      where: { id: userId },
+      data: { referralRewardedAt: new Date() },
+    });
+
+    await db.notification.create({
+      data: {
+        userId: user.referredById,
+        type: 'REFERRAL_BONUS',
+        title: '🎉 Referral Bonus Credited!',
+        body: `You earned ₦${REFERRAL_BONUS_AMOUNT.toLocaleString()} for ${user.firstName}'s milestone.`,
+        data: { referredUserId: userId, amount: REFERRAL_BONUS_AMOUNT, reference },
+      },
+    });
+
+    logger.info(`Referral bonus credited: ${reference} — ₦${REFERRAL_BONUS_AMOUNT} to referrer of user ${userId}`);
+    return { reference, amount: REFERRAL_BONUS_AMOUNT };
+  });
+};
+
 module.exports = {
   getUserWallets,
   initiateDeposit,
@@ -227,4 +303,5 @@ module.exports = {
   getEscrowStatus,
   getEscrowHistory,
   formatAmount,
+  rewardForReferral,
 };
