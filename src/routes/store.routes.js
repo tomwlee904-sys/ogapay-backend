@@ -218,7 +218,7 @@ router.post('/:itemId/reviews', authenticate, async (req, res) => {
 // GET /api/v1/store/my-products — Seller's own products
 router.get('/my-products', authenticate, async (req, res) => {
   const items = await prisma.storeItem.findMany({
-    where: { sellerId: req.user.id },
+    where: { sellerId: req.user.id, isActive: true },
     orderBy: { createdAt: 'desc' },
     include: {
       purchases: { select: { id: true, quantity: true, totalPrice: true, createdAt: true } },
@@ -244,6 +244,7 @@ router.get('/my-products', authenticate, async (req, res) => {
       isActive: item.isActive,
       sales,
       revenue,
+      orders: item.purchases.length,
       avgRating: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0,
       reviewsCount: ratings.length,
       status: item.isActive ? 'Active' : 'Draft',
@@ -392,10 +393,11 @@ router.get('/:id', async (req, res) => {
 // POST /api/v1/store/:itemId/purchase
 router.post('/:itemId/purchase', authenticate, async (req, res) => {
   const { itemId } = req.params;
-  const { quantity = 1, currency = 'NGN' } = req.body;
+  const { quantity = 1 } = req.body;
 
   const item = await prisma.storeItem.findUnique({ where: { id: itemId } });
   if (!item || !item.isActive) throw ApiError.notFound('Item not found or unavailable');
+  const currency = item.currency;
   if (item.stock !== null && item.stock < quantity) throw ApiError.badRequest('Insufficient stock');
 
   const totalPrice = parseFloat(item.price) * quantity;
@@ -445,43 +447,6 @@ router.post('/:itemId/purchase', authenticate, async (req, res) => {
   createdResponse(res, purchase, 'Purchase successful');
 });
 
-
-// GET /api/v1/store/my-products — Seller's own products
-router.get("/my-products", authenticate, async (req, res) => {
-  const items = await prisma.storeItem.findMany({
-    where: { sellerId: req.user.id },
-    orderBy: { createdAt: "desc" },
-    include: {
-      reviews: { select: { rating: true } },
-      purchases: { select: { quantity: true, totalPrice: true } },
-    },
-  });
-
-  const mapped = items.map(item => {
-    const ratings = item.reviews.map(r => r.rating);
-    const avgRating = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
-    const totalSales = item.purchases.reduce((s, p) => s + p.quantity, 0);
-    return {
-      id: item.id,
-      name: item.name,
-      description: item.description,
-      price: parseFloat(item.price),
-      currency: item.currency,
-      imageUrl: item.imageUrl || "",
-      category: item.category,
-      isActive: item.isActive,
-      stock: item.stock,
-      status: item.isActive ? "ACTIVE" : "DRAFT",
-      sales: totalSales,
-      rating: avgRating,
-      reviewsCount: ratings.length,
-      metadata: item.metadata,
-      createdAt: item.createdAt,
-    };
-  });
-
-  successResponse(res, mapped);
-});
 
 // ── Admin: Manage store items ──────────────────
 
