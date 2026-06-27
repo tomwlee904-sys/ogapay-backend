@@ -158,6 +158,7 @@ const submitKyc = async (userId, { idType, idNumber, dateOfBirth, address, city,
   // Referral reward on milestone (KYC Tier 1+)
   if (autoApprove) {
     walletService.rewardForReferral(userId).catch(e => logger.warn('Referral reward check failed:', e.message));
+    walletService.rewardSignupBonus(userId).catch(e => logger.warn('Signup bonus check failed:', e.message));
   }
 
   logger.info(`KYC ${idType} submitted for user ${userId} — auto-approved: ${autoApprove}`);
@@ -278,6 +279,7 @@ const handleDojahWebhook = async (payload) => {
       },
     }).catch(() => {});
     walletService.rewardForReferral(kyc.userId).catch(e => logger.warn('Referral reward check failed:', e.message));
+    walletService.rewardSignupBonus(kyc.userId).catch(e => logger.warn('Signup bonus check failed:', e.message));
     logger.info(`KYC auto-approved via webhook for user ${kyc.userId}`);
   } else if (event === 'verification.failed' || event === 'kyc.rejected') {
     const reason = data?.reason || data?.message || 'Documents did not pass verification';
@@ -336,6 +338,7 @@ const adminReviewKyc = async (adminId, userId, { action, rejectionReason, tierUp
     walletService.rewardForReferral(userId).catch(e => logger.warn('Referral reward check failed:', e.message));
   }
 
+    walletService.rewardSignupBonus(userId).catch(e => logger.warn('Signup bonus check failed:', e.message));
   logger.info(`KYC ${newStatus} (Level ${newTier}) for user ${userId} by admin ${adminId}`);
   return { status: newStatus, tier: newTier, level: newTier };
 };

@@ -222,11 +222,18 @@ const initializeFlutterwavePayment = async (payload) => {
 
 // ── Referral reward ─────────────────────────────
 const REFERRAL_BONUS_AMOUNT = 1000;
+const REFERRAL_CAP = 20;
+const SIGNUP_BONUS_AMOUNT = 1000;
+
+// ── Referral reward (with 20-referral cap) ──────
 
 const rewardForReferral = async (userId) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, referredById: true, referralRewardedAt: true, isEmailVerified: true, firstName: true },
+    select: {
+      id: true, referredById: true, referralRewardedAt: true,
+      referralMilestoneReachedAt: true, isEmailVerified: true, firstName: true,
+    },
   });
 
   if (!user || !user.referredById) return null;
@@ -241,13 +248,51 @@ const rewardForReferral = async (userId) => {
   const milestoneReached = user.isEmailVerified || (kyc?.status === 'APPROVED' && (kyc?.kycTier || 0) >= 1);
   if (!milestoneReached) return null;
 
+  // Cap check + payment inside a single $transaction for atomicity
   return prisma.$transaction(async (db) => {
+    // Count referrer's already-paid referrals inside the transaction
+    const paidCount = await db.user.count({
+      where: { referredById: user.referredById, referralRewardedAt: { not: null } },
+    });
+
+    // Check if the cap has been reached
+    if (paidCount >= REFERRAL_CAP) {
+      // Cap reached — record milestone but skip payment
+      await db.user.update({
+        where: { id: userId },
+        data: { referralMilestoneReachedAt: new Date() },
+      });
+
+      logger.info(
+        `Referral cap reached for referrer ${user.referredById} — ` +
+        `milestone recorded for user ${userId} but bonus skipped (${paidCount}/${REFERRAL_CAP})`
+      );
+      return { capped: true, paidCount };
+    }
+
     const referrerWallet = await db.wallet.findUnique({
       where: { userId_currency: { userId: user.referredById, currency: 'NGN' } },
     });
     if (!referrerWallet) return null;
 
-    const newBalance = parseFloat(referrerWallet.balance) + REFERRAL_BONUS_AMOUNT;
+    // Daily velocity check: rolling 24h sum of REFERRAL_BONUS for referrer
+    const dailySum = await db.transaction.aggregate({
+      where: {
+        userId: user.referredById,
+        type: 'REFERRAL_BONUS',
+        status: 'COMPLETED',
+        createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+      },
+      _sum: { amount: true },
+    });
+    const dailyTotal = dailySum._sum.amount ? parseFloat(dailySum._sum.amount) : 0;
+    const DAILY_THRESHOLD = 5000;
+    const PENALTY_AMOUNT = 10;
+    const isPenalized = dailyTotal >= DAILY_THRESHOLD;
+    const effectiveAmount = isPenalized ? REFERRAL_BONUS_AMOUNT - PENALTY_AMOUNT : REFERRAL_BONUS_AMOUNT;
+    const descSuffix = isPenalized ? ' (cooldown penalty applied)' : '';
+
+    const newBalance = parseFloat(referrerWallet.balance) + effectiveAmount;
     const reference = `OGA-REF-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
 
     await db.wallet.update({
@@ -261,14 +306,14 @@ const rewardForReferral = async (userId) => {
         walletId: referrerWallet.id,
         type: 'REFERRAL_BONUS',
         status: 'COMPLETED',
-        amount: REFERRAL_BONUS_AMOUNT,
+        amount: effectiveAmount,
         currency: 'NGN',
         reference,
         balanceBefore: referrerWallet.balance,
         balanceAfter: newBalance,
-        description: `Referral bonus for ${user.firstName}'s milestone`,
+        description: `Referral bonus for ${user.firstName}'s milestone${descSuffix}`,
         completedAt: new Date(),
-        metadata: { referredUserId: userId },
+        metadata: { referredUserId: userId, dailyVelocityPenalized: isPenalized, dailyTotal },
       },
     });
 
@@ -281,14 +326,83 @@ const rewardForReferral = async (userId) => {
       data: {
         userId: user.referredById,
         type: 'REFERRAL_BONUS',
-        title: '🎉 Referral Bonus Credited!',
-        body: `You earned ₦${REFERRAL_BONUS_AMOUNT.toLocaleString()} for ${user.firstName}'s milestone.`,
-        data: { referredUserId: userId, amount: REFERRAL_BONUS_AMOUNT, reference },
+        title: isPenalized ? '🔶 Referral Bonus Credited (reduced rate)' : '🎉 Referral Bonus Credited!',
+        body: `You earned ₦${effectiveAmount.toLocaleString()} for ${user.firstName}'s milestone.${isPenalized ? ' (Cooldown penalty: ₦10 deducted due to high daily volume)' : ''}`,
+        data: { referredUserId: userId, amount: effectiveAmount, reference, dailyVelocityPenalized: isPenalized },
       },
     });
 
-    logger.info(`Referral bonus credited: ${reference} — ₦${REFERRAL_BONUS_AMOUNT} to referrer of user ${userId}`);
-    return { reference, amount: REFERRAL_BONUS_AMOUNT };
+    logger.info(`Referral bonus credited: ${reference} — ₦${effectiveAmount} to referrer of user ${userId}${isPenalized ? ' (daily velocity penalty applied, dailyTotal=' + dailyTotal + ')' : ''}`);
+    return { reference, amount: effectiveAmount, dailyVelocityPenalized: isPenalized };
+  });
+};
+
+// ── Signup bonus (₦1,000 on NIN or BVN verification) ───
+
+const rewardSignupBonus = async (userId) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, signupBonusPaid: true },
+  });
+
+  if (!user || user.signupBonusPaid) return null;
+
+  // Verify user has approved NIN or BVN KYC (tier >= 1)
+  const kyc = await prisma.kycVerification.findUnique({
+    where: { userId },
+    select: { status: true, kycTier: true },
+  });
+
+  const isVerified = kyc?.status === 'APPROVED' && (kyc?.kycTier || 0) >= 1;
+  if (!isVerified) return null;
+
+  return prisma.$transaction(async (db) => {
+    const wallet = await db.wallet.findUnique({
+      where: { userId_currency: { userId, currency: 'NGN' } },
+    });
+    if (!wallet) return null;
+
+    const newBalance = parseFloat(wallet.balance) + SIGNUP_BONUS_AMOUNT;
+    const reference = `OGA-SGN-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
+
+    await db.wallet.update({
+      where: { id: wallet.id },
+      data: { balance: newBalance },
+    });
+
+    await db.transaction.create({
+      data: {
+        userId,
+        walletId: wallet.id,
+        type: 'SIGNUP_BONUS',
+        status: 'COMPLETED',
+        amount: SIGNUP_BONUS_AMOUNT,
+        currency: 'NGN',
+        reference,
+        balanceBefore: wallet.balance,
+        balanceAfter: newBalance,
+        description: 'Signup bonus for completing KYC verification',
+        completedAt: new Date(),
+      },
+    });
+
+    await db.user.update({
+      where: { id: userId },
+      data: { signupBonusPaid: true },
+    });
+
+    await db.notification.create({
+      data: {
+        userId,
+        type: 'SIGNUP_BONUS',
+        title: '🎉 ₦1,000 Signup Bonus Credited!',
+        body: 'You earned ₦1,000 for verifying your identity. Welcome to OgaPay!',
+        data: { amount: SIGNUP_BONUS_AMOUNT, reference },
+      },
+    });
+
+    logger.info(`Signup bonus credited: ${reference} — ₦${SIGNUP_BONUS_AMOUNT} to user ${userId}`);
+    return { reference, amount: SIGNUP_BONUS_AMOUNT };
   });
 };
 
@@ -304,4 +418,5 @@ module.exports = {
   getEscrowHistory,
   formatAmount,
   rewardForReferral,
+  rewardSignupBonus,
 };

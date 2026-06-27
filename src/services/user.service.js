@@ -164,11 +164,19 @@ const getReferralStats = async (userId) => {
     }),
   ]);
 
+  const getReferralTier = (count) => {
+    if (count >= 20) return 'gold';
+    if (count >= 10) return 'silver';
+    if (count >= 5) return 'bronze';
+    return null;
+  };
+
   return {
     referralCode: user.referralCode,
     referralLink: `${process.env.FRONTEND_URL}/join?ref=${user.referralCode}`,
     totalReferrals,
     rewardedReferrals,
+    referralTier: getReferralTier(rewardedReferrals),
     totalEarned: bonusSum._sum.amount || 0,
   };
 };

@@ -45,6 +45,7 @@ enum TransactionType {
   TASK_REFUND
   PLATFORM_FEE
   REFERRAL_BONUS
+  SIGNUP_BONUS
   STORE_PURCHASE
   TRANSFER
   EARNING
@@ -157,6 +158,8 @@ model User {
   referralCode         String    @unique @map("referral_code")
   referredById         String?   @map("referred_by_id")
   referralRewardedAt   DateTime? @map("referral_rewarded_at")
+  referralMilestoneReachedAt DateTime? @map("referral_milestone_reached_at")
+  signupBonusPaid      Boolean   @default(false) @map("signup_bonus_paid")
   lastLoginAt          DateTime? @map("last_login_at")
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")
