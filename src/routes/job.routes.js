@@ -17,6 +17,9 @@ router.get('/monitor', authenticate, authorize('POSTER', 'ADMIN'), async (req, r
       submissions: {
         select: { status: true },
       },
+      poster: {
+        select: { username: true, avatarUrl: true, posterProfile: { select: { isVerified: true } } },
+      },
     },
   });
 
@@ -31,9 +34,15 @@ router.get('/monitor', authenticate, authorize('POSTER', 'ADMIN'), async (req, r
   const jobs = tasks.map(t => ({
     id: t.id,
     title: t.title,
+    description: t.description,
+    instructions: t.instructions,
     status: t.status,
     reward: Number(t.reward),
     currency: t.currency,
+    category: t.category,
+    estimatedTime: t.estimatedTime,
+    tags: t.tags || [],
+    proofRequired: !!t.proofRequired,
     maxWorkers: t.maxWorkers,
     currentWorkers: t.currentWorkers || 0,
     submissionsCount: t._count.submissions,
@@ -44,6 +53,11 @@ router.get('/monitor', authenticate, authorize('POSTER', 'ADMIN'), async (req, r
     budgetRemaining: Number(t.reward) * (t.maxWorkers - t.submissions.filter(s => s.status === 'APPROVED').length),
     deadline: t.deadline,
     createdAt: t.createdAt,
+    poster: t.poster ? {
+      username: t.poster.username,
+      avatarUrl: t.poster.avatarUrl,
+      isVerified: t.poster.posterProfile?.isVerified || false,
+    } : null,
   }));
 
   successResponse(res, { summary, jobs });
