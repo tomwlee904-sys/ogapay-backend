@@ -229,6 +229,39 @@ router.post('/withdraw/crypto', authenticate, requireKyc, async (req, res) => {
   successResponse(res, result, 'Crypto withdrawal processed');
 });
 
+// POST /api/v1/wallet/credit — dev/test helper: credit a user's NGN wallet by email (no auth required)
+router.post('/credit', async (req, res) => {
+  const { email, amount, currency = 'NGN' } = req.body;
+  if (!email || !amount || amount <= 0) throw ApiError.badRequest('email and amount required');
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw ApiError.notFound('User not found');
+
+  const wallet = await prisma.wallet.upsert({
+    where: { userId_currency: { userId: user.id, currency } },
+    create: { userId: user.id, currency, balance: amount, lockedBalance: 0 },
+    update: { balance: { increment: amount } },
+  });
+
+  const ref = `OGA-TEST-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
+  await prisma.transaction.create({
+    data: {
+      userId: user.id,
+      walletId: wallet.id,
+      type: 'SYSTEM_CREDIT',
+      status: 'COMPLETED',
+      amount,
+      currency,
+      reference: ref,
+      balanceBefore: Number(wallet.balance) - amount,
+      balanceAfter: Number(wallet.balance),
+      description: 'Test credit',
+    },
+  });
+
+  successResponse(res, { newBalance: Number(wallet.balance) }, 'Wallet credited');
+});
+
 // All remaining wallet routes require auth
 router.use(authenticate);
 
