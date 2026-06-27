@@ -344,7 +344,7 @@ const forgotPassword = async (email) => {
   });
 
   const frontend = process.env.FRONTEND_URL || 'https://ogapay.vercel.app';
-  const link = \`\${frontend}/reset-password?token=\${resetToken}&userId=\${user.id}\`;
+  const link = `${frontend}/reset-password?token=${resetToken}&userId=${user.id}`;
   const emailContent = buildPasswordResetEmail({ name: user.firstName, link });
 
   sendEmail({ to: user.email, ...emailContent }).catch(e =>
