@@ -79,18 +79,26 @@ const createVirtualAccount = async (userId, ipAddress) => {
     if (!user) throw ApiError.notFound('User not found');
 
     const tx_ref = `DVA-${uuidv4().replace(/-/g, '').slice(0, 20).toUpperCase()}`;
-    const { data } = await flwRequest.post('/virtual-account-numbers', {
-      email: user.email,
-      is_permanent: true,
-      tx_ref,
-      narration: `OgaPay Wallet`,
-      phonenumber: user.phone || undefined,
-      firstname: user.firstName || undefined,
-      lastname: user.lastName || undefined,
-    });
+    let flwRes;
+    try {
+      flwRes = await flwRequest.post('/virtual-account-numbers', {
+        email: user.email,
+        is_permanent: true,
+        tx_ref,
+        narration: `OgaPay Wallet`,
+        phonenumber: user.phone || undefined,
+        firstname: user.firstName || undefined,
+        lastname: user.lastName || undefined,
+      });
+    } catch (flwErr) {
+      const flwMsg = flwErr?.response?.data?.message || flwErr?.response?.data || flwErr.message;
+      logger.error(`Flutterwave DVA error: ${JSON.stringify(flwMsg)}`);
+      throw ApiError.internal(`Flutterwave: ${flwMsg}`);
+    }
 
+    const data = flwRes.data;
     if (data.status !== 'success') {
-      throw ApiError.internal('Failed to create virtual account');
+      throw ApiError.internal(`Flutterwave create DVA failed: ${data.message || data.status}`);
     }
 
     const vaData = data.data;
