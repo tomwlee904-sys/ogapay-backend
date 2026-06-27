@@ -83,12 +83,13 @@ const createVirtualAccount = async (userId, ipAddress) => {
     try {
       flwRes = await flwRequest.post('/virtual-account-numbers', {
         email: user.email,
-        is_permanent: false,
+        is_permanent: true,
         tx_ref,
         narration: `OgaPay Wallet`,
         phonenumber: user.phone || undefined,
         firstname: user.firstName || undefined,
         lastname: user.lastName || undefined,
+        bvn: process.env.FLUTTERWAVE_BVN || '12345678901',
       });
     } catch (flwErr) {
       const flwMsg = flwErr?.response?.data?.message || flwErr?.response?.data || flwErr.message;
