@@ -83,7 +83,7 @@ const createVirtualAccount = async (userId, ipAddress) => {
     try {
       flwRes = await flwRequest.post('/virtual-account-numbers', {
         email: user.email,
-        is_permanent: true,
+        is_permanent: false,
         tx_ref,
         narration: `OgaPay Wallet`,
         phonenumber: user.phone || undefined,
