@@ -143,7 +143,7 @@ const createVirtualAccount = async (userId, ipAddress) => {
 
     logger.info(`DVA created for user ${userId}: ${vaData.bank_name} ${vaData.account_number}`);
     return virtualAccount;
-  });
+  }, { timeout: 20000 });
 };
 
 const getVirtualAccount = async (userId) => {
