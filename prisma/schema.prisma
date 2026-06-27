@@ -113,7 +113,6 @@ enum PaymentProvider {
 // ── MODELS ────────────────────────────────────
 
 model User {
-model User {
   id                   String    @id @default(uuid())
   supabaseId           String?   @unique @map("supabase_id")
   email                String    @unique
