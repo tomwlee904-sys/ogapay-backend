@@ -72,11 +72,15 @@ const createVirtualAccount = async (userId, ipAddress) => {
       return existingDva;
     }
 
-    const customer = await findOrCreateCustomer(db, userId);
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+    if (!user) throw ApiError.notFound('User not found');
 
     const tx_ref = `DVA-${uuidv4().replace(/-/g, '').slice(0, 20).toUpperCase()}`;
     const { data } = await flwRequest.post('/virtual-account-numbers', {
-      email: customer.customerEmail,
+      email: user.email,
       is_permanent: true,
       tx_ref,
       narration: `OgaPay Wallet`,
@@ -88,11 +92,19 @@ const createVirtualAccount = async (userId, ipAddress) => {
 
     const vaData = data.data;
 
+    const flwCustomerId = vaData.customer?.id || 0;
+    const cust = await db.flutterwaveCustomer.upsert({
+      where: { userId },
+      update: { flutterwaveId: Number(flwCustomerId), customerEmail: user.email },
+      create: { userId, flutterwaveId: Number(flwCustomerId), customerEmail: user.email },
+    });
+    const customerId = cust.id;
+
     const virtualAccount = await db.virtualAccount.create({
       data: {
         userId,
-        flutterwaveCustomerId: customer.id,
-        accountNumber: vaData.account_number,
+        flutterwaveCustomerId: customerId,
+        accountNumber: String(vaData.account_number),
         bankName: vaData.bank_name,
         bankCode: vaData.bank_code || null,
         accountName: vaData.account_name || null,
