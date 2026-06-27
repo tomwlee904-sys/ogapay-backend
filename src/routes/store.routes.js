@@ -397,51 +397,142 @@ router.post('/:itemId/purchase', authenticate, async (req, res) => {
 
   const item = await prisma.storeItem.findUnique({ where: { id: itemId } });
   if (!item || !item.isActive) throw ApiError.notFound('Item not found or unavailable');
+  if (!item.sellerId) throw ApiError.badRequest('Product has no seller');
+  if (item.sellerId === req.user.id) throw ApiError.badRequest('You cannot purchase your own product');
+
   const currency = item.currency;
   if (item.stock !== null && item.stock < quantity) throw ApiError.badRequest('Insufficient stock');
 
   const totalPrice = parseFloat(item.price) * quantity;
 
-  // Deduct from wallet
-  const wallet = await prisma.wallet.findUnique({
-    where: { userId_currency: { userId: req.user.id, currency } },
-  });
-  if (!wallet) throw ApiError.notFound('Wallet not found');
-  const available = parseFloat(wallet.balance) - parseFloat(wallet.lockedBalance);
+  // Load wallets for buyer and seller
+  const [buyerWallet, sellerWallet] = await Promise.all([
+    prisma.wallet.findUnique({ where: { userId_currency: { userId: req.user.id, currency } } }),
+    prisma.wallet.findUnique({ where: { userId_currency: { userId: item.sellerId, currency } } }),
+  ]);
+  if (!buyerWallet) throw ApiError.notFound('Buyer wallet not found');
+  if (!sellerWallet) throw ApiError.notFound('Seller wallet not found');
+
+  const available = parseFloat(buyerWallet.balance) - parseFloat(buyerWallet.lockedBalance);
   if (available < totalPrice) throw ApiError.badRequest('Insufficient wallet balance');
 
   const purchase = await prisma.$transaction(async (db) => {
+    // 1. Debit buyer
     await db.wallet.update({
-      where: { id: wallet.id },
+      where: { id: buyerWallet.id },
       data: { balance: { decrement: totalPrice } },
     });
 
     const ref = `OGA-STORE-${Date.now()}`;
+
     await db.transaction.create({
       data: {
         userId: req.user.id,
-        walletId: wallet.id,
+        walletId: buyerWallet.id,
         type: 'STORE_PURCHASE',
         status: 'COMPLETED',
         amount: totalPrice,
         currency,
         reference: ref,
-        balanceBefore: wallet.balance,
-        balanceAfter: parseFloat(wallet.balance) - totalPrice,
+        balanceBefore: buyerWallet.balance,
+        balanceAfter: parseFloat(buyerWallet.balance) - totalPrice,
         description: `Purchase: ${item.name}`,
         completedAt: new Date(),
       },
     });
 
+    // 2. Credit seller
+    const newSellerBalance = parseFloat(sellerWallet.balance) + totalPrice;
+    await db.wallet.update({
+      where: { id: sellerWallet.id },
+      data: { balance: newSellerBalance },
+    });
+
+    await db.transaction.create({
+      data: {
+        userId: item.sellerId,
+        walletId: sellerWallet.id,
+        type: 'STORE_PURCHASE',
+        status: 'COMPLETED',
+        amount: totalPrice,
+        currency,
+        reference: ref + '-SELLER',
+        balanceBefore: sellerWallet.balance,
+        balanceAfter: newSellerBalance,
+        description: `Sale: ${item.name} (purchased by ${req.user.firstName || 'a buyer'})`,
+        completedAt: new Date(),
+      },
+    });
+
+    // 3. Create store purchase record
     const storePurchase = await db.storePurchase.create({
       data: { userId: req.user.id, itemId, quantity, totalPrice, currency },
     });
 
+    // 4. Decrement stock if applicable (race-condition safe: where includes gte guard)
     if (item.stock !== null) {
-      await db.storeItem.update({ where: { id: itemId }, data: { stock: { decrement: quantity } } });
+      const result = await db.storeItem.updateMany({
+        where: { id: itemId, stock: { gte: quantity } },
+        data: { stock: { decrement: quantity } },
+      });
+      if (result.count === 0) {
+        // Stock was insufficient at the moment of update — rollback the entire transaction
+        throw new Error('Insufficient stock');
+      }
     }
 
-    return storePurchase;
+    // 5. Find or create conversation between buyer and seller
+    const existingConv = await db.conversation.findFirst({
+      where: {
+        AND: [
+          { participants: { some: { userId: req.user.id } } },
+          { participants: { some: { userId: item.sellerId } } },
+        ],
+      },
+    });
+
+    let conversationId = existingConv?.id;
+    if (!conversationId) {
+      const conv = await db.conversation.create({
+        data: {
+          participants: {
+            create: [
+              { userId: req.user.id },
+              { userId: item.sellerId },
+            ],
+          },
+        },
+      });
+      conversationId = conv.id;
+    }
+
+    // 6. Add system message about the purchase
+    const buyerName = req.user.firstName || req.user.username || 'A buyer';
+    await db.message.create({
+      data: {
+        conversationId,
+        senderId: req.user.id,
+        content: `🛒 ${buyerName} purchased ${item.name} for ${totalPrice.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:6})} ${currency}. Arrange next steps here.`,
+      },
+    });
+
+    await db.conversation.update({
+      where: { id: conversationId },
+      data: { updatedAt: new Date() },
+    });
+
+    // 7. Notify seller
+    await db.notification.create({
+      data: {
+        userId: item.sellerId,
+        type: 'STORE_PURCHASE',
+        title: '🛒 New Purchase!',
+        body: `${buyerName} purchased ${item.name} for ${totalPrice.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:6})} ${currency}.`,
+        data: { purchaseId: storePurchase.id, conversationId, itemId, buyerId: req.user.id },
+      },
+    });
+
+    return { ...storePurchase, conversationId };
   });
 
   createdResponse(res, purchase, 'Purchase successful');
