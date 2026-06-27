@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const { prisma } = require('../config/database');
 const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
+const { fetchPrices, FALLBACK_PRICES } = require('./price.service');
 
 const PLATFORM_FEE_PERCENT = parseFloat(process.env.PLATFORM_FEE_PERCENT || '10');
 
@@ -129,10 +130,32 @@ const confirmDeposit = async (reference, providerRef) => {
 // ── Withdraw ───────────────────────────────────
 
 const initiateWithdrawal = async (userId, { amount, currency, bankCode, bankName, accountNumber, accountName, walletAddress }) => {
-  // Minimum withdrawal check (NGN-equivalent ~₦5,000 across all currencies)
-  const MIN_WITHDRAWAL = { NGN: 5000, USDC: 3.5, SOL: 0.022 };
-  const minAmt = MIN_WITHDRAWAL[currency];
-  if (minAmt !== undefined && amount < minAmt) {
+  // Minimum withdrawal check: ₦5,000 NGN-equivalent using live rates
+  const MIN_NGN = 5000;
+  let minAmt;
+  if (currency === 'NGN') {
+    minAmt = MIN_NGN;
+  } else {
+    try {
+      const prices = await fetchPrices();
+      const rateKey = currency.toLowerCase();
+      const rate = prices?.[rateKey]?.ngn;
+      if (rate && rate > 0) {
+        minAmt = MIN_NGN / rate;
+      } else {
+        // Live rate invalid — use static fallback
+        const fallbackRates = { USDC: FALLBACK_PRICES.usdc.ngn, SOL: FALLBACK_PRICES.sol.ngn };
+        minAmt = MIN_NGN / (fallbackRates[currency] || fallbackRates.USDC);
+        logger.warn(`Withdrawal min check using static fallback rate for ${currency} (live rate unavailable)`);
+      }
+    } catch (err) {
+      // Live fetch failed — use static fallback
+      const fallbackRates = { USDC: FALLBACK_PRICES.usdc.ngn, SOL: FALLBACK_PRICES.sol.ngn };
+      minAmt = MIN_NGN / (fallbackRates[currency] || fallbackRates.USDC);
+      logger.warn(`Withdrawal min check: live rate fetch failed, using fallback for ${currency}: ${err.message}`);
+    }
+  }
+  if (amount < minAmt) {
     throw ApiError.badRequest('Minimum withdrawal is ' + formatAmount(minAmt, currency));
   }
 
