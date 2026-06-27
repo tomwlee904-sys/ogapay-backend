@@ -74,7 +74,7 @@ const createVirtualAccount = async (userId, ipAddress) => {
 
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { email: true },
+      select: { email: true, firstName: true, lastName: true, phone: true },
     });
     if (!user) throw ApiError.notFound('User not found');
 
@@ -84,6 +84,9 @@ const createVirtualAccount = async (userId, ipAddress) => {
       is_permanent: true,
       tx_ref,
       narration: `OgaPay Wallet`,
+      phonenumber: user.phone || undefined,
+      firstname: user.firstName || undefined,
+      lastname: user.lastName || undefined,
     });
 
     if (data.status !== 'success') {
