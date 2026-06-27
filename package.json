@@ -30,6 +30,7 @@
     "morgan": "^1.10.0",
     "multer": "1.4.4-lts.1",
     "node-cron": "^4.2.1",
+    "nodemailer": "^9.0.1",
     "otplib": "^13.4.1",
     "pg": "^8.21.0",
     "prisma": "^6.19.3",

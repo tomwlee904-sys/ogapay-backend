@@ -357,25 +357,24 @@ const forgotPassword = async (email) => {
 // ── Reset Password ─────────────────────────────
 
 const resetPassword = async (token, newPassword) => {
-  const stored = await prisma.refreshToken.findUnique({
-    where: { token: `reset_${token}` },
-    include: { user: true },
+  const user = await prisma.user.findFirst({
+    where: {
+      passwordResetToken: token,
+      passwordResetTokenExpiry: { gt: new Date() },
+    },
   });
 
-  if (!stored) throw ApiError.badRequest('Invalid or expired reset token');
-  if (stored.expiresAt < new Date()) {
-    await prisma.refreshToken.delete({ where: { id: stored.id } });
-    throw ApiError.badRequest('Reset token expired');
-  }
+  if (!user) throw ApiError.badRequest('Invalid or expired reset token');
 
   const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
-  await prisma.$transaction([
-    prisma.user.update({
-      where: { id: stored.userId },
-      data: { passwordHash },
-    }),
-    prisma.refreshToken.delete({ where: { id: stored.id } }),
-  ]);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      passwordHash,
+      passwordResetToken: null,
+      passwordResetTokenExpiry: null,
+    },
+  });
 
   return { message: 'Password reset successful' };
 };
