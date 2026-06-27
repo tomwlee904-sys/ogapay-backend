@@ -113,6 +113,7 @@ enum PaymentProvider {
 // ── MODELS ────────────────────────────────────
 
 model User {
+model User {
   id                   String    @id @default(uuid())
   supabaseId           String?   @unique @map("supabase_id")
   email                String    @unique
@@ -150,6 +151,10 @@ model User {
   isTwoFactorEnabled   Boolean   @default(false) @map("is_two_factor_enabled")
   twoFactorSecret      String?   @map("two_factor_secret")
   twoFactorBackupCodes String[]  @default([]) @map("two_factor_backup_codes")
+  emailVerificationToken     String?  @map("email_verification_token")
+  emailVerificationTokenExpiry DateTime? @map("email_verification_token_expiry")
+  passwordResetToken         String?  @map("password_reset_token")
+  passwordResetTokenExpiry   DateTime? @map("password_reset_token_expiry")
   referralCode         String    @unique @map("referral_code")
   referredById         String?   @map("referred_by_id")
   referralRewardedAt   DateTime? @map("referral_rewarded_at")

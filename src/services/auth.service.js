@@ -8,7 +8,7 @@ const { supabase, supabaseAdmin } = require('../config/supabase');
 const { generateTokenPair, verifyRefreshToken } = require('../utils/jwt');
 const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
-const { sendEmail, buildVerificationEmail } = require('./email.service');
+const { sendEmail, buildVerificationEmail, buildPasswordResetEmail } = require('./email.service');
 
 const twoFactorService = require('./2fa.service');
 
@@ -325,7 +325,6 @@ const sanitizeUser = (user) => ({
 const forgotPassword = async (email) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
-    // Don't reveal whether email exists
     return { message: 'If that email is registered, a reset link will be sent.' };
   }
 
@@ -333,17 +332,18 @@ const forgotPassword = async (email) => {
   const expiresAt = new Date();
   expiresAt.setHours(expiresAt.getHours() + 1);
 
-  // Store reset token in DB
-  await prisma.refreshToken.create({
-    data: {
-      userId: user.id,
-      token: `reset_${resetToken}`,
-      expiresAt,
-    },
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordResetToken: resetToken, passwordResetTokenExpiry: expiresAt },
   });
 
-  // In production, send email via SendGrid/Mailgun
-  logger.info(`Password reset requested for ${email}. Token: ${resetToken}`);
+  const frontend = process.env.FRONTEND_URL || 'https://ogapay.vercel.app';
+  const link = \`\${frontend}/reset-password?token=\${resetToken}&userId=\${user.id}\`;
+  const emailContent = buildPasswordResetEmail({ name: user.firstName, link });
+
+  sendEmail({ to: user.email, ...emailContent }).catch(e =>
+    logger.warn('Password reset email failed:', e.message)
+  );
 
   return { message: 'If that email is registered, a reset link will be sent.' };
 };

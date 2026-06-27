@@ -52,4 +52,20 @@ function buildVerificationEmail({ name, link }) {
   };
 }
 
-module.exports = { sendEmail, buildVerificationEmail };
+function buildPasswordResetEmail({ name, link }) {
+  return {
+    subject: 'Reset your password — OgaPay',
+    html: \`
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <div style="font-size:28px;font-weight:900;margin-bottom:8px">OgaPay</div>
+        <p style="font-size:14px;color:#555;margin:0 0 20px">Hi \${name || 'there'},</p>
+        <p style="font-size:14px;color:#555;margin:0 0 20px">Click the button below to reset your password. This link expires in 1 hour.</p>
+        <a href="\${link}" style="display:inline-block;padding:12px 28px;border-radius:8px;background:#191C6D;color:#fff;text-decoration:none;font-weight:700;font-size:14px">Reset Password</a>
+        <p style="font-size:12px;color:#999;margin-top:24px">If you didn't request this, you can ignore this email.</p>
+        <p style="font-size:12px;color:#999;margin-top:8px">Or paste this link in your browser:<br/>\${link}</p>
+      </div>
+    \`,
+  };
+}
+
+module.exports = { sendEmail, buildVerificationEmail, buildPasswordResetEmail };
