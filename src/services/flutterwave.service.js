@@ -78,10 +78,18 @@ const createVirtualAccount = async (userId, ipAddress) => {
     });
     if (!user) throw ApiError.notFound('User not found');
 
+    const kyc = await db.kycVerification.findUnique({
+      where: { userId },
+      select: { idType: true, idNumber: true, status: true },
+    });
+    if (!kyc || kyc.status !== 'APPROVED' || !kyc.idNumber) {
+      throw ApiError.badRequest('Please complete KYC verification first to create a virtual account');
+    }
+
     const tx_ref = `DVA-${uuidv4().replace(/-/g, '').slice(0, 20).toUpperCase()}`;
     let flwRes;
     try {
-      flwRes = await flwRequest.post('/virtual-account-numbers', {
+      const body = {
         email: user.email,
         is_permanent: true,
         tx_ref,
@@ -89,8 +97,10 @@ const createVirtualAccount = async (userId, ipAddress) => {
         phonenumber: user.phone || undefined,
         firstname: user.firstName || undefined,
         lastname: user.lastName || undefined,
-        bvn: process.env.FLUTTERWAVE_BVN || '12345678901',
-      });
+      };
+      if (kyc.idType === 'BVN') body.bvn = kyc.idNumber;
+      else body.nin = kyc.idNumber;
+      flwRes = await flwRequest.post('/virtual-account-numbers', body);
     } catch (flwErr) {
       const flwMsg = flwErr?.response?.data?.message || flwErr?.response?.data || flwErr.message;
       logger.error(`Flutterwave DVA error: ${JSON.stringify(flwMsg)}`);
