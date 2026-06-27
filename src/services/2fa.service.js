@@ -1,6 +1,6 @@
 'use strict';
 
-const { authenticator } = require('otplib');
+const otplib = require('otplib');
 const QRCode = require('qrcode');
 const crypto = require('crypto');
 const { prisma } = require('../config/database');
@@ -9,8 +9,8 @@ const { ApiError } = require('../utils/apiResponse');
 const ISSUER = 'OgaPay';
 
 const generateSecret = (email) => {
-  const secret = authenticator.generateSecret();
-  const otpauth = authenticator.keyuri(email, ISSUER, secret);
+  const secret = otplib.generateSecret();
+  const otpauth = otplib.generateURI({ type: 'totp', accountName: email, issuer: ISSUER, secret });
   return { secret, otpauth };
 };
 
@@ -26,7 +26,7 @@ const generateBackupCodes = (count = 8) => {
 
 const verifyToken = (token, secret) => {
   try {
-    return authenticator.verify({ token, secret });
+    return otplib.verify({ token, secret });
   } catch {
     return false;
   }
