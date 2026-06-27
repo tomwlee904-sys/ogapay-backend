@@ -129,8 +129,11 @@ const confirmDeposit = async (reference, providerRef) => {
 // ── Withdraw ───────────────────────────────────
 
 const initiateWithdrawal = async (userId, { amount, currency, bankCode, bankName, accountNumber, accountName, walletAddress }) => {
-  if (currency === 'NGN' && amount < 5000) {
-    throw ApiError.badRequest('Minimum NGN withdrawal is ₦5,000');
+  // Minimum withdrawal check (NGN-equivalent ~₦5,000 across all currencies)
+  const MIN_WITHDRAWAL = { NGN: 5000, USDC: 3.5, SOL: 0.022 };
+  const minAmt = MIN_WITHDRAWAL[currency];
+  if (minAmt !== undefined && amount < minAmt) {
+    throw ApiError.badRequest('Minimum withdrawal is ' + formatAmount(minAmt, currency));
   }
 
   const wallet = await prisma.wallet.findUnique({
