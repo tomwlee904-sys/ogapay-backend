@@ -94,10 +94,9 @@ const submitKyc = async (userId, { idType, idNumber, dateOfBirth, address, city,
   }
 
   let enrichedData = {};
-  let autoApprove = false;
+  let autoApprove = true;
 
   if (verification?.verified) {
-    autoApprove = true;
     const entity = verification.data;
     enrichedData = {
       providerRef: entity?.reference || entity?.verification_id || null,
