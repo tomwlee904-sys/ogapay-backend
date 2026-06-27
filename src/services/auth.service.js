@@ -9,6 +9,7 @@ const { generateTokenPair, verifyRefreshToken } = require('../utils/jwt');
 const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
 const { sendEmail, buildVerificationEmail, buildPasswordResetEmail } = require('./email.service');
+const { recordReferralSignup } = require('./referral.service');
 
 const twoFactorService = require('./2fa.service');
 
@@ -109,6 +110,11 @@ const register = async ({ firstName, lastName, email, password, username, role, 
   });
 
   logger.info(`New user registered: ${user.email} (${user.role})`);
+
+  // Record referral relationship in referrals table
+  if (referredById) {
+    recordReferralSignup(user.id, referralCode).catch(e => logger.warn('Referral signup record failed:', e.message));
+  }
 
   // Fire-and-forget verification email (don't block registration)
   sendVerificationEmail(user).catch(e => logger.warn('Verification email failed:', e.message));

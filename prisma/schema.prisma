@@ -200,6 +200,8 @@ model User {
   virtualAccounts           VirtualAccount[]
   bankAccounts              BankAccount[]
   auditLogs                 AuditLog[]
+  referralsMade             Referral[]                @relation("ReferrerReferrals")
+  referralsReceived         Referral?                 @relation("ReferredReferrals")
 
   // OAuth fields
   linkedinOAuthToken        String?   @map("linkedin_oauth_token")
@@ -950,6 +952,25 @@ model BankAccount {
 
   @@index([userId])
   @@map("bank_accounts")
+}
+
+model Referral {
+  id                   String    @id @default(uuid())
+  referrerId           String    @map("referrer_id")
+  referredId           String    @unique @map("referred_id")
+  referralCode         String    @map("referral_code")
+  status               String    @default("pending")
+  bonusAmount          Decimal   @default(500) @map("bonus_amount") @db.Decimal(20, 8)
+  firstTaskCompletedAt DateTime? @map("first_task_completed_at")
+  bonusPaidAt          DateTime? @map("bonus_paid_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+
+  referrer User @relation("ReferrerReferrals", fields: [referrerId], references: [id])
+  referred User @relation("ReferredReferrals", fields: [referredId], references: [id])
+
+  @@index([referrerId])
+  @@index([status])
+  @@map("referrals")
 }
 
 model AuditLog {

@@ -5,6 +5,7 @@ const multer = require('multer');
 const { authenticate, authorize, requireKyc, optionalAuth } = require('../middleware/auth.middleware');
 const { validate, createTaskSchema, submitTaskSchema, reviewSubmissionSchema } = require('../middleware/validate');
 const taskService = require('../services/task.service');
+const { maybeTriggerReferralBonus } = require('../services/referral.service');
 const { successResponse, createdResponse, paginatedResponse, paginate } = require('../utils/apiResponse');
 
 const router = express.Router();
@@ -70,6 +71,12 @@ router.patch(
   validate(reviewSubmissionSchema),
   async (req, res) => {
     const result = await taskService.reviewSubmission(req.user.id, req.params.submissionId, req.body);
+    if (req.body.status === 'APPROVED' && result.workerId) {
+      maybeTriggerReferralBonus(result.workerId).catch(e => {
+        const { logger } = require('../utils/logger');
+        logger.warn('Referral bonus trigger failed:', e.message);
+      });
+    }
     successResponse(res, result, `Submission ${req.body.status.toLowerCase()}`);
   },
 );
