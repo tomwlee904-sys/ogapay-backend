@@ -3,9 +3,8 @@ const vaultService = require('./vault.service');
 
 const { v4: uuidv4 } = require('uuid');
 const { prisma } = require('../config/database');
-const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
-
+const { ApiError } = require('../utils/apiResponse');
 const PLATFORM_FEE_PERCENT = parseFloat(process.env.PLATFORM_FEE_PERCENT || '10');
 
 const formatAmount = (amount, currency) => {
@@ -138,6 +137,17 @@ const releaseEscrow = async (taskId, workerId, amount, currency, submissionId, t
     });
 
     logger.info(`Escrow released: task ${taskId} -> worker ${workerId} - ${amount} ${currency}`);
+    // Auto-convert USDC to NGN if worker has the preference enabled
+    if (currency === 'USDC') {
+      try {
+        const walletService = require('./wallet.service');
+        await walletService.autoConvertUsdcToNgn(workerId, { db });
+      } catch (e) {
+        // Non-blocking -- payment already succeeded
+        console.error(`Post-escrow auto-convert failed for worker ${workerId}: ${e.message}`);
+      }
+    }
+
   };
 
   if (tx) {

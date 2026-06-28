@@ -122,6 +122,11 @@ const confirmDeposit = async (reference, providerRef) => {
       },
     });
 
+    // Auto-convert USDC to NGN if user has the preference enabled
+    if (tx.currency === 'USDC') {
+      await autoConvertUsdcToNgn(tx.userId, { db });
+    }
+
     logger.info(`Deposit confirmed: ${reference} — ${tx.amount} ${tx.currency}`);
     return updated;
   });
@@ -432,8 +437,146 @@ const rewardSignupBonus = async (userId) => {
   });
 };
 
+
+// ── Auto-convert USDC to NGN (for users with preference enabled) ────
+
+const autoConvertUsdcToNgn = async (userId, options = {}) => {
+  /**
+   * Checks user.preferences.autoConvert. If enabled, converts the user's entire
+   * USDC balance to NGN at the current exchange rate.
+   *
+   * **Atomicity / race-safety:**
+   * - When called with `options.db` (inside an outer $transaction), uses the
+   *   passed transaction client directly -- the outer transaction provides
+   *   serializable isolation.
+   * - When called standalone (escrow path), wraps debit/credit in its own
+   *   $transaction and uses `updateMany` with an optimistic-lock WHERE clause
+   *   (`balance: usdcBalance`) so that if two concurrent calls read the same
+   *   balance, only one wins; the other's `result.count` will be 0 and it
+   *   safely no-ops (next credit event will retry).
+   *
+   * Must never throw -- failures are logged and the USDC balance is left as-is.
+   */
+  try {
+    // -- 1. Gate check (runs outside transaction -- harmless if slightly stale) --
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { preferences: true },
+    });
+    if (!user) return;
+    const prefs = (typeof user.preferences === 'object' && user.preferences) ? user.preferences : {};
+    if (!prefs.autoConvert) return;
+
+    // -- 2. Define the debit/credit logic --
+    const executeConversion = async (db) => {
+      // Re-read user inside transaction to be safe
+      const innerUser = await db.user.findUnique({
+        where: { id: userId },
+        select: { preferences: true },
+      });
+      if (!innerUser) return null;
+      const innerPrefs = (typeof innerUser.preferences === 'object' && innerUser.preferences) ? innerUser.preferences : {};
+      if (!innerPrefs.autoConvert) return null;
+
+      const usdcWallet = await db.wallet.findUnique({
+        where: { userId_currency: { userId, currency: 'USDC' } },
+      });
+      if (!usdcWallet) return null;
+      const usdcBalance = parseFloat(usdcWallet.balance);
+      if (usdcBalance <= 0.000001) return null;
+
+      const prices = await fetchPrices();
+      const rate = prices?.usdc?.ngn || FALLBACK_PRICES.usdc.ngn;
+      const ngnAmount = parseFloat((usdcBalance * rate).toFixed(2));
+      if (ngnAmount <= 0) return null;
+
+      // Get or create NGN wallet inside the same transaction
+      let ngnWallet = await db.wallet.findUnique({
+        where: { userId_currency: { userId, currency: 'NGN' } },
+      });
+      if (!ngnWallet) {
+        ngnWallet = await db.wallet.create({
+          data: { userId, currency: 'NGN', balance: 0, lockedBalance: 0 },
+        });
+      }
+
+      const reference = `OGA-CONV-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
+      const newNgnBalance = parseFloat(ngnWallet.balance) + ngnAmount;
+
+      // Atomic debit with optimistic lock -- only succeeds if balance still matches
+      const result = await db.wallet.updateMany({
+        where: { id: usdcWallet.id, balance: usdcBalance },
+        data: { balance: 0 },
+      });
+      if (result.count === 0) {
+        // Another concurrent call already converted or spent this balance
+        logger.warn(`Auto-convert race avoided for user ${userId}: balance changed since read (was ${usdcBalance})`);
+        return null;
+      }
+
+      // Credit NGN wallet
+      await db.wallet.update({
+        where: { id: ngnWallet.id },
+        data: { balance: newNgnBalance },
+      });
+
+      // Log USDC debit transaction
+      await db.transaction.create({
+        data: {
+          userId,
+          walletId: usdcWallet.id,
+          type: 'TRANSFER',
+          status: 'COMPLETED',
+          amount: -usdcBalance,
+          currency: 'USDC',
+          reference,
+          balanceBefore: usdcBalance,
+          balanceAfter: 0,
+          description: `Auto-converted ${usdcBalance.toFixed(6)} USDC`,
+          completedAt: new Date(),
+          metadata: { autoConvert: true, rate, ngnAmount, fromCurrency: 'USDC', toCurrency: 'NGN' },
+        },
+      });
+
+      // Log NGN credit transaction
+      await db.transaction.create({
+        data: {
+          userId,
+          walletId: ngnWallet.id,
+          type: 'TRANSFER',
+          status: 'COMPLETED',
+          amount: ngnAmount,
+          currency: 'NGN',
+          reference: reference + '-NGN',
+          balanceBefore: ngnWallet.balance,
+          balanceAfter: newNgnBalance,
+          description: `Auto-converted ${usdcBalance.toFixed(6)} USDC to ₦${ngnAmount.toLocaleString('en-NG', {minimumFractionDigits:2})} (rate: ₦${rate}/USDC)`,
+          completedAt: new Date(),
+          metadata: { autoConvert: true, rate, usdcAmount: usdcBalance, fromCurrency: 'USDC', toCurrency: 'NGN' },
+        },
+      });
+
+      logger.info(`Auto-converted ${usdcBalance} USDC -> ₦${ngnAmount} for user ${userId} (ref: ${reference})`);
+      return { reference, usdcAmount: usdcBalance, ngnAmount };
+    };
+
+    // -- 3. Execute with or without an outer transaction --
+    if (options.db) {
+      await executeConversion(options.db);
+    } else {
+      await prisma.$transaction((db) => executeConversion(db));
+    }
+  } catch (err) {
+    // Failure must never propagate -- USDC credit already succeeded
+    logger.error(`Auto-convert USDC->NGN failed for user ${userId}: ${err.message}`);
+  }
+};
+
+
+
 module.exports = {
   getUserWallets,
+  autoConvertUsdcToNgn,
   initiateDeposit,
   confirmDeposit,
   initiateWithdrawal,

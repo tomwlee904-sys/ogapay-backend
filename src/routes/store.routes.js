@@ -532,6 +532,16 @@ router.post('/:itemId/purchase', authenticate, async (req, res) => {
       },
     });
 
+    // Auto-convert USDC to NGN if seller has the preference enabled
+    if (currency === 'USDC') {
+      try {
+        await walletService.autoConvertUsdcToNgn(item.sellerId, { db });
+      } catch (e) {
+        // Non-blocking — payment already succeeded
+        console.error(`Post-purchase auto-convert failed for seller ${item.sellerId}: ${e.message}`);
+      }
+    }
+
     return { ...storePurchase, conversationId };
   });
 
