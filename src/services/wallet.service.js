@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const { prisma } = require('../config/database');
 const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
+const { createNotification, NOTIF_TYPES } = require("../utils/notify");
 const { fetchPrices, FALLBACK_PRICES } = require('./price.service');
 
 const PLATFORM_FEE_PERCENT = parseFloat(process.env.PLATFORM_FEE_PERCENT || '10');
@@ -112,14 +113,13 @@ const confirmDeposit = async (reference, providerRef) => {
       },
     });
 
-    await db.notification.create({
-      data: {
-        userId: tx.userId,
-        type: 'DEPOSIT_CONFIRMED',
-        title: '💰 Deposit Confirmed',
-        body: `Your deposit of ${formatAmount(tx.amount, tx.currency)} has been confirmed.`,
-        data: { txId: tx.id, amount: tx.amount, currency: tx.currency },
-      },
+    await createNotification({
+      userId: tx.userId,
+      type: NOTIF_TYPES.DEPOSIT_CONFIRMED,
+      title: '💰 Deposit Confirmed',
+      body: `Your deposit of ${formatAmount(tx.amount, tx.currency)} has been confirmed.`,
+      data: { txId: tx.id, amount: tx.amount, currency: tx.currency },
+      db,
     });
 
     // Auto-convert USDC to NGN if user has the preference enabled
@@ -353,14 +353,13 @@ const rewardForReferral = async (userId) => {
       data: { referralRewardedAt: new Date() },
     });
 
-    await db.notification.create({
-      data: {
-        userId: user.referredById,
-        type: 'REFERRAL_BONUS',
-        title: isPenalized ? '🔶 Referral Bonus Credited (reduced rate)' : '🎉 Referral Bonus Credited!',
-        body: `You earned ₦${effectiveAmount.toLocaleString()} for ${user.firstName}'s milestone.${isPenalized ? ' (Cooldown penalty: ₦10 deducted due to high daily volume)' : ''}`,
-        data: { referredUserId: userId, amount: effectiveAmount, reference, dailyVelocityPenalized: isPenalized },
-      },
+    await createNotification({
+      userId: user.referredById,
+      type: NOTIF_TYPES.REFERRAL_BONUS,
+      title: isPenalized ? '🔶 Referral Bonus Credited (reduced rate)' : '🎉 Referral Bonus Credited!',
+      body: `You earned ₦${effectiveAmount.toLocaleString()} for ${user.firstName}'s milestone.${isPenalized ? ' (Cooldown penalty: ₦10 deducted due to high daily volume)' : ''}`,
+      data: { referredUserId: userId, amount: effectiveAmount, reference, dailyVelocityPenalized: isPenalized },
+      db,
     });
 
     logger.info(`Referral bonus credited: ${reference} — ₦${effectiveAmount} to referrer of user ${userId}${isPenalized ? ' (daily velocity penalty applied, dailyTotal=' + dailyTotal + ')' : ''}`);
@@ -422,14 +421,13 @@ const rewardSignupBonus = async (userId) => {
       data: { signupBonusPaid: true },
     });
 
-    await db.notification.create({
-      data: {
-        userId,
-        type: 'SIGNUP_BONUS',
-        title: '🎉 ₦1,000 Signup Bonus Credited!',
-        body: 'You earned ₦1,000 for verifying your identity. Welcome to OgaPay!',
-        data: { amount: SIGNUP_BONUS_AMOUNT, reference },
-      },
+    await createNotification({
+      userId,
+      type: NOTIF_TYPES.SIGNUP_BONUS,
+      title: '🎉 ₦1,000 Signup Bonus Credited!',
+      body: 'You earned ₦1,000 for verifying your identity. Welcome to OgaPay!',
+      data: { amount: SIGNUP_BONUS_AMOUNT, reference },
+      db,
     });
 
     logger.info(`Signup bonus credited: ${reference} — ₦${SIGNUP_BONUS_AMOUNT} to user ${userId}`);
