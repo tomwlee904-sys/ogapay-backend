@@ -391,10 +391,10 @@ model Task {
   expiresAt             DateTime?      @map("expires_at")
 
   poster          User             @relation("TaskPoster", fields: [posterId], references: [id])
-  submissions     TaskSubmission[] @onDelete(Cascade)
-  disputes        Dispute[]        @onDelete(Cascade)
-  waitlistEntries Waitlist[]       @onDelete(Cascade)
-  bookmarks       Bookmark[]       @onDelete(Cascade)
+  submissions     TaskSubmission[]
+  disputes        Dispute[]
+  waitlistEntries Waitlist[]
+  bookmarks       Bookmark[]
 
   @@index([status])
   @@index([category])
@@ -424,7 +424,7 @@ model TaskSubmission {
   createdAt            DateTime             @default(now()) @map("created_at")
   updatedAt            DateTime             @updatedAt @map("updated_at")
 
-  task      Task     @relation(fields: [taskId], references: [id])
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   worker    User     @relation(fields: [workerId], references: [id])
   moderator User?    @relation("Moderator", fields: [moderatedById], references: [id])
   dispute   Dispute?
