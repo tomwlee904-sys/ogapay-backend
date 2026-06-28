@@ -391,10 +391,10 @@ model Task {
   expiresAt             DateTime?      @map("expires_at")
 
   poster          User             @relation("TaskPoster", fields: [posterId], references: [id])
-  submissions     TaskSubmission[]
-  disputes        Dispute[]
-  waitlistEntries Waitlist[]
-  bookmarks       Bookmark[]
+  submissions     TaskSubmission[] @onDelete(Cascade)
+  disputes        Dispute[]        @onDelete(Cascade)
+  waitlistEntries Waitlist[]       @onDelete(Cascade)
+  bookmarks       Bookmark[]       @onDelete(Cascade)
 
   @@index([status])
   @@index([category])
@@ -461,8 +461,8 @@ model Dispute {
   outcome        String? // "WORKER_WON" | "POSTER_WON" | "SPLIT"
   createdAt      DateTime  @default(now()) @map("created_at")
 
-  task       Task           @relation(fields: [taskId], references: [id])
-  submission TaskSubmission @relation(fields: [submissionId], references: [id])
+  task       Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  submission TaskSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   worker     User           @relation("DisputeWorker", fields: [workerId], references: [id])
   poster     User           @relation("DisputePoster", fields: [posterId], references: [id])
 
