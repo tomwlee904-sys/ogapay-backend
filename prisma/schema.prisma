@@ -386,6 +386,8 @@ model Task {
   minSorsaScore         Int            @default(0) @map("min_sorsa_score")
   requiresLinkedin      Boolean        @default(false) @map("requires_linkedin")
   requiresWallet        Boolean        @default(false) @map("requires_wallet")
+  minRank               Int            @default(0) @map("min_rank")
+  workerRequirement     String?        @map("worker_requirement")
   createdAt             DateTime       @default(now()) @map("created_at")
   updatedAt             DateTime       @updatedAt @map("updated_at")
   expiresAt             DateTime?      @map("expires_at")

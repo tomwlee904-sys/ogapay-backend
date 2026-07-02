@@ -55,6 +55,7 @@ const KYC_LEVELS = {
   NONE: 0,
   NIN_VERIFIED: 1,   // Level 1 — NIN only, no selfie
   BVN_VERIFIED: 2,   // Level 2 — BVN upgrade
+  ADDRESS_VERIFIED: 3, // Level 3 — Address + Docs
 };
 
 const TIER_THRESHOLDS = { 1: 'NIN', 2: 'BVN', 3: 'ADDRESS' };
@@ -235,16 +236,17 @@ const getKycStatus = async (userId) => {
   return {
     ...kyc,
     level: kyc.kycTier,
-    withdrawalLimit: kyc.kycTier >= KYC_LEVELS.BVN_VERIFIED ? 20000 : (kyc.kycTier >= KYC_LEVELS.NIN_VERIFIED ? 10000 : 0),
+    withdrawalLimit: kyc.kycTier >= KYC_LEVELS.ADDRESS_VERIFIED ? 200000 : (kyc.kycTier >= KYC_LEVELS.BVN_VERIFIED ? 20000 : (kyc.kycTier >= KYC_LEVELS.NIN_VERIFIED ? 10000 : 0)),
   };
 };
 
 // ── Get withdrawal limit for a user ────────────
 
 const getWithdrawalLimit = (kycTier) => {
-  if (kycTier >= KYC_LEVELS.BVN_VERIFIED) return 20000;  // Level 2: ₦20,000
-  if (kycTier >= KYC_LEVELS.NIN_VERIFIED) return 10000;   // Level 1: ₦10,000
-  return 0;                                                 // No KYC: can't withdraw
+  if (kycTier >= KYC_LEVELS.ADDRESS_VERIFIED) return 200000;  // Level 3: ₦200,000
+  if (kycTier >= KYC_LEVELS.BVN_VERIFIED) return 20000;       // Level 2: ₦20,000
+  if (kycTier >= KYC_LEVELS.NIN_VERIFIED) return 10000;       // Level 1: ₦10,000
+  return 0;                                                      // No KYC: can't withdraw
 };
 
 // ── Handle Dojah webhook callback ──────────────
