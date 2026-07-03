@@ -120,3 +120,92 @@ router.get('/callback', async (req, res) => {
 });
 
 module.exports = router;
+
+// Helper: get Twitter app-only Bearer Token from client credentials
+let _cachedBearerToken = null;
+let _tokenExpiresAt = 0;
+
+async function getTwitterBearerToken() {
+  // Check env var first
+  if (process.env.TWITTER_BEARER_TOKEN) return process.env.TWITTER_BEARER_TOKEN;
+  // Check cache
+  if (_cachedBearerToken && Date.now() < _tokenExpiresAt) return _cachedBearerToken;
+  // Obtain via OAuth 2.0 Client Credentials
+  if (!process.env.TWITTER_CLIENT_ID || !process.env.TWITTER_CLIENT_SECRET) return null;
+  try {
+    const res = await fetch('https://api.twitter.com/2/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: 'Basic ' + Buffer.from(
+          process.env.TWITTER_CLIENT_ID + ':' + process.env.TWITTER_CLIENT_SECRET
+        ).toString('base64'),
+      },
+      body: new URLSearchParams({ grant_type: 'client_credentials' }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    _cachedBearerToken = data.access_token;
+    _tokenExpiresAt = Date.now() + (data.expires_in || 7200) * 1000 - 60000; // 1min buffer
+    return _cachedBearerToken;
+  } catch { return null; }
+}
+
+// POST /fetch-post — Fetch an X/Twitter post by URL
+router.post('/fetch-post', authenticate, async (req, res) => {
+  const { url } = req.body;
+  if (!url) throw ApiError.badRequest('Post URL is required');
+
+  // Parse tweet ID from URL
+  const match = url.match(/(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)/i);
+  if (!match) throw ApiError.badRequest('Invalid X/Twitter URL');
+
+  const tweetId = match[1];
+
+  try {
+    const bearerToken = await getTwitterBearerToken();
+    if (!bearerToken) {
+      return successResponse(res, {
+        id: tweetId, url,
+        authorName: 'Unknown', authorUsername: 'unknown',
+        avatarUrl: null, text: '', media: [],
+        likes: 0, reposts: 0, replies: 0, verified: false,
+      }, 'Twitter API not configured');
+    }
+
+    const tweetRes = await fetch(
+      `https://api.twitter.com/2/tweets/${tweetId}?expansions=author_id,attachments.media_keys&media.fields=url,preview_image_url,type&tweet.fields=public_metrics,created_at&user.fields=profile_image_url,verified,username`,
+      { headers: { Authorization: `Bearer ${bearerToken}` } }
+    );
+
+    if (!tweetRes.ok) throw new Error('Twitter API error');
+
+    const tweetData = await tweetRes.json();
+    const tweet = tweetData.data || {};
+    const includes = tweetData.includes || {};
+    const author = includes.users?.[0] || {};
+    const mediaItems = includes.media || [];
+
+    successResponse(res, {
+      id: tweet.id, url,
+      authorName: author.name || 'Unknown',
+      authorUsername: author.username || 'unknown',
+      avatarUrl: author.profile_image_url || null,
+      verified: author.verified || false,
+      text: tweet.text || '',
+      media: mediaItems.map((m) => m.url || m.preview_image_url || '').filter(Boolean),
+      likes: tweet.public_metrics?.like_count || 0,
+      reposts: tweet.public_metrics?.retweet_count || 0,
+      replies: tweet.public_metrics?.reply_count || 0,
+      createdAt: tweet.created_at || null,
+    }, 'Tweet fetched successfully');
+
+  } catch {
+    successResponse(res, {
+      id: tweetId, url,
+      authorName: 'Unknown', authorUsername: 'unknown',
+      avatarUrl: null, text: '', media: [],
+      likes: 0, reposts: 0, replies: 0, verified: false,
+    }, 'Could not fetch tweet data');
+  }
+});

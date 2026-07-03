@@ -2,10 +2,10 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "npm install --omit=dev && bash scripts/prebuild.sh && npx prisma db push --accept-data-loss && npx prisma generate && node scripts/fix-community-isactive.js && node scripts/fix-negative-wallets.js"
+    "buildCommand": "npm install --omit=dev && bash scripts/prebuild.sh && npx prisma db push --accept-data-loss && node scripts/add-rank-columns.js && npx prisma generate && node scripts/fix-community-isactive.js && node scripts/fix-negative-wallets.js"
   },
   "deploy": {
-    "startCommand": "node src/index.js",
+    "startCommand": "npx prisma generate && node src/index.js",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
