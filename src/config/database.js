@@ -1,5 +1,16 @@
 'use strict';
 
+// Regenerate Prisma client on every start to pick up schema changes
+try {
+  require('child_process').execSync('npx prisma generate', {
+    stdio: 'pipe',
+    cwd: __dirname + '/../..',
+    timeout: 30000,
+  });
+} catch (e) {
+  // Non-fatal: continue with existing client
+}
+
 const { PrismaClient } = require('@prisma/client');
 const { logger } = require('../utils/logger');
 
