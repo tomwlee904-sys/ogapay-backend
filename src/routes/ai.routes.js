@@ -308,12 +308,24 @@ router.post('/chat', authenticate, async (req, res) => {
   const { question } = req.body || {};
   if (!question) throw ApiError.badRequest('Question is required');
   const userId = req.user.id;
+
+  // Fetch user name for personalization
+  let userName = 'there';
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { firstName: true, lastName: true, username: true },
+    });
+    if (user) userName = user.firstName || user.username || 'there';
+  } catch {}
+
   const lower = question.toLowerCase().trim();
 
-  // Helper: format NGN amount with commas
+  // Helper: format NGN
   const fmtNgn = (n) => 'NGN ' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  let answer;
+  let answer = '';
+  let suggestions = [];
 
   // --- Wallet / balance
   if ((lower.includes('wallet') || lower.includes('balance') || lower.includes('money') || lower.includes('fund')) &&
@@ -323,72 +335,85 @@ router.post('/chat', authenticate, async (req, res) => {
       if (wallet) {
         const bal = Number(wallet.balance || 0);
         const pend = Number(wallet.pendingBalance || 0);
-        answer = 'Your current wallet balance is ' + fmtNgn(bal) + '.';
-        if (pend > 0) answer += ' You also have ' + fmtNgn(pend) + ' pending.';
-        answer += ' You can withdraw or use these funds to create tasks and purchase from the store.';
+        answer = 'Hey ' + userName + '! Your **wallet balance** is ' + fmtNgn(bal) + '.';
+        if (pend > 0) answer += ' You have ' + fmtNgn(pend) + ' pending.';
+        answer += '\n\nYou can [View your wallet](/wallet) or [Create a task](/create) using your funds.';
       } else {
-        answer = "You don't have a wallet yet. Create a task or make a purchase to get one set up automatically.";
+        answer = 'Hey ' + userName + '! You don\'t have a wallet yet. [Create a task](/create) or [Browse the store](/store) to get started.';
       }
-    } catch { answer = 'I had trouble fetching your wallet. Please try again or check your wallet page.'; }
+      suggestions = ['How much have I earned?', 'Show my tasks', 'What can you do?'];
+    } catch {
+      answer = 'Sorry ' + userName + ', I had trouble fetching your wallet. Try the [Wallet page](/wallet) directly.';
+      suggestions = ['Show my profile', 'What can you do?', 'How do fees work?'];
+    }
   }
 
-  // --- My tasks / jobs
-  else if ((lower.includes('task') || lower.includes('job') || lower.includes('create')) &&
+  // --- My tasks
+  else if ((lower.includes('task') || lower.includes('job') || lower.includes('created')) &&
            (lower.includes('my') || lower.includes('how many') || lower.includes('list') || lower.includes('show'))) {
     try {
       const tasks = await prisma.task.findMany({
         where: { creatorId: userId },
         orderBy: { createdAt: 'desc' },
         take: 10,
-        select: { id: true, title: true, status: true, reward: true, createdAt: true, _count: { select: { submissions: true } } },
+        select: { id: true, title: true, status: true, reward: true, _count: { select: { submissions: true } } },
       });
       if (tasks.length === 0) {
-        answer = "You haven't created any tasks yet. Head to the Create Job page to post your first task -- it takes less than 2 minutes.";
+        answer = 'Hey ' + userName + '! You haven\'t created any tasks yet. [Create your first task here](/create) -- it takes less than 2 minutes.';
+        suggestions = ['How do I create a task?', 'What categories are there?', 'Show my wallet'];
       } else {
         const openTasks = tasks.filter(t => t.status === 'OPEN').length;
         const closedTasks = tasks.filter(t => t.status === 'CLOSED').length;
-        answer = 'You have created ' + tasks.length + ' task' + (tasks.length !== 1 ? 's' : '') + ' in total. ';
-        answer += openTasks + ' are currently open and ' + closedTasks + ' are closed.\n\n';
+        answer = 'Hey ' + userName + '! You\'ve created **' + tasks.length + ' task' + (tasks.length !== 1 ? 's' : '') + '** (' + openTasks + ' open, ' + closedTasks + ' closed).\n\n';
         const recent = tasks.slice(0, 3);
-        answer += 'Recent tasks:\n';
         recent.forEach((t, i) => {
-          answer += (i + 1) + '. "' + (t.title || 'Untitled') + '" -- ' + (t.status === 'OPEN' ? 'Filling' : 'Closed') + ' | Reward: ' + fmtNgn(Number(t.reward)) + ' | ' + t._count.submissions + ' submission' + (t._count.submissions !== 1 ? 's' : '') + '\n';
+          answer += (i + 1) + '. **"' + (t.title || 'Untitled') + '"** -- ' + (t.status === 'OPEN' ? 'Filling' : 'Closed') + ' | ' + fmtNgn(Number(t.reward)) + ' | ' + t._count.submissions + ' submission' + (t._count.submissions !== 1 ? 's' : '') + '\n';
         });
-        if (tasks.length > 3) answer += '...and ' + (tasks.length - 3) + ' more. View all on your dashboard.';
+        if (tasks.length > 3) answer += '...and ' + (tasks.length - 3) + ' more.\n\n';
+        answer += '[View all on dashboard](/dashboard) | [Create a new task](/create)';
       }
-    } catch { answer = "I couldn't load your tasks right now. Please check your dashboard."; }
+      suggestions = ['Show my submissions', 'What\'s my balance?', 'Create a task'];
+    } catch {
+      answer = 'Sorry ' + userName + ', I couldn\'t load your tasks. [Check your dashboard](/dashboard).';
+      suggestions = ['What can you do?', 'Show my profile'];
+    }
   }
 
-  // --- My submissions / work I applied to
-  else if ((lower.includes('submission') || lower.includes('applied') || lower.includes('work') || lower.includes('earn')) &&
+  // --- My submissions
+  else if ((lower.includes('submission') || lower.includes('applied') || lower.includes('work') || lower.includes('completed')) &&
            (lower.includes('my') || lower.includes('how many') || lower.includes('show') || lower.includes('list'))) {
     try {
       const submissions = await prisma.taskSubmission.findMany({
         where: { workerId: userId },
         orderBy: { createdAt: 'desc' },
         take: 10,
-        include: { task: { select: { title: true, reward: true } } },
+        include: { task: { select: { title: true } } },
       });
       if (submissions.length === 0) {
-        answer = "You haven't applied to any tasks yet. Browse the tasks page to find work that matches your skills.";
+        answer = 'Hey ' + userName + '! You haven\'t applied to any tasks yet. [Browse available tasks](/tasks) to find work.';
+        suggestions = ['Show my wallet', 'What\'s my balance?', 'How do I earn?'];
       } else {
         const approved = submissions.filter(s => s.status === 'APPROVED').length;
         const pending = submissions.filter(s => s.status === 'PENDING').length;
         const rejected = submissions.filter(s => s.status === 'REJECTED').length;
-        answer = 'You have made ' + submissions.length + ' submission' + (submissions.length !== 1 ? 's' : '') + '. ';
-        answer += approved + ' approved, ' + pending + ' pending review, ' + rejected + ' rejected.\n\n';
+        answer = 'Hey ' + userName + '! You\'ve made **' + submissions.length + ' submission' + (submissions.length !== 1 ? 's' : '') + '**:\n';
+        answer += 'Approved: ' + approved + ' | Pending: ' + pending + ' | Rejected: ' + rejected + '\n\n';
         const recent = submissions.slice(0, 3);
-        answer += 'Recent:\n';
         recent.forEach((s, i) => {
           answer += (i + 1) + '. "' + (s.task?.title || 'Task') + '" -- ' + s.status + '\n';
         });
-        if (submissions.length > 3) answer += '...and ' + (submissions.length - 3) + ' more.';
+        if (submissions.length > 3) answer += '...and ' + (submissions.length - 3) + ' more.\n\n';
+        answer += '[View all submissions](/my-tasks) | [Browse more tasks](/tasks)';
       }
-    } catch { answer = "I couldn't load your submissions right now. Check your dashboard."; }
+      suggestions = ['Show my tasks', 'What\'s my balance?', 'How do fees work?'];
+    } catch {
+      answer = 'Sorry ' + userName + ', I couldn\'t load your submissions. [Check your dashboard](/dashboard).';
+      suggestions = ['What can you do?', 'Show my profile'];
+    }
   }
 
-  // --- My store / products
-  else if ((lower.includes('store') || lower.includes('product') || lower.includes('selling') || lower.includes('my item')) &&
+  // --- My store
+  else if ((lower.includes('store') || lower.includes('product') || lower.includes('selling')) &&
            (lower.includes('my') || lower.includes('how many') || lower.includes('show'))) {
     try {
       const items = await prisma.storeItem.findMany({
@@ -396,21 +421,26 @@ router.post('/chat', authenticate, async (req, res) => {
         select: { id: true, name: true, price: true, isActive: true, _count: { select: { purchases: true } } },
       });
       if (items.length === 0) {
-        answer = 'Your store is empty. Go to My Store to add your first product and start selling to the OgaPay community.';
+        answer = 'Hey ' + userName + '! Your store is empty. [Add your first product](/mystore) and start selling.';
+        suggestions = ['How do I list a product?', 'Show my wallet', 'What can you do?'];
       } else {
         const active = items.filter(i => i.isActive).length;
         const totalSales = items.reduce((sum, i) => sum + i._count.purchases, 0);
-        answer = 'You have ' + items.length + ' product' + (items.length !== 1 ? 's' : '') + ' in your store (' + active + ' active). ';
-        answer += 'Total sales across all items: ' + totalSales + '.\n\nYour products:\n';
+        answer = 'Hey ' + userName + '! You have **' + items.length + ' product' + (items.length !== 1 ? 's' : '') + '** (' + active + ' active) with **' + totalSales + ' total sale' + (totalSales !== 1 ? 's' : '') + '**.\n\n';
         items.slice(0, 5).forEach((item, i) => {
-          answer += (i + 1) + '. "' + item.name + '" -- ' + fmtNgn(Number(item.price)) + ' | ' + item._count.purchases + ' sale' + (item._count.purchases !== 1 ? 's' : '') + '\n';
+          answer += (i + 1) + '. **"' + item.name + '"** -- ' + fmtNgn(Number(item.price)) + '\n';
         });
+        answer += '\n[Manage your store](/mystore) | [Browse the store](/store)';
       }
-    } catch { answer = "I couldn't load your store items. Check your My Store page."; }
+      suggestions = ['Show my tasks', 'Show my wallet', 'How do I price my product?'];
+    } catch {
+      answer = 'Sorry ' + userName + ', I couldn\'t load your store. [Check your My Store page](/mystore).';
+      suggestions = ['What can you do?', 'Show my profile'];
+    }
   }
 
-  // --- My profile / account
-  else if (lower.includes('profile') || lower.includes('account') || lower.includes('kyc') || lower.includes('verify') || lower.includes('who am i') || lower.includes('whoami')) {
+  // --- My profile
+  else if (lower.includes('profile') || lower.includes('account') || lower.includes('who am i') || lower.includes('whoami') || lower.includes('about me')) {
     try {
       const user = await prisma.user.findUnique({
         where: { id: userId },
@@ -418,81 +448,102 @@ router.post('/chat', authenticate, async (req, res) => {
       });
       if (user) {
         const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.username || 'User';
-        answer = 'You are logged in as ' + name + ' (@' + (user.username || 'unknown') + ').\n';
-        answer += 'Email: ' + (user.email || 'Not provided') + '\n';
-        answer += 'KYC Status: ' + (user.kycStatus || 'Not verified') + '\n';
-        answer += 'Role: ' + (user.role || 'User') + '\n';
-        answer += 'Member since: ' + (user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A') + '\n\n';
-        if (user.kycStatus !== 'APPROVED') {
-          answer += 'Tip: Complete KYC verification in your Profile settings to unlock higher limits and build trust.';
-        }
+        answer = 'Hey ' + userName + '! Here\'s your profile:\n\n';
+        answer += '**Name:** ' + name + '\n';
+        answer += '**Username:** @' + (user.username || 'unknown') + '\n';
+        answer += '**Email:** ' + (user.email || 'Not provided') + '\n';
+        answer += '**KYC:** ' + (user.kycStatus || 'Not verified') + '\n';
+        answer += '**Role:** ' + (user.role || 'User') + '\n';
+        answer += '**Member since:** ' + (user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A') + '\n\n';
+        if (user.kycStatus !== 'APPROVED') answer += 'Tip: [Complete KYC verification](/settings) to unlock higher limits.\n';
+        answer += '\n[Edit profile](/profile) | [View settings](/settings)';
       } else {
-        answer = "I couldn't find your profile information.";
+        answer = 'Sorry ' + userName + ', I couldn\'t find your profile.';
       }
-    } catch { answer = 'I had trouble fetching your profile. Please check your settings.'; }
+      suggestions = ['Show my wallet', 'What\'s my balance?', 'Show my tasks'];
+    } catch {
+      answer = 'Sorry ' + userName + ', I had trouble fetching your profile.';
+      suggestions = ['What can you do?', 'Show my wallet'];
+    }
   }
 
-  // --- My earnings / analytics
-  else if (lower.includes('earning') || lower.includes('made') || lower.includes('income') || lower.includes('payout') || lower.includes('analytics')) {
+  // --- My earnings
+  else if (lower.includes('earning') || lower.includes('made') || lower.includes('income') || lower.includes('payout')) {
     try {
-      const approved = await prisma.taskSubmission.findMany({
-        where: { workerId: userId, status: 'APPROVED' },
-        select: { id: true },
-      });
-      const totalEarned = approved.length;
+      const approved = await prisma.taskSubmission.count({ where: { workerId: userId, status: 'APPROVED' } });
       const wallet = await prisma.wallet.findUnique({ where: { userId } });
-      answer = 'You have completed ' + totalEarned + ' task' + (totalEarned !== 1 ? 's' : '') + ' successfully.';
-      if (wallet) {
-        const bal = Number(wallet.balance || 0);
-        answer += ' Your current wallet balance is ' + fmtNgn(bal) + ' ready for withdrawal.';
-      }
-      answer += ' Keep working to grow your earnings!';
-    } catch { answer = "I couldn't load your earnings data right now."; }
+      answer = 'Hey ' + userName + '! You\'ve completed **' + approved + ' task' + (approved !== 1 ? 's' : '') + '** successfully.';
+      if (wallet) answer += ' Your balance is ' + fmtNgn(Number(wallet.balance || 0)) + '.';
+      answer += '\n\n[View your wallet](/wallet) | [Browse more tasks](/tasks)';
+      suggestions = ['Show my submissions', 'Show my wallet', 'How do fees work?'];
+    } catch {
+      answer = 'Sorry ' + userName + ', I couldn\'t load your earnings.';
+      suggestions = ['What can you do?', 'Show my profile'];
+    }
   }
 
-  // --- What can you do?
-  else if (lower.includes('what can you') || lower.includes('help') || lower.includes('capabilities') || lower.includes('what do you')) {
-    answer = "I can help you with:\n" +
-      '* Check your **wallet balance** -- try "What\'s my balance?"\n' +
-      '* View your **tasks** -- "Show my tasks"\n' +
-      '* Check your **submissions** -- "How many tasks have I applied to?"\n' +
-      '* View your **store products** -- "Show my store items"\n' +
-      '* Check your **profile** -- "Who am I?"\n' +
-      '* View **earnings** -- "How much have I earned?"\n' +
-      '\n' +
-      'I can also answer general questions about fees, payments, disputes, KYC, and how OgaPay works.';
+  // --- Help / capabilities
+  else if (lower.includes('what can you') || lower.includes('help') || lower.includes('capabilities') || lower.includes('what do you') || lower.includes('commands')) {
+    answer = 'Hey ' + userName + '! I\'m your OgaPay assistant. Here\'s what I can do:\n\n';
+    answer += '* **"What\'s my balance?"** -- Check your wallet\n';
+    answer += '* **"Show my tasks"** -- View your created jobs\n';
+    answer += '* **"My submissions"** -- See your applied work\n';
+    answer += '* **"Show my store"** -- Check your products\n';
+    answer += '* **"Who am I?"** -- View your profile\n';
+    answer += '* **"How much have I earned?"** -- Track earnings\n';
+    answer += '* **"How do fees work?"** -- Platform fees explained\n';
+    answer += '* **"What is KYC?"** -- Verification info\n';
+    answer += '\n[Browse tasks](/tasks) | [Create a job](/create) | [My dashboard](/dashboard)';
+    suggestions = ['What\'s my balance?', 'Show my tasks', 'Who am I?'];
   }
 
-  // --- General FAQ (non-personalized)
-  else if (lower.includes('refund') || lower.includes('cancel')) {
-    answer = 'Refunds and cancellations are handled on a case-by-case basis. Please contact our support team through the Support page with your order details and we will assist you within 24 hours.';
-  } else if (lower.includes('how long') || lower.includes('delivery') || lower.includes('shipping')) {
-    answer = 'Delivery times vary by service category. Most digital services are delivered within 1-14 days as specified in the product listing. If you need faster delivery, check with the seller before placing your order.';
+  // --- Greetings
+  else if (lower.includes('hello') || lower.includes('hi ') || lower.includes('hey') || lower.includes('good morning') || lower.includes('good evening') || lower.includes('sup')) {
+    answer = 'Hey ' + userName + '! ' + randomGreeting() + ' I\'m your OgaPay assistant. Try **"What can you do?"** to see how I can help, or ask me about your wallet, tasks, or profile.';
+    suggestions = ['What can you do?', 'What\'s my balance?', 'Show my tasks'];
+  }
+
+  // General FAQ
+  else if (lower.includes('fee') || lower.includes('commission') || lower.includes('charge')) {
+    answer = 'OgaPay charges a **10% platform fee** on completed transactions. This covers payment processing, dispute resolution, and platform maintenance. There are no fees for browsing, listing, or messaging.\n\n[Create a task](/create) | [Browse tasks](/tasks)';
+    suggestions = ['What is KYC?', 'How do payments work?', 'Show my wallet'];
+  } else if (lower.includes('kyc') || lower.includes('verify') || lower.includes('identity') || lower.includes('veryai')) {
+    answer = '**KYC (Know Your Customer)** verifies your identity on OgaPay. While not required for all features, verified users get higher transaction limits. VeryAI is our biometric verification partner for human-only verification.\n\n[Complete KYC](/settings) | [View my profile](/profile)';
+    suggestions = ['Who am I?', 'What can you do?', 'How do fees work?'];
   } else if (lower.includes('payment') || lower.includes('pay') || lower.includes('fund')) {
-    answer = 'OgaPay supports payments in NGN, USDC, and SOL. Funds are held in escrow and released to the seller once you confirm satisfaction with the delivered work. This protects both buyers and sellers.';
+    answer = 'OgaPay supports **NGN, USDC, and SOL**. Funds are held in escrow and released once you confirm satisfaction. This protects both buyers and sellers.\n\n[Fund your wallet](/wallet) | [Create a task](/create)';
+    suggestions = ['How do fees work?', 'Show my wallet', 'What is KYC?'];
   } else if (lower.includes('dispute') || lower.includes('problem') || lower.includes('issue')) {
-    answer = "If you encounter any issues with an order, first communicate directly with the seller. If you can't resolve it, open a dispute through the order page within 7 days of delivery. Our moderation team will review both sides and make a fair decision.";
-  } else if (lower.includes('commission') || lower.includes('fee') || lower.includes('charge')) {
-    answer = 'OgaPay charges a 10% platform fee on completed transactions. This covers payment processing, dispute resolution, fraud protection, and platform maintenance. There are no fees for browsing, listing, or messaging.';
-  } else if (lower.includes('verify') || lower.includes('kyc') || lower.includes('identity') || lower.includes('veryai')) {
-    answer = 'Identity verification (KYC) is available in your Profile settings. While not required for all features, verified users get higher transaction limits and increased trust from potential buyers and sellers. VeryAI is our biometric verification partner for human-only verification.';
+    answer = 'If you have an issue with an order, first message the seller directly. If unresolved, open a dispute within **7 days** of delivery. Our team reviews both sides and makes a fair decision.\n\n[View my tasks](/tasks) | [Get support](/support)';
+    suggestions = ['Show my submissions', 'Show my wallet', 'What can you do?'];
+  } else if (lower.includes('refund') || lower.includes('cancel')) {
+    answer = 'Refunds and cancellations are handled case-by-case. Please [contact support](/support) with your order details and we\'ll assist within 24 hours.';
+    suggestions = ['Show my tasks', 'What can you do?', 'How do fees work?'];
   } else if (lower.includes('how to') || lower.includes('create task') || lower.includes('post a job') || lower.includes('hire')) {
-    answer = 'To create a task, go to the Create Job page. Choose a category (Social, Content, Design, etc.), set your budget and requirements, then publish. Workers will start applying within minutes.';
-  } else if (lower.includes('hello') || lower.includes('hi ') || lower.includes('hey') || lower.includes('good morning') || lower.includes('good evening')) {
-    answer = 'Hello! I am your OgaPay assistant. You can ask me about your balance, tasks, submissions, store items, or how things work. Try "What can you do?" to see all my capabilities.';
+    answer = 'To create a task, go to the [Create Job page](/create). Choose a category, set your budget and requirements, then publish. Workers will start applying within minutes.\n\nYou can also browse the [Worker Store](/store) to hire for specific services.';
+    suggestions = ['What categories are there?', 'How do fees work?', 'Show my tasks'];
+  } else if (lower.includes('how long') || lower.includes('delivery') || lower.includes('shipping')) {
+    answer = 'Delivery times vary by service category. Most digital services are delivered within **1-14 days**. Check the product listing for specific timelines.';
+    suggestions = ['How do fees work?', 'What is KYC?', 'What can you do?'];
   } else {
-    answer = "I'm not sure I understand. Try asking about:\n" +
-      '* Your **wallet balance** -- "What\'s my balance?"\n' +
-      '* Your **tasks** -- "Show my tasks"\n' +
-      '* Your **submissions** -- "My submissions"\n' +
-      '* Your **store** -- "My store products"\n' +
-      '* Your **profile** -- "Who am I?"\n' +
-      '* General info -- "How do fees work?" or "What is KYC?"\n\n' +
-      'Or type "What can you do?" for the full list.';
+    answer = 'Hey ' + userName + ', I\'m not sure I understand. Try one of these:\n\n';
+    answer += '* **"What\'s my balance?"**\n';
+    answer += '* **"Show my tasks"**\n';
+    answer += '* **"My submissions"**\n';
+    answer += '* **"Who am I?"**\n';
+    answer += '* **"What can you do?"**\n';
+    answer += '* **"How do fees work?"**\n';
+    answer += '\nOr type **"What can you do?"** for the full list.';
+    suggestions = ['What can you do?', 'What\'s my balance?', 'Show my tasks'];
   }
 
-  successResponse(res, { answer }, 'Chat response generated');
+  successResponse(res, { userName, answer, suggestions }, 'Chat response generated');
 });
+
+function randomGreeting() {
+  const g = ['Welcome back!', 'Good to see you!', 'Great to have you here!', 'How\'s it going?', 'What can I help you with today?'];
+  return g[Math.floor(Math.random() * g.length)];
+}
 
 
 module.exports = router;
