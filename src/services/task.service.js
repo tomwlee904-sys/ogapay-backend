@@ -8,7 +8,7 @@ const { logger } = require('../utils/logger');
 // ── Create Task ────────────────────────────────
 
 const createTask = async (posterId, taskData) => {
-  const { reward, currency, maxWorkers, title, description, category, instructions, deadline, proofRequired, tags, estimatedTime, status: _, ...extra } = taskData;
+  const { reward, currency, maxWorkers, title, description, category, instructions, deadline, proofRequired, tags, estimatedTime, trackingCode, status: _, ...extra } = taskData;
 
   // Lock the worker rewards in escrow and charge the platform fee once.
   const taskSubtotal = reward * maxWorkers;
@@ -36,6 +36,7 @@ const createTask = async (posterId, taskData) => {
         ...(taskData.requiresLinkedin !== undefined && { requiresLinkedin: taskData.requiresLinkedin }),
         ...(taskData.requiresWallet !== undefined && { requiresWallet: taskData.requiresWallet }),
         ...(taskData.workerRequirement && { workerRequirement: taskData.workerRequirement }),
+        ...(trackingCode && { trackingCode }),
         status: 'OPEN',
         escrowed: true,
         escrowTxId: escrowResult.txId,

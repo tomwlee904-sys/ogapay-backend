@@ -383,6 +383,7 @@ model Task {
   featured              Boolean        @default(false)
   cooldownStartedAt     DateTime?      @map("cooldown_started_at")
   cooldownDurationHours Int            @default(24) @map("cooldown_duration_hours")
+  trackingCode          String?        @map("tracking_code")
   minSorsaScore         Int            @default(0) @map("min_sorsa_score")
   requiresLinkedin      Boolean        @default(false) @map("requires_linkedin")
   requiresWallet        Boolean        @default(false) @map("requires_wallet")
