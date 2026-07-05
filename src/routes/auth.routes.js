@@ -171,7 +171,7 @@ router.get('/me', authenticate, async (req, res) => {
       walletAddress: safeUser.walletAddress || null, walletProvider: safeUser.walletProvider || null,
       walletConnectedAt: safeUser.walletConnectedAt ? safeUser.walletConnectedAt.toISOString() : null,
       referralCode: safeUser.referralCode, isEmailVerified: safeUser.isEmailVerified,
-      kycStatus: kyc?.status || null, onboardingComplete: safeUser.onboardingComplete || false,
+      kycStatus: kyc?.status || null, phone: safeUser.phone || null, isPhoneVerified: safeUser.isPhoneVerified || false, onboardingComplete: safeUser.onboardingComplete || false,
       wallet: walletMap, bankAccount, onboarding, _count: user._count, createdAt: safeUser.createdAt,
     };
     return res.json({ success: true, user: response });

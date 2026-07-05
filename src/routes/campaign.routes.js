@@ -4,6 +4,53 @@ const express = require('express');
 const { authenticate } = require('../middleware/auth.middleware');
 const { successResponse, ApiError } = require('../utils/apiResponse');
 const Groq = require('groq-sdk');
+const prisma = require("../lib/prisma");
+
+// GET /api/v1/campaigns/qualification — Pre-qualification check before campaign creation
+router.get("/qualification", authenticate, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        isEmailVerified: true,
+        isPhoneVerified: true,
+        walletAddress: true,
+        phone: true,
+        createdAt: true,
+        kyc: { select: { status: true } },
+      },
+    });
+    if (!user) throw new ApiError(404, "User not found");
+
+    const accountAgeDays = Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+    const kycStatus = user.kyc?.status || null;
+
+    const checks = {
+      kycVerified: kycStatus === "APPROVED",
+      emailConfirmed: user.isEmailVerified,
+      walletConnected: !!user.walletAddress,
+      accountAgeMet: accountAgeDays >= 7,
+      phoneVerified: user.isPhoneVerified,
+    };
+
+    const allPassed = Object.values(checks).every(Boolean);
+
+    const details = {
+      kyc: { status: kycStatus, passed: checks.kycVerified, actionUrl: "/settings?tab=kyc" },
+      email: { verified: user.isEmailVerified, passed: checks.emailConfirmed, actionUrl: "/settings?tab=account" },
+      wallet: { connected: !!user.walletAddress, passed: checks.walletConnected, actionUrl: "/wallet" },
+      accountAge: { days: accountAgeDays, passed: checks.accountAgeMet, actionUrl: null },
+      phone: { verified: user.isPhoneVerified, passed: checks.phoneVerified, actionUrl: "/settings?tab=account" },
+    };
+
+    successResponse(res, { checks, allPassed, details });
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    console.error("[Qualification Error]", err.message);
+    throw new ApiError(500, "Failed to check qualification status");
+  }
+});
+
 
 const router = express.Router();
 
@@ -213,6 +260,44 @@ router.post('/rewrite', authenticate, async (req, res) => {
   } catch (err) {
     if (err instanceof ApiError) throw err;
     throw new ApiError(500, 'Failed to rewrite campaign');
+  }
+});
+
+// GET /api/v1/campaigns/qualification — Pre-qualification check before campaign creation
+        walletAddress: true,
+        phone: true,
+        createdAt: true,
+        kyc: { select: { status: true } },
+      },
+    });
+    if (!user) throw new ApiError(404, "User not found");
+
+    const accountAgeDays = Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+    const kycStatus = user.kyc?.status || null;
+
+    const checks = {
+      kycVerified: kycStatus === "APPROVED",
+      emailConfirmed: user.isEmailVerified,
+      walletConnected: !!user.walletAddress,
+      accountAgeMet: accountAgeDays >= 7,
+      phoneVerified: user.isPhoneVerified,
+    };
+
+    const allPassed = Object.values(checks).every(Boolean);
+
+    const details = {
+      kyc: { status: kycStatus, passed: checks.kycVerified, actionUrl: "/settings?tab=kyc" },
+      email: { verified: user.isEmailVerified, passed: checks.emailConfirmed, actionUrl: "/settings?tab=account" },
+      wallet: { connected: !!user.walletAddress, passed: checks.walletConnected, actionUrl: "/wallet" },
+      accountAge: { days: accountAgeDays, passed: checks.accountAgeMet, actionUrl: null },
+      phone: { verified: user.isPhoneVerified, passed: checks.phoneVerified, actionUrl: "/settings?tab=account" },
+    };
+
+    successResponse(res, { checks, allPassed, details });
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    console.error("[Qualification Error]", err.message);
+    throw new ApiError(500, "Failed to check qualification status");
   }
 });
 
