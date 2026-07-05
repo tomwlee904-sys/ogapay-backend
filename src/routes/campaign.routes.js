@@ -139,7 +139,7 @@ router.post('/generate', authenticate, async (req, res) => {
     const platform = campaignData?.campaign?.platform || 'Default';
     const rewards = REWARD_RANGES[platform] || REWARD_RANGES['Default'];
 
-    res.json(successResponse({
+    successResponse(res, {
       message: message || 'Here\'s your campaign plan!',
       campaign: campaignData?.campaign || null,
       rewardBreakdown: campaignData?.rewardBreakdown || rewards,
@@ -147,7 +147,7 @@ router.post('/generate', authenticate, async (req, res) => {
       warnings: campaignData?.warnings || [],
       nextQuestions: campaignData?.nextQuestions || [],
       draftId: newDraftId,
-    }));
+    });
   } catch (err) {
     if (err instanceof ApiError) throw err;
     console.error('[Campaign AI Error]', err.message);
@@ -206,10 +206,10 @@ router.post('/rewrite', authenticate, async (req, res) => {
     // Update draft
     campaignDrafts.set(`${userId}:${draftId}`, { ...draft, ...campaignData.campaign });
 
-    res.json(successResponse({
+    successResponse(res, {
       campaign: campaignData.campaign,
       message: `Campaign rewritten in ${style} style!`,
-    }));
+    });
   } catch (err) {
     if (err instanceof ApiError) throw err;
     throw new ApiError(500, 'Failed to rewrite campaign');
