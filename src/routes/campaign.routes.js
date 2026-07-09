@@ -4,7 +4,7 @@ const express = require('express');
 const { authenticate } = require('../middleware/auth.middleware');
 const { successResponse, ApiError } = require('../utils/apiResponse');
 const Groq = require('groq-sdk');
-const prisma = require("../lib/prisma");
+const { prisma } = require("../config/database");
 
 const router = express.Router();
 
