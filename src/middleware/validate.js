@@ -45,7 +45,7 @@ const refreshTokenSchema = z.object({
 
 const createTaskSchema = z.object({
   title: z.string().min(5).max(200),
-  description: z.string().min(20),
+  description: z.string().min(20).max(10000),
   category: z.enum([
     'SOCIAL_MEDIA', 'DATA_ENTRY', 'CONTENT_WRITING', 'APP_TESTING',
     'SURVEY', 'DESIGN', 'TRANSLATION', 'WEB_RESEARCH', 'VIDEO_REVIEW', 'OTHER',
@@ -58,8 +58,15 @@ const createTaskSchema = z.object({
   proofRequired: z.string().optional(),
   tags: z.array(z.string()).max(5).optional(),
   estimatedTime: z.number().int().min(1).max(10080).optional(),
+  // Worker level needed: 1 Beginner … 5 Legend (higher values count as Legend)
   minRank: z.number().int().min(0).max(100).optional(),
-  workerRequirement: z.string().optional(),
+  // KYC and HUMAN are enforced when applying; other text is shown but not checked
+  workerRequirement: z.string().max(200).optional(),
+  minSorsaScore: z.number().int().min(0).max(100).optional(),
+  requiresWallet: z.boolean().optional(),
+  requiresX: z.boolean().optional(),
+  trackingCode: z.string().trim().max(64).optional(),
+  attachments: z.array(z.string().url().max(2048)).max(10).optional(),
 }).superRefine((data, ctx) => {
   if (data.currency === 'NGN' && data.reward < 50) {
     ctx.addIssue({ code: 'custom', message: 'Minimum reward is 50 NGN', path: ['reward'] });

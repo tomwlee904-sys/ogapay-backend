@@ -8,7 +8,7 @@ const { logger } = require('../utils/logger');
 // ── Create Task ────────────────────────────────
 
 const createTask = async (posterId, taskData) => {
-  const { reward, currency, maxWorkers, title, description, category, instructions, deadline, proofRequired, tags, estimatedTime, trackingCode, status: _, ...extra } = taskData;
+  const { reward, currency, maxWorkers, title, description, category, instructions, deadline, proofRequired, tags, estimatedTime, trackingCode, attachments, status: _, ...extra } = taskData;
 
   // Lock the worker rewards in escrow and charge the platform fee once, in the
   // same transaction as the task insert: if anything below fails, no money moves.
@@ -39,6 +39,8 @@ const createTask = async (posterId, taskData) => {
         ...(taskData.requiresWallet !== undefined && { requiresWallet: taskData.requiresWallet }),
         ...(taskData.workerRequirement && { workerRequirement: taskData.workerRequirement }),
         ...(trackingCode && { trackingCode }),
+        ...(taskData.requiresX !== undefined && { requiresX: taskData.requiresX }),
+        ...(attachments?.length && { attachments }),
         status: 'OPEN',
         escrowed: true,
         escrowTxId: escrowResult.txId,
@@ -194,16 +196,56 @@ const getTask = async (taskId, userId) => {
 
 // ── Apply to Task ──────────────────────────────
 
+// ── Job requirements ───────────────────────────
+
+const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT', 'LEGEND'];
+const LEVEL_NAMES = ['Beginner', 'Intermediate', 'Advanced', 'Expert', 'Legend'];
+
+// Refuse an application when the worker doesn't meet what the poster asked for,
+// and say exactly what's missing.
+const checkWorkerRequirements = async (task, workerId) => {
+  const needRank = Math.min(Number(task.minRank) || 0, 5);
+  const needScore = Number(task.minSorsaScore) || 0;
+  if (!task.workerRequirement && needRank <= 1 && needScore <= 0 && !task.requiresWallet && !task.requiresX) return;
+
+  const worker = await prisma.user.findUnique({
+    where: { id: workerId },
+    select: {
+      humanVerifiedAt: true,
+      ogaScore: true,
+      walletAddress: true,
+      twitterOAuthConnected: true,
+      kyc: { select: { status: true } },
+      workerProfile: { select: { level: true } },
+      wallets: { where: { currency: 'SOL', walletAddress: { not: null } }, select: { id: true }, take: 1 },
+    },
+  });
+
+  const missing = [];
+  let fixInSettings = false;
+  const need = (text, settable) => { missing.push(text); fixInSettings = fixInSettings || settable; };
+  if (task.workerRequirement === 'KYC' && worker?.kyc?.status !== 'APPROVED') need('verified KYC', true);
+  if (task.workerRequirement === 'HUMAN' && !worker?.humanVerifiedAt) need('human verification with VeryAI', true);
+  if (needScore > 0 && (worker?.ogaScore || 0) < needScore) need(`an OgaScore of ${needScore} (yours is ${worker?.ogaScore || 0})`, false);
+  if (task.requiresWallet && !worker?.walletAddress && !worker?.wallets?.length) need('a connected Solana wallet', true);
+  if (task.requiresX && !worker?.twitterOAuthConnected) need('a connected X account', true);
+  if (needRank > 1) {
+    const have = Math.max(0, LEVELS.indexOf(worker?.workerProfile?.level || 'BEGINNER')) + 1;
+    if (have < needRank) need(`${LEVEL_NAMES[needRank - 1]} rank or higher (you're ${LEVEL_NAMES[have - 1]})`, false);
+  }
+
+  if (missing.length) {
+    throw ApiError.forbidden(`This job needs ${missing.join(', ')}.${fixInSettings ? ' You can set these up in Settings.' : ''}`);
+  }
+};
+
 const applyToTask = async (workerId, taskId) => {
   const task = await prisma.task.findUnique({ where: { id: taskId } });
   if (!task) throw ApiError.notFound('Task not found');
   if (task.status !== 'OPEN') throw ApiError.badRequest(`Task is ${task.status.toLowerCase()}, not accepting applications`);
   if (task.expiresAt && new Date(task.expiresAt) < new Date()) throw ApiError.badRequest('Task has expired');
   if (task.posterId === workerId) throw ApiError.badRequest('You cannot apply to your own task');
-  if (task.workerRequirement === 'HUMAN') {
-    const worker = await prisma.user.findUnique({ where: { id: workerId }, select: { humanVerifiedAt: true } });
-    if (!worker?.humanVerifiedAt) throw ApiError.forbidden('This job is only for human-verified workers. Verify with VeryAI in Settings, then apply.');
-  }
+  await checkWorkerRequirements(task, workerId);
 
   const submission = await prisma.$transaction(async (db) => {
     // Atomic capacity check inside the transaction
