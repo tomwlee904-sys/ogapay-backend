@@ -14,7 +14,7 @@ async function findUserByIdentity(identity) {
       id: true, email: true, role: true,
       firstName: true, lastName: true, username: true,
       avatarUrl: true, isBanned: true, isEmailVerified: true,
-      kyc: { select: { status: true } },
+      kyc: { select: { status: true, kycTier: true } },
     },
   });
 }
@@ -38,7 +38,7 @@ const authenticate = async (req, res, next) => {
         id: true, email: true, role: true,
         firstName: true, lastName: true, username: true,
         avatarUrl: true, isBanned: true, isEmailVerified: true,
-        kyc: { select: { status: true } },
+        kyc: { select: { status: true, kycTier: true } },
         wallets: { select: { id: true, currency: true, walletAddress: true, isActive: true } },
       },
     });
@@ -58,7 +58,7 @@ const authenticate = async (req, res, next) => {
               id: true, email: true, role: true,
               firstName: true, lastName: true, username: true,
               avatarUrl: true, isBanned: true, isEmailVerified: true,
-              kyc: { select: { status: true } },
+              kyc: { select: { status: true, kycTier: true } },
               wallets: { select: { id: true, currency: true, walletAddress: true, isActive: true } },
             },
           });
@@ -131,7 +131,7 @@ const optionalAuth = async (req, res, next) => {
         id: true, email: true, role: true,
         firstName: true, lastName: true, username: true,
         avatarUrl: true, isBanned: true, isEmailVerified: true,
-        kyc: { select: { status: true } },
+        kyc: { select: { status: true, kycTier: true } },
       },
     });
   } catch { /* not a backend JWT */ }
@@ -147,7 +147,7 @@ const optionalAuth = async (req, res, next) => {
             id: true, email: true, role: true,
             firstName: true, lastName: true, username: true,
             avatarUrl: true, isBanned: true, isEmailVerified: true,
-            kyc: { select: { status: true } },
+            kyc: { select: { status: true, kycTier: true } },
           },
         });
       }
