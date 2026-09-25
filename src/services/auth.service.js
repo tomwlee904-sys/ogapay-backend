@@ -10,6 +10,8 @@ const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
 const { sendEmail, buildVerificationEmail, buildPasswordResetEmail } = require('./email.service');
 const { recordReferralSignup } = require('./referral.service');
+const nacl = require('tweetnacl');
+const bs58 = require('bs58').default;
 
 const twoFactorService = require('./2fa.service');
 
@@ -449,4 +451,97 @@ const verify2FAChallenge = async (userId, challengeToken, twoFactorCode) => {
   return { user: sanitizeUser(user), tokens };
 };
 
-module.exports = { register, login, googleExchange, refreshTokens, logout, forgotPassword, resetPassword, changePassword, verify2FAChallenge };
+// ── Sign in with a wallet or a pairing code ─────
+
+// Same outcome as a password login: a 2FA challenge when the account has 2FA
+// on (unless skipped), otherwise a session.
+const startSession = async (user, ipAddress, userAgent, { skipTwoFactor = false } = {}) => {
+  if (user.isBanned) throw ApiError.forbidden('Account has been banned. Contact support.');
+
+  await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+
+  if (user.isTwoFactorEnabled && !skipTwoFactor) {
+    const challengeToken = crypto.randomBytes(32).toString('hex');
+    const challengeExpiry = new Date(Date.now() + 5 * 60 * 1000);
+    await prisma.twoFactorChallenge.upsert({
+      where: { userId: user.id },
+      create: { userId: user.id, token: challengeToken, expiresAt: challengeExpiry },
+      update: { token: challengeToken, expiresAt: challengeExpiry },
+    });
+    return { requiresTwoFactor: true, challengeToken, userId: user.id };
+  }
+
+  const tokens = generateTokenPair(user);
+  await saveRefreshToken(user.id, tokens.refreshToken, ipAddress, userAgent);
+  return { user: sanitizeUser(user), tokens };
+};
+
+// The user signs the message from POST /wallet/nonce. Only wallets linked with
+// a signature (POST /wallet/verify, stored on the SOL wallet record) can sign
+// in; addresses typed in without proof (users.wallet_address) are not trusted.
+const walletLogin = async ({ wallet, signature }, ipAddress, userAgent) => {
+  const w = String(wallet || '').trim();
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(w) || !signature) {
+    throw ApiError.badRequest('wallet and signature required');
+  }
+
+  const stored = await prisma.walletNonce.findUnique({ where: { wallet: w } });
+  if (!stored || stored.expiresAt < new Date()) throw ApiError.badRequest('This sign-in request expired. Try again.');
+
+  const message = `Sign this message to verify your wallet.\n\nNonce: ${stored.nonce}`;
+  let verified = false;
+  try {
+    verified = nacl.sign.detached.verify(new TextEncoder().encode(message), bs58.decode(String(signature)), bs58.decode(w));
+  } catch {
+    verified = false;
+  }
+  if (!verified) throw ApiError.unauthorized('The wallet signature could not be verified');
+
+  // Single use: a replayed signature finds no nonce
+  const { count } = await prisma.walletNonce.deleteMany({ where: { wallet: w, nonce: stored.nonce } });
+  if (count === 0) throw ApiError.badRequest('This sign-in request was already used. Try again.');
+
+  const linked = await prisma.wallet.findMany({
+    where: { currency: 'SOL', walletAddress: w },
+    select: { userId: true },
+    take: 2,
+  });
+  if (linked.length === 0) {
+    throw ApiError.notFound('No OgaPay account uses this wallet yet. Sign in another way, then connect it in Settings.');
+  }
+  if (linked.length > 1) {
+    throw ApiError.conflict('This wallet is linked to more than one account. Sign in with email or Google.');
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: linked[0].userId } });
+  if (!user) throw ApiError.notFound('Account not found');
+
+  logger.info(`Wallet sign-in: ${user.email}`);
+  return startSession(user, ipAddress, userAgent);
+};
+
+// A signed-in device creates a code (POST /devices/pair/generate); the new
+// device exchanges it once, within 5 minutes, for its own session. The code
+// was issued to an already-verified session, so 2FA isn't asked again.
+const pairLogin = async ({ code }, ipAddress, userAgent) => {
+  const c = String(code || '').replace(/[\s-]/g, '').toUpperCase();
+  if (c.length !== 25) throw ApiError.badRequest('Enter the full 25-character pairing code');
+
+  const now = new Date();
+  const device = await prisma.device.findFirst({ where: { code: c, codeExpiresAt: { gte: now } } });
+  if (!device) throw ApiError.badRequest('Invalid or expired pairing code');
+
+  const { count } = await prisma.device.updateMany({
+    where: { id: device.id, code: c },
+    data: { code: null, codeExpiresAt: null, lastActiveAt: now, name: userAgent ? String(userAgent).slice(0, 190) : device.name },
+  });
+  if (count === 0) throw ApiError.badRequest('Invalid or expired pairing code');
+
+  const user = await prisma.user.findUnique({ where: { id: device.userId } });
+  if (!user) throw ApiError.notFound('Account not found');
+
+  logger.info(`Pairing sign-in: ${user.email}`);
+  return startSession(user, ipAddress, userAgent, { skipTwoFactor: true });
+};
+
+module.exports = { register, login, googleExchange, refreshTokens, logout, forgotPassword, resetPassword, changePassword, verify2FAChallenge, walletLogin, pairLogin };

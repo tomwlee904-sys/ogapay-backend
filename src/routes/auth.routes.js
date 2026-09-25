@@ -76,6 +76,18 @@ router.post('/login', validate(loginSchema), async (req, res) => {
   successResponse(res, result, 'Login successful');
 });
 
+// POST /api/v1/auth/wallet/login — sign the /wallet/nonce message with a linked wallet
+router.post('/wallet/login', async (req, res) => {
+  const result = await authService.walletLogin(req.body || {}, req.ip, req.headers['user-agent']);
+  successResponse(res, result, 'Signed in with wallet');
+});
+
+// POST /api/v1/auth/pair — sign in on a new device with a code from a signed-in one
+router.post('/pair', async (req, res) => {
+  const result = await authService.pairLogin(req.body || {}, req.ip, req.headers['user-agent']);
+  successResponse(res, result, 'Device paired and signed in');
+});
+
 // POST /api/v1/auth/refresh
 router.post('/refresh', validate(refreshTokenSchema), async (req, res) => {
   const result = await authService.refreshTokens(req.body.refreshToken);

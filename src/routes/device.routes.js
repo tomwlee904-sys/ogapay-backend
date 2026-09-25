@@ -17,9 +17,16 @@ router.get('/', authenticate, async (req, res) => {
   res.json({ success: true, data: devices });
 });
 
-// Generate a pairing code
+// 25 characters from a 32-letter alphabet without look-alikes (0/O, 1/I): 125 bits.
+// The code signs a new device in (POST /auth/pair), so it must not be guessable.
+const PAIR_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const newPairingCode = () => Array.from(crypto.randomBytes(25), (b) => PAIR_ALPHABET[b % 32]).join('');
+
+// Generate a pairing code (any earlier unused code of this user stops working)
 router.post('/pair/generate', authenticate, async (req, res) => {
-  const code = crypto.randomBytes(3).toString('hex').toUpperCase().slice(0, 6);
+  // Rows that still hold a code were never paired, so they can go
+  await prisma.device.deleteMany({ where: { userId: req.user.id, code: { not: null } } });
+  const code = newPairingCode();
   const codeExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
   const device = await prisma.device.create({
@@ -32,6 +39,12 @@ router.post('/pair/generate', authenticate, async (req, res) => {
   });
 
   res.json({ success: true, data: { code: device.code } });
+});
+
+// Cancel this user's active pairing code
+router.post('/pair/delete', authenticate, async (req, res) => {
+  const { count } = await prisma.device.deleteMany({ where: { userId: req.user.id, code: { not: null } } });
+  successResponse(res, { cancelled: count }, 'Pairing code deleted');
 });
 
 // Verify and link a device using a pairing code
