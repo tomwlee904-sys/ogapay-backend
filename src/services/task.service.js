@@ -772,7 +772,7 @@ const hireWorker = async (posterId, username, { title, brief, budget, deadline, 
     })).id;
     const files = (attachments || []).map((u) => `\n${u}`).join('');
     await prisma.message.create({
-      data: { conversationId, senderId: posterId, content: `Direct hire: ${task.title}\n\n${brief}${files}` },
+      data: { conversationId, senderId: posterId, content: `${title ? `Direct hire: ${title}` : 'Direct hire'}\n\n${brief}${files}` },
     });
     await prisma.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date() } });
   } catch (err) {

@@ -673,6 +673,7 @@ router.get('/mine/list', authenticate, async (req, res) => {
     description: m.community.description,
     accentColor: m.community.accentColor,
     iconUrl: m.community.iconUrl,
+    isPublic: m.community.isPublic,
     role: m.role,
     memberCount: m.community._count.members,
     joinedAt: m.createdAt,

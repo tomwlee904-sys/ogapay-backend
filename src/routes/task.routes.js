@@ -229,10 +229,14 @@ router.patch('/:id', authenticate, authorize('POSTER', 'ADMIN'), async (req, res
 router.delete('/:id', authenticate, authorize('POSTER', 'ADMIN'), async (req, res) => {
   try {
     const { prisma } = require('../config/database');
-    const task = await prisma.task.findUnique({ where: { id: req.params.id }, select: { posterId: true, status: true } });
+    const task = await prisma.task.findUnique({ where: { id: req.params.id }, select: { posterId: true, status: true, escrowed: true } });
     if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
     if (task.posterId !== req.user.id && req.user.role !== 'ADMIN') {
       return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    // Deleting a funded job would leave the poster's money locked: cancel it (refund) first
+    if (task.escrowed && !['CANCELLED', 'COMPLETED'].includes(task.status)) {
+      return res.status(409).json({ success: false, message: 'This job still holds escrow. Cancel it first to get the money back (POST /escrow/refund/:taskId).' });
     }
     await prisma.task.delete({ where: { id: req.params.id } });
     const { successResponse } = require('../utils/apiResponse');

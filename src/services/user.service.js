@@ -24,6 +24,9 @@ const getProfile = async (userId) => {
     passwordHash, twoFactorSecret, twoFactorBackupCodes,
     passwordResetToken, passwordResetTokenExpiry,
     emailVerificationToken, emailVerificationTokenExpiry,
+    // Third-party OAuth tokens are server-side only
+    linkedinOAuthToken, linkedinOAuthRefreshToken, githubOAuthToken,
+    twitterOAuthToken, twitterOAuthTokenSecret, googleOAuthToken, googleOAuthRefreshToken,
     ...safeUser
   } = user;
   return safeUser;

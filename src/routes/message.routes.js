@@ -77,8 +77,14 @@ router.post('/', authenticate, async (req, res) => {
   const userId = req.user.id;
   let { conversationId, recipientId, content } = req.body;
 
-  if (!content || !content.trim()) throw ApiError.badRequest('Message content is required');
+  if (!content || typeof content !== 'string' || !content.trim()) throw ApiError.badRequest('Message content is required');
+  if (content.length > 5000) throw ApiError.badRequest('Message is too long (5,000 characters max)');
   if (!conversationId && !recipientId) throw ApiError.badRequest('Provide conversationId or recipientId');
+  if (!conversationId) {
+    if (recipientId === userId) throw ApiError.badRequest('You cannot message yourself');
+    const recipient = await prisma.user.findUnique({ where: { id: String(recipientId) }, select: { isBanned: true } });
+    if (!recipient || recipient.isBanned) throw ApiError.notFound('User not found');
+  }
 
   let convId = conversationId;
 
