@@ -679,10 +679,26 @@ router.get('/mine/list', authenticate, async (req, res) => {
   })));
 });
 
+// ─── My pending invites ───────────────────────────────────────
+router.get('/invites/mine', authenticate, async (req, res) => {
+  const invites = await prisma.communityInvite.findMany({
+    where: { inviteeId: req.user.id, status: 'PENDING', expiresAt: { gt: new Date() } },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true, message: true, createdAt: true, expiresAt: true,
+      community: { select: { id: true, name: true, slug: true, coverImage: true, accentColor: true } },
+      inviter: { select: { username: true, avatarUrl: true } },
+    },
+  });
+  successResponse(res, invites);
+});
+
 // ─── Invite User ──────────────────────────────────────────────
 router.post('/:id/invite', authenticate, async (req, res) => {
-  const { inviteeId, email, message } = req.body;
-  if (!inviteeId && !email) throw ApiError.badRequest('Provide inviteeId or email');
+  const { email, message, username } = req.body;
+  let { inviteeId } = req.body;
+  if (!inviteeId && !email && !username) throw ApiError.badRequest('Provide username, inviteeId or email');
+  if (message && String(message).length > 300) throw ApiError.badRequest('Message is too long');
 
   const community = await prisma.community.findUnique({ where: { id: req.params.id } });
   if (!community) throw ApiError.notFound('Community not found');
@@ -690,9 +706,21 @@ router.post('/:id/invite', authenticate, async (req, res) => {
   const membership = await prisma.communityMember.findUnique({
     where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
   });
-  if (!membership || !['OWNER', 'ADMIN', 'MODERATOR'].includes(membership.role)) {
+  // Leaders can invite to any community; members can invite to public ones
+  const isLeader = membership && ['OWNER', 'ADMIN', 'MODERATOR'].includes(membership.role);
+  if (!membership || (!isLeader && community.isPublic === false)) {
     throw ApiError.forbidden('Only community leaders can send invites');
   }
+
+  if (username && !inviteeId) {
+    const invitee = await prisma.user.findFirst({
+      where: { username: { equals: String(username).replace(/^@/, ''), mode: 'insensitive' } },
+      select: { id: true, isBanned: true },
+    });
+    if (!invitee || invitee.isBanned) throw ApiError.notFound('User not found');
+    inviteeId = invitee.id;
+  }
+  if (inviteeId === req.user.id) throw ApiError.badRequest('You are already in this community');
 
   // Check if invitee is already a member
   if (inviteeId) {
@@ -700,6 +728,12 @@ router.post('/:id/invite', authenticate, async (req, res) => {
       where: { communityId_userId: { communityId: community.id, userId: inviteeId } },
     });
     if (alreadyMember) throw ApiError.conflict('User is already a member');
+
+    // One open invite per person per community (no notification spam)
+    const pending = await prisma.communityInvite.findFirst({
+      where: { communityId: community.id, inviteeId, status: 'PENDING', expiresAt: { gt: new Date() } },
+    });
+    if (pending) return successResponse(res, { id: pending.id, expiresAt: pending.expiresAt, alreadyInvited: true }, 'Already invited');
   }
 
   const token = crypto.randomBytes(24).toString('hex');
@@ -716,6 +750,19 @@ router.post('/:id/invite', authenticate, async (req, res) => {
       expiresAt,
     },
   });
+
+  if (inviteeId) {
+    const inviter = await prisma.user.findUnique({ where: { id: req.user.id }, select: { username: true } });
+    await prisma.notification.create({
+      data: {
+        userId: inviteeId,
+        type: 'COMMUNITY_INVITE',
+        title: `Invitation to ${community.name}`,
+        body: `@${inviter?.username || 'someone'} invited you to join ${community.name}.`,
+        data: { communityId: community.id, inviteId: invite.id },
+      },
+    }).catch(() => {});
+  }
 
   createdResponse(res, {
     id: invite.id,
@@ -759,20 +806,20 @@ router.patch('/invites/:inviteId', authenticate, async (req, res) => {
   if (invite.status !== 'PENDING') throw ApiError.conflict('Invite already responded');
   if (invite.expiresAt < new Date()) throw ApiError.conflict('Invite has expired');
 
+  const { count } = await prisma.communityInvite.updateMany({
+    where: { id: invite.id, status: 'PENDING' },
+    data: { status: action === 'accept' ? 'ACCEPTED' : 'DECLINED', respondedAt: new Date() },
+  });
+  if (!count) throw ApiError.conflict('Invite already responded');
+
   if (action === 'accept') {
-    await prisma.communityMember.create({
-      data: { communityId: invite.communityId, userId: req.user.id, role: 'MEMBER' },
-    });
-    await prisma.communityInvite.update({
-      where: { id: invite.id },
-      data: { status: 'ACCEPTED', respondedAt: new Date() },
+    await prisma.communityMember.upsert({
+      where: { communityId_userId: { communityId: invite.communityId, userId: req.user.id } },
+      update: {},
+      create: { communityId: invite.communityId, userId: req.user.id, role: 'MEMBER' },
     });
     successResponse(res, { communityId: invite.communityId }, 'Invite accepted');
   } else {
-    await prisma.communityInvite.update({
-      where: { id: invite.id },
-      data: { status: 'DECLINED', respondedAt: new Date() },
-    });
     successResponse(res, null, 'Invite declined');
   }
 });
@@ -923,7 +970,7 @@ router.get('/:id/jobs/open', async (req, res) => {
   const skip = (page - 1) * limit;
 
   const taskCat = TASK_CATEGORY_MAP[community.category?.toLowerCase()] || 'OTHER';
-  const where = { category: taskCat, status: 'OPEN' };
+  const where = { category: taskCat, status: 'OPEN', hiredWorkerId: null };
 
   const [jobs, total] = await Promise.all([
     prisma.task.findMany({
@@ -972,7 +1019,7 @@ router.get('/:id/jobs/completed', async (req, res) => {
   const skip = (page - 1) * limit;
 
   const taskCat = TASK_CATEGORY_MAP[community.category?.toLowerCase()] || 'OTHER';
-  const where = { category: taskCat, status: 'COMPLETED' };
+  const where = { category: taskCat, status: 'COMPLETED', hiredWorkerId: null };
 
   const [jobs, total] = await Promise.all([
     prisma.task.findMany({

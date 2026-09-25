@@ -138,6 +138,7 @@ const getPublicProfile = async (username) => {
       isBanned: true,
       preferences: true,
       humanVerifiedAt: true,
+      workerProfileBio: true,
       createdAt: true,
       kyc: { select: { status: true } },
       workerProfile: {
@@ -150,7 +151,16 @@ const getPublicProfile = async (username) => {
       posterProfile: {
         select: { companyName: true, website: true, totalPosted: true, avgRating: true, totalRatings: true, isVerified: true },
       },
-      _count: { select: { tasksCreated: true, taskSubmissions: true } },
+      _count: {
+        select: {
+          tasksCreated: true,
+          taskSubmissions: true,
+          communityMemberships: true,
+          portfolioItems: true,
+          storeItems: { where: { isActive: true } },
+          blogPosts: { where: { isPublished: true } },
+        },
+      },
     },
   });
   if (!user || user.isBanned) throw ApiError.notFound('User not found');
@@ -159,10 +169,11 @@ const getPublicProfile = async (username) => {
     return { username: user.username, isPublic: false };
   }
 
-  const { isBanned, kyc, humanVerifiedAt, workerProfile, preferences, ...rest } = user;
+  const { isBanned, kyc, humanVerifiedAt, workerProfileBio, workerProfile, preferences, ...rest } = user;
   const prefs = (preferences && typeof preferences === 'object') ? preferences : {};
   return {
     ...rest,
+    bio: workerProfile?.bio || workerProfileBio || null,
     // Only the display switches; preferences is free-form and client-written
     preferences: { showEarnings: prefs.showEarnings === true, showRank: prefs.showRank === true },
     kycVerified: kyc?.status === 'APPROVED',

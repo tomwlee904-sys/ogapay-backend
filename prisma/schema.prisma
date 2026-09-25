@@ -175,6 +175,10 @@ model User {
   workerProfile             WorkerProfile?
   posterProfile             PosterProfile?
   tasksCreated              Task[]                    @relation("TaskPoster")
+  tasksHired                Task[]                    @relation("TaskHiredWorker")
+  portfolioItems            PortfolioItem[]
+  communityInvitesSent      CommunityInvite[]         @relation("InviteSender")
+  communityInvitesReceived  CommunityInvite[]         @relation("InviteReceiver")
   taskSubmissions           TaskSubmission[]
   transactions              Transaction[]
   notifications             Notification[]
@@ -396,8 +400,11 @@ model Task {
   createdAt             DateTime       @default(now()) @map("created_at")
   updatedAt             DateTime       @updatedAt @map("updated_at")
   expiresAt             DateTime?      @map("expires_at")
+  // Private direct hire: only this worker can see and take the job
+  hiredWorkerId         String?        @map("hired_worker_id")
 
   poster          User             @relation("TaskPoster", fields: [posterId], references: [id])
+  hiredWorker     User?            @relation("TaskHiredWorker", fields: [hiredWorkerId], references: [id])
   submissions     TaskSubmission[]
   disputes        Dispute[]
   waitlistEntries Waitlist[]
@@ -406,6 +413,7 @@ model Task {
   @@index([status])
   @@index([category])
   @@index([posterId])
+  @@index([hiredWorkerId])
   @@map("tasks")
 }
 
@@ -702,6 +710,7 @@ model Community {
   members      CommunityMember[]
   requests     CommunityRequest[]
   chatMessages CommunityChatMessage[]
+  invites      CommunityInvite[]
 
   @@map("communities")
 }
@@ -999,4 +1008,52 @@ model AuditLog {
   @@index([userId, createdAt])
   @@index([action, createdAt])
   @@map("audit_logs")
+}
+
+// Work samples shown on the public profile
+model PortfolioItem {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  title       String
+  description String?
+  url         String?
+  imageUrl    String?  @map("image_url")
+  position    Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("portfolio_items")
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+// Restored: community-v2 invite routes use this model
+model CommunityInvite {
+  id          String       @id @default(uuid())
+  communityId String       @map("community_id")
+  inviterId   String       @map("inviter_id")
+  inviteeId   String?      @map("invitee_id")
+  email       String?
+  token       String       @unique
+  status      InviteStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime     @default(now()) @map("created_at")
+  expiresAt   DateTime     @map("expires_at")
+  respondedAt DateTime?    @map("responded_at")
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  inviter   User      @relation("InviteSender", fields: [inviterId], references: [id])
+  invitee   User?     @relation("InviteReceiver", fields: [inviteeId], references: [id])
+
+  @@index([communityId])
+  @@index([inviteeId])
+  @@map("community_invites")
 }

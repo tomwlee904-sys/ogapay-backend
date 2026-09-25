@@ -41,6 +41,7 @@ const createTask = async (posterId, taskData) => {
         ...(trackingCode && { trackingCode }),
         ...(taskData.requiresX !== undefined && { requiresX: taskData.requiresX }),
         ...(attachments?.length && { attachments }),
+        ...(taskData.hiredWorkerId && { hiredWorkerId: taskData.hiredWorkerId }),
         status: 'OPEN',
         escrowed: true,
         escrowTxId: escrowResult.txId,
@@ -66,10 +67,10 @@ const createTask = async (posterId, taskData) => {
   logTaskFee(task.id, Number(task.platformFee), currency);
   logger.info(`Task created: ${task.id} by poster ${posterId}`);
 
-  // Notify workers whose categories match this task
+  // Notify workers whose categories match this task (not for a private hire)
   try {
     const category = task.category;
-    if (category) {
+    if (category && !task.hiredWorkerId) {
       const matchingWorkers = await prisma.workerProfile.findMany({
         where: { categories: { has: category }, isAvailable: true },
         select: { userId: true },
@@ -99,7 +100,7 @@ const listTasks = async ({ category, status = 'OPEN', page = 1, limit = 20, sear
   const skip = (page - 1) * limit;
 
   const now = new Date();
-  const where = {};
+  const where = { hiredWorkerId: null }; // private direct hires never list publicly
   if (status === 'ACTIVE') {
     where.status = { in: ['OPEN', 'COOLING_DOWN'] };
   } else {
@@ -154,7 +155,7 @@ const listTasks = async ({ category, status = 'OPEN', page = 1, limit = 20, sear
 
 // ── Get Task ───────────────────────────────────
 
-const getTask = async (taskId, userId) => {
+const getTask = async (taskId, userId, role) => {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
     include: {
@@ -173,6 +174,9 @@ const getTask = async (taskId, userId) => {
   });
 
   if (!task) throw ApiError.notFound('Task not found');
+  if (task.hiredWorkerId && ![task.posterId, task.hiredWorkerId].includes(userId) && role !== 'ADMIN') {
+    throw ApiError.notFound('Task not found');
+  }
 
   // Override status to EXPIRED if deadline has passed and task is still OPEN
   const now = new Date();
@@ -245,6 +249,7 @@ const applyToTask = async (workerId, taskId) => {
   if (task.status !== 'OPEN') throw ApiError.badRequest(`Task is ${task.status.toLowerCase()}, not accepting applications`);
   if (task.expiresAt && new Date(task.expiresAt) < new Date()) throw ApiError.badRequest('Task has expired');
   if (task.posterId === workerId) throw ApiError.badRequest('You cannot apply to your own task');
+  if (task.hiredWorkerId && task.hiredWorkerId !== workerId) throw ApiError.notFound('Task not found');
   await checkWorkerRequirements(task, workerId);
 
   const submission = await prisma.$transaction(async (db) => {
@@ -528,6 +533,7 @@ const triggerCooldownIfFull = async (task, taskId) => {
 const getFeaturedTasks = async () => {
   const tasks = await prisma.task.findMany({
     where: {
+      hiredWorkerId: null,
       status: { in: ['OPEN', 'COOLING_DOWN'] },
       featured: true,
       OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }],
@@ -555,7 +561,7 @@ const getFeaturedTasks = async () => {
 
 const joinWaitlist = async (userId, taskId) => {
   const task = await prisma.task.findUnique({ where: { id: taskId } });
-  if (!task) throw ApiError.notFound('Task not found');
+  if (!task || task.hiredWorkerId) throw ApiError.notFound('Task not found');
   if (task.status !== 'COOLING_DOWN') throw ApiError.badRequest('Task is not in cooldown');
 
   const existing = await prisma.waitlist.findUnique({
@@ -727,7 +733,72 @@ const calculateLevel = (tasksCompleted, avgRating) => {
   return 'BEGINNER';
 };
 
+// ── Direct hire ────────────────────────────────
+// A private one-worker job: same escrow and fee as any job, but only the hired
+// worker can see or take it. The brief opens a private chat with them.
+const hireWorker = async (posterId, username, { title, brief, budget, deadline, attachments }) => {
+  const worker = await prisma.user.findFirst({
+    where: { username: { equals: String(username).replace(/^@/, ''), mode: 'insensitive' } },
+    select: { id: true, username: true, isBanned: true, isPublic: true },
+  });
+  if (!worker || worker.isBanned || worker.isPublic === false) throw ApiError.notFound('User not found');
+  if (worker.id === posterId) throw ApiError.badRequest('You cannot hire yourself');
+
+  const firstLine = brief.split('\n').map((l) => l.trim()).find(Boolean) || brief;
+  const jobTitle = title || (firstLine.length > 80 ? firstLine.slice(0, 77) + '...' : firstLine).padEnd(5, '.');
+
+  const task = await createTask(posterId, {
+    title: jobTitle,
+    description: brief,
+    category: 'OTHER',
+    reward: budget,
+    currency: 'NGN',
+    maxWorkers: 1,
+    deadline,
+    attachments,
+    hiredWorkerId: worker.id,
+  });
+
+  // Private chat: reuse an existing conversation between the two, else create one
+  let conversationId = null;
+  try {
+    const existing = await prisma.conversation.findFirst({
+      where: { AND: [{ participants: { some: { userId: posterId } } }, { participants: { some: { userId: worker.id } } }] },
+      select: { id: true },
+    });
+    conversationId = existing?.id || (await prisma.conversation.create({
+      data: { participants: { create: [{ userId: posterId }, { userId: worker.id }] } },
+      select: { id: true },
+    })).id;
+    const files = (attachments || []).map((u) => `\n${u}`).join('');
+    await prisma.message.create({
+      data: { conversationId, senderId: posterId, content: `Direct hire: ${task.title}\n\n${brief}${files}` },
+    });
+    await prisma.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date() } });
+  } catch (err) {
+    logger.warn(`Hire chat failed for task ${task.id}: ${err.message}`);
+  }
+
+  try {
+    await prisma.notification.create({
+      data: {
+        userId: worker.id,
+        type: 'DIRECT_HIRE',
+        title: '💼 You have been hired',
+        body: `Private job: "${task.title}" — ₦${Number(task.reward).toLocaleString()}`,
+        data: { taskId: task.id, conversationId },
+      },
+    });
+  } catch (err) {
+    logger.warn(`Hire notification failed for task ${task.id}: ${err.message}`);
+  }
+
+  logger.info(`Direct hire: task ${task.id} by ${posterId} for worker ${worker.id}`);
+  return { task, conversationId, worker: { id: worker.id, username: worker.username } };
+};
+
 module.exports = {
+  hireWorker,
   createTask,
   listTasks,
   getTask,

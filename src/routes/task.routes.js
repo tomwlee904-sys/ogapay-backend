@@ -197,7 +197,7 @@ router.patch(
 // GET /api/v1/tasks/:id
 router.get('/:id', optionalAuth, async (req, res) => {
   const userId = req.user?.id || null;
-  const data = await taskService.getTask(req.params.id, userId);
+  const data = await taskService.getTask(req.params.id, userId, req.user?.role);
   successResponse(res, data, 'Task fetched');
 });
 // PATCH /api/v1/tasks/:id — Update task (poster only)

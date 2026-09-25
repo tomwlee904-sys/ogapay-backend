@@ -73,6 +73,24 @@ const createTaskSchema = z.object({
   }
 });
 
+// Private direct hire from a profile (NGN, one worker)
+const hireSchema = z.object({
+  title: z.string().trim().min(5).max(200).optional(),
+  brief: z.string().trim().min(20).max(10000),
+  budget: z.number().min(100),                                  // NGN, worker receives this
+  deadline: z.string().datetime().optional(),
+  attachments: z.array(z.string().url().max(2048)).max(5).optional(),
+});
+
+const httpUrl = z.string().trim().url().max(2048).refine((u) => /^https?:\/\//i.test(u), 'Must be an http(s) link');
+const portfolioItemSchema = z.object({
+  title: z.string().trim().min(1).max(100),
+  description: z.string().trim().max(1000).optional().nullable(),
+  url: httpUrl.optional().nullable(),
+  imageUrl: httpUrl.optional().nullable(),
+  position: z.number().int().min(0).max(1000).optional(),
+});
+
 const submitTaskSchema = z.object({
   proof: z.string().optional(),
   workerNotes: z.string().max(1000).optional(),
@@ -131,6 +149,8 @@ module.exports = {
   loginSchema,
   refreshTokenSchema,
   createTaskSchema,
+  hireSchema,
+  portfolioItemSchema,
   submitTaskSchema,
   reviewSubmissionSchema,
   depositSchema,
