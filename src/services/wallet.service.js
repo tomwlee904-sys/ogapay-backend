@@ -6,7 +6,7 @@ const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
 const { createNotification, NOTIF_TYPES } = require("../utils/notify");
 const { fetchPrices, FALLBACK_PRICES } = require('./price.service');
-const { holdFunds } = require('../utils/ledger');
+const { holdFunds, debitAvailable } = require('../utils/ledger');
 
 const PLATFORM_FEE_PERCENT = parseFloat(process.env.PLATFORM_FEE_PERCENT || '10');
 
@@ -595,7 +595,84 @@ const autoConvertUsdcToNgn = async (userId, options = {}) => {
 
 
 
+// ── Send to another OgaPay user (internal ledger) ──────────────────────────
+
+const sendToUser = async (senderId, { recipient, amount, currency = 'NGN', note }) => {
+  const amt = Number(amount);
+  if (!(amt > 0)) throw ApiError.badRequest('Invalid amount');
+
+  // Recipient by username or email (case-insensitive)
+  const ident = String(recipient).trim().replace(/^@/, '');
+  const to = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { username: { equals: ident, mode: 'insensitive' } },
+        { email: { equals: ident, mode: 'insensitive' } },
+      ],
+    },
+    select: { id: true, username: true, isBanned: true },
+  });
+  if (!to || to.isBanned) throw ApiError.notFound('No OgaPay user with that username or email');
+  if (to.id === senderId) throw ApiError.badRequest('You cannot send money to yourself');
+
+  const reference = `OGA-SEND-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
+
+  return prisma.$transaction(async (db) => {
+    const from = await db.wallet.findUnique({ where: { userId_currency: { userId: senderId, currency } } });
+    if (!from) throw ApiError.notFound('Wallet not found');
+
+    // Debit in one guarded step: two sends at once can't spend the same money
+    if (!(await debitAvailable(db, from.id, amt))) {
+      const available = Math.max(0, parseFloat(from.balance) - parseFloat(from.lockedBalance));
+      throw ApiError.badRequest(`Insufficient balance. Available: ${formatAmount(available, currency)}`);
+    }
+
+    const toWallet = await db.wallet.upsert({
+      where: { userId_currency: { userId: to.id, currency } },
+      update: { balance: { increment: amt } },
+      create: { userId: to.id, currency, balance: amt, lockedBalance: 0 },
+    });
+
+    const fromAfter = parseFloat(from.balance) - amt;
+    const sent = await db.transaction.create({
+      data: {
+        userId: senderId, walletId: from.id,
+        type: 'TRANSFER', status: 'COMPLETED',
+        amount: amt, currency, reference,
+        balanceBefore: from.balance, balanceAfter: fromAfter,
+        description: note ? `Sent to @${to.username}: ${note}` : `Sent to @${to.username}`,
+        metadata: { direction: 'debit', counterpartyId: to.id, counterparty: to.username, p2p: true },
+        completedAt: new Date(),
+      },
+    });
+    await db.transaction.create({
+      data: {
+        userId: to.id, walletId: toWallet.id,
+        type: 'TRANSFER', status: 'COMPLETED',
+        amount: amt, currency, reference: `${reference}-R`,
+        balanceBefore: parseFloat(toWallet.balance) - amt, balanceAfter: toWallet.balance,
+        description: note ? `Received: ${note}` : 'Money received',
+        metadata: { direction: 'credit', counterpartyId: senderId, p2p: true },
+        completedAt: new Date(),
+      },
+    });
+
+    await createNotification({
+      userId: to.id,
+      type: 'TRANSFER_RECEIVED',
+      title: '💸 Money received',
+      body: `You received ${formatAmount(amt, currency)}${note ? `: ${note}` : '.'}`,
+      data: { reference, amount: amt, currency },
+      db,
+    });
+
+    logger.info(`Send: ${reference} — ${amt} ${currency} from ${senderId} to ${to.id}`);
+    return { reference, amount: amt, currency, recipient: to.username, balanceAfter: fromAfter, txId: sent.id };
+  });
+};
+
 module.exports = {
+  sendToUser,
   getUserWallets,
   autoConvertUsdcToNgn,
   initiateDeposit,

@@ -93,6 +93,14 @@ const depositSchema = z.object({
   callbackUrl: z.string().url().optional(),
 });
 
+// Send money to another OgaPay user (internal ledger)
+const sendSchema = z.object({
+  recipient: z.string().trim().min(1).max(254),   // username or email
+  amount: z.number().positive().min(100),          // Min NGN 100
+  currency: z.enum(['NGN']).default('NGN'),        // NGN only for now
+  note: z.string().trim().max(140).optional(),
+});
+
 const withdrawSchema = z.object({
   amount: z.number().positive().min(100),
   currency: z.enum(['NGN', 'USDC', 'USDT', 'ETH', 'MATIC', 'SOL']).default('NGN'),
@@ -127,5 +135,6 @@ module.exports = {
   reviewSubmissionSchema,
   depositSchema,
   withdrawSchema,
+  sendSchema,
   kycSubmitSchema,
 };

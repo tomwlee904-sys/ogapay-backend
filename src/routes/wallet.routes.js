@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const nacl = require('tweetnacl');
 const bs58 = require('bs58').default;
 const { authenticate, requireKyc } = require('../middleware/auth.middleware');
-const { validate, depositSchema, withdrawSchema } = require('../middleware/validate');
+const { validate, depositSchema, withdrawSchema, sendSchema } = require('../middleware/validate');
 const { prisma } = require('../config/database');
 const walletService = require('../services/wallet.service');
 const solanaService = require('../services/solana.service');
@@ -339,7 +339,13 @@ router.post('/deposit', validate(depositSchema), async (req, res) => {
   successResponse(res, data, 'Deposit initiated. Complete payment to fund your wallet.');
 });
 
-// POST /api/v1/wallets/withdraw
+// POST /api/v1/wallets/send — send money to another OgaPay user (internal ledger).
+// (/transfer is the bank payout via Flutterwave.)
+router.post('/send', validate(sendSchema), async (req, res) => {
+  const data = await walletService.sendToUser(req.user.id, req.body);
+  successResponse(res, data, 'Transfer completed.');
+});
+
 // POST /api/v1/wallets/withdraw
 router.post('/withdraw', requireKyc, validate(withdrawSchema), async (req, res) => {
   const idempotencyKey = req.headers['idempotency-key'];
