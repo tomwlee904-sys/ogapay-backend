@@ -131,6 +131,107 @@ router.delete('/linkedin/disconnect', authenticate, async (req, res) => {
   successResponse(res, null, 'LinkedIn disconnected');
 });
 
+// ─── VeryAI human verification (Palm OAuth2 + PKCE) ─────────
+
+const VERY_AUTHORIZE_URL = 'https://connect.very.org/oauth/authorize';
+const VERY_TOKEN_URL = 'https://api.very.org/oauth2/token';
+const VERY_USERINFO_URL = 'https://api.very.org/oauth2/userinfo';
+const VERY_REDIRECT = () => process.env.VERY_REDIRECT_URI || `${FRONTEND()}/verify/callback`;
+
+// POST /api/v1/social/very/init — returns the VeryAI URL to send the user to
+router.post('/very/init', authenticate, async (req, res) => {
+  const clientId = process.env.VERY_CLIENT_ID;
+  if (!clientId || !process.env.VERY_CLIENT_SECRET) {
+    return res.status(503).json({ success: false, message: 'Human verification is not available yet' });
+  }
+
+  const crypto = require('crypto');
+  const state = crypto.randomBytes(16).toString('hex');
+  const verifier = crypto.randomBytes(32).toString('base64url');
+  const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
+  const redirectUri = VERY_REDIRECT();
+
+  oauthStore.set(`very:${state}`, { userId: req.user.id, verifier, redirectUri, ts: Date.now() });
+
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    scope: 'openid',
+    state,
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
+  });
+
+  successResponse(res, { authUrl: `${VERY_AUTHORIZE_URL}?${params.toString()}` });
+});
+
+// POST /api/v1/social/very/complete — the frontend callback page posts { code, state } here
+router.post('/very/complete', authenticate, async (req, res) => {
+  const { code, state } = req.body || {};
+  if (!code || !state) return res.status(400).json({ success: false, message: 'Missing verification code' });
+
+  const key = `very:${state}`;
+  const stored = oauthStore.get(key);
+  // The flow must be finished by the same signed-in user who started it
+  if (!stored || stored.userId !== req.user.id || Date.now() - stored.ts > STORE_TTL) {
+    return res.status(400).json({ success: false, message: 'Verification session expired. Please start again.' });
+  }
+  oauthStore.delete(key);
+
+  const axios = require('axios');
+  let sub;
+  try {
+    const tokenRes = await axios.post(VERY_TOKEN_URL, new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: stored.redirectUri,
+      client_id: process.env.VERY_CLIENT_ID,
+      client_secret: process.env.VERY_CLIENT_SECRET,
+      code_verifier: stored.verifier,
+    }).toString(), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 15000 });
+
+    const userRes = await axios.get(VERY_USERINFO_URL, {
+      headers: { Authorization: `Bearer ${tokenRes.data.access_token}` },
+      timeout: 15000,
+    });
+    sub = userRes.data?.sub;
+  } catch (err) {
+    const msg = err.response?.data?.error_description || err.response?.data?.error || err.message;
+    return res.status(502).json({ success: false, message: `VeryAI verification failed: ${msg}` });
+  }
+  if (!sub) return res.status(502).json({ success: false, message: 'VeryAI did not return a verified identity' });
+
+  const me = await prisma.user.findUnique({ where: { id: req.user.id }, select: { veryUserId: true } });
+  if (me?.veryUserId && me.veryUserId !== sub) {
+    return res.status(409).json({ success: false, message: 'This account is already verified by a different person' });
+  }
+
+  try {
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { veryUserId: sub, humanVerifiedAt: new Date() },
+      select: { humanVerifiedAt: true },
+    });
+    successResponse(res, { verified: true, verifiedAt: user.humanVerifiedAt }, 'Human verification complete');
+  } catch (err) {
+    if (err.code === 'P2002') {
+      return res.status(409).json({ success: false, message: 'This person has already verified another OgaPay account' });
+    }
+    throw err;
+  }
+});
+
+// GET /api/v1/social/very/status
+router.get('/very/status', authenticate, async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { humanVerifiedAt: true } });
+  successResponse(res, {
+    verified: !!user?.humanVerifiedAt,
+    verifiedAt: user?.humanVerifiedAt || null,
+    available: !!(process.env.VERY_CLIENT_ID && process.env.VERY_CLIENT_SECRET),
+  });
+});
+
 // ─── GitHub OAuth ────────────────────────────────
 
 // POST /api/v1/social/github/init

@@ -197,6 +197,10 @@ const applyToTask = async (workerId, taskId) => {
   if (task.status !== 'OPEN') throw ApiError.badRequest(`Task is ${task.status.toLowerCase()}, not accepting applications`);
   if (task.expiresAt && new Date(task.expiresAt) < new Date()) throw ApiError.badRequest('Task has expired');
   if (task.posterId === workerId) throw ApiError.badRequest('You cannot apply to your own task');
+  if (task.workerRequirement === 'HUMAN') {
+    const worker = await prisma.user.findUnique({ where: { id: workerId }, select: { humanVerifiedAt: true } });
+    if (!worker?.humanVerifiedAt) throw ApiError.forbidden('This job is only for human-verified workers. Verify with VeryAI in Settings, then apply.');
+  }
 
   const submission = await prisma.$transaction(async (db) => {
     // Atomic capacity check inside the transaction
