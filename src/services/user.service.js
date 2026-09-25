@@ -19,8 +19,13 @@ const getProfile = async (userId) => {
   });
   if (!user) throw ApiError.notFound('User not found');
 
-  // Remove sensitive fields
-  const { passwordHash, ...safeUser } = user;
+  // Never send credentials or one-time tokens, even to the owner
+  const {
+    passwordHash, twoFactorSecret, twoFactorBackupCodes,
+    passwordResetToken, passwordResetTokenExpiry,
+    emailVerificationToken, emailVerificationTokenExpiry,
+    ...safeUser
+  } = user;
   return safeUser;
 };
 
@@ -112,20 +117,62 @@ const uploadCover = async (userId, file) => {
 
 // ── Get public profile by username ─────────────
 
+// Public, unauthenticated: an explicit allow-list only. Never return the
+// user row itself (it holds email, phone, bank details, 2FA secrets and
+// password-reset tokens) or wallets.
 const getPublicProfile = async (username) => {
   const user = await prisma.user.findUnique({
     where: { username },
-    include: {
-      kyc: { select: { status: true, verifiedAt: true } },
-      wallets: { where: { isActive: true } },
-      workerProfile: true,
-      posterProfile: true,
+    select: {
+      id: true,
+      username: true,
+      firstName: true,
+      lastName: true,
+      avatarUrl: true,
+      coverUrl: true,
+      twitterUsername: true,
+      website: true,
+      role: true,
+      ogaScore: true,
+      isPublic: true,
+      isBanned: true,
+      preferences: true,
+      humanVerifiedAt: true,
+      createdAt: true,
+      kyc: { select: { status: true } },
+      workerProfile: {
+        select: {
+          level: true, reputationScore: true, totalEarned: true, tasksCompleted: true,
+          successRate: true, avgRating: true, totalRatings: true, skills: true,
+          categories: true, bio: true, isAvailable: true,
+        },
+      },
+      posterProfile: {
+        select: { companyName: true, website: true, totalPosted: true, avgRating: true, totalRatings: true, isVerified: true },
+      },
       _count: { select: { tasksCreated: true, taskSubmissions: true } },
     },
   });
-  if (!user) throw ApiError.notFound('User not found');
-  const { passwordHash, ...safeUser } = user;
-  return safeUser;
+  if (!user || user.isBanned) throw ApiError.notFound('User not found');
+
+  if (user.isPublic === false) {
+    return { username: user.username, isPublic: false };
+  }
+
+  const { isBanned, kyc, humanVerifiedAt, workerProfile, preferences, ...rest } = user;
+  const prefs = (preferences && typeof preferences === 'object') ? preferences : {};
+  return {
+    ...rest,
+    // Only the display switches; preferences is free-form and client-written
+    preferences: { showEarnings: prefs.showEarnings === true, showRank: prefs.showRank === true },
+    kycVerified: kyc?.status === 'APPROVED',
+    humanVerified: !!humanVerifiedAt,
+    // Earnings are shown only if the user opted in (Settings → show earnings)
+    workerProfile: workerProfile && {
+      ...workerProfile,
+      totalEarned: prefs.showEarnings === true ? workerProfile.totalEarned : undefined,
+    },
+  };
 };
 
 // ── Get user's transaction history ────────────
