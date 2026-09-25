@@ -259,7 +259,9 @@ const applyToTask = async (workerId, taskId) => {
     const existing = await db.taskSubmission.findUnique({
       where: { taskId_workerId: { taskId, workerId } },
     });
-    if (existing) throw ApiError.conflict('You have already applied to this task');
+    if (existing && existing.status !== 'EXPIRED') throw ApiError.conflict('You have already applied to this task');
+    // Lost the slot earlier for not submitting: a fresh application replaces it
+    if (existing) await db.taskSubmission.delete({ where: { id: existing.id } });
 
     const sub = await db.taskSubmission.create({
       data: { taskId, workerId, startedAt: new Date() },
@@ -642,10 +644,11 @@ const rejectSubmission = async (posterId, submissionId, { posterNotes }) => {
 
 // ── Auto-Complete Expired Cooldowns ─────────────
 
-// Previously this approved every applicant who had not submitted anything and
-// told the poster they were paid, without paying them. Now it only ends the
-// cooldown: submitted work goes through normal review (and the 24h moderation
-// queue), and the task completes through completeTaskIfResolved.
+// Once every slot is taken the task cools down for 24 hours. When that ends,
+// applicants who still haven't submitted anything lose their slot so others
+// can take it; submitted work goes through normal review (and the 24h
+// moderation queue), and the task completes through completeTaskIfResolved.
+// (This used to mark unsubmitted work approved and "paid" without paying.)
 const autoCompleteExpiredCooldowns = async () => {
   const expired = await prisma.task.findMany({
     where: {
@@ -664,13 +667,40 @@ const autoCompleteExpiredCooldowns = async () => {
         data: { status: 'OPEN' },
       });
       if (count === 0) return;
+
+      const stale = await db.taskSubmission.findMany({
+        where: { taskId: task.id, status: 'PENDING', submittedAt: null },
+        select: { id: true, workerId: true },
+      });
+      if (stale.length) {
+        const { count: released } = await db.taskSubmission.updateMany({
+          where: { id: { in: stale.map((s) => s.id) }, status: 'PENDING', submittedAt: null },
+          data: { status: 'EXPIRED', reviewedAt: new Date(), posterNotes: 'Slot released: no work submitted within 24 hours' },
+        });
+        await db.task.update({
+          where: { id: task.id },
+          data: { currentWorkers: { decrement: released }, submissionsCount: { decrement: released } },
+        });
+        await db.notification.createMany({
+          data: stale.map((s) => ({
+            userId: s.workerId,
+            type: 'SLOT_EXPIRED',
+            title: 'Your slot was released',
+            body: `You didn't submit work for "${task.title}" within 24 hours, so your slot is open to others. Apply again if a slot is free.`,
+            data: { taskId: task.id },
+          })),
+        });
+      }
+
       if (await completeTaskIfResolved(db, task.id)) return;
       await db.notification.create({
         data: {
           userId: task.posterId,
           type: 'COOLDOWN_EXPIRED',
           title: '⏰ Cooldown Ended',
-          body: `Cooldown ended for "${task.title}". Review the submitted work to pay your workers.`,
+          body: stale.length
+            ? `${stale.length} applicant${stale.length === 1 ? '' : 's'} didn't submit in time for "${task.title}", so ${stale.length === 1 ? 'that slot is' : 'those slots are'} open again. Review the submitted work to pay your workers.`
+            : `Cooldown ended for "${task.title}". Review the submitted work to pay your workers.`,
           data: { taskId: task.id },
         },
       });

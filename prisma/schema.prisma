@@ -94,6 +94,7 @@ enum TaskSubmissionStatus {
   APPROVED
   REJECTED
   DISPUTED
+  EXPIRED // slot released: no work submitted in time
 }
 
 enum WorkerLevel {

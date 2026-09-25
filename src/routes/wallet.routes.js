@@ -10,6 +10,7 @@ const { prisma } = require('../config/database');
 const walletService = require('../services/wallet.service');
 const solanaService = require('../services/solana.service');
 const flutterwaveService = require('../services/flutterwave.service');
+const { fetchPrices, FALLBACK_PRICES } = require('../services/price.service');
 const { successResponse, createdResponse, ApiError } = require('../utils/apiResponse');
 const { v4: uuidv4 } = require('uuid');
 const { checkIdempotency, setIdempotency } = require('../utils/idempotency');
@@ -23,6 +24,28 @@ const router = express.Router();
 const ngnWithdrawLimit = (user) => {
   const tier = user?.kyc?.kycTier ?? 0;
   return tier >= 3 ? 200000 : tier >= 2 ? 20000 : tier >= 1 ? 10000 : 0;
+};
+
+// Naira value of an amount at the live rate (static fallback if the feed is down)
+const toNgn = async (amount, currency) => {
+  if (currency === 'NGN') return Number(amount);
+  const key = String(currency).toLowerCase();
+  const prices = await fetchPrices().catch(() => null);
+  const rate = prices?.[key]?.ngn || FALLBACK_PRICES[key]?.ngn
+    || (key === 'usdt' ? (prices?.usdc?.ngn || FALLBACK_PRICES.usdc.ngn) : null);
+  if (!rate) throw ApiError.badRequest(`Withdrawals in ${currency} aren't available right now`);
+  return Number(amount) * rate;
+};
+
+// The same KYC limit applies to bank, transfer and crypto withdrawals
+const assertWithinLimit = async (user, amount, currency) => {
+  const limit = ngnWithdrawLimit(user);
+  const ngn = await toNgn(amount, currency);
+  if (ngn > limit) {
+    const worth = currency === 'NGN' ? '' : ` This withdrawal is worth about ₦${Math.round(ngn).toLocaleString()}.`;
+    const more = (user?.kyc?.kycTier ?? 0) < 3 ? ' Raise your KYC level to withdraw more.' : '';
+    throw ApiError.badRequest(`Your limit is ₦${limit.toLocaleString()} per withdrawal at your KYC level.${worth}${more}`);
+  }
 };
 
 // ─── Public: request a nonce to sign ──────────────────────────
@@ -197,6 +220,7 @@ router.post('/withdraw/crypto', authenticate, requireKyc, async (req, res) => {
   if (!toAddress) throw ApiError.badRequest('toAddress required');
   if (!currency || !['USDC', 'SOL'].includes(currency)) throw ApiError.badRequest('Currency must be USDC or SOL');
   try { new PublicKey(toAddress); } catch { throw ApiError.badRequest('Invalid Solana address'); }
+  await assertWithinLimit(req.user, amount, currency);
 
   // The same Idempotency-Key always maps to the same reference and references
   // are unique, so a retried request can't create a second withdrawal.
@@ -322,14 +346,10 @@ router.post('/withdraw', requireKyc, validate(withdrawSchema), async (req, res) 
   const cached = checkIdempotency(idempotencyKey);
   if (cached) return successResponse(res, cached, 'Withdrawal already submitted (idempotent)');
 
-  const { amount } = req.body;
+  const { amount, currency } = req.body;
 
-  // Check withdrawal limit based on KYC level
-  const MAX_WITHDRAWAL = ngnWithdrawLimit(req.user);
-
-  if (Number(amount) > MAX_WITHDRAWAL) {
-    throw ApiError.badRequest(`Withdrawal limit is ₦${MAX_WITHDRAWAL.toLocaleString()} for your KYC level. Upgrade to Level 3 (Address + Docs) for ₦200,000 limit.`);
-  }
+  // KYC limit, in naira, whatever the currency (USDC was compared as if it were naira)
+  await assertWithinLimit(req.user, amount, currency || 'NGN');
 
   const data = await walletService.initiateWithdrawal(req.user.id, req.body);
   setIdempotency(idempotencyKey, data);
@@ -406,11 +426,8 @@ router.post('/transfer', requireKyc, async (req, res) => {
   if (!bankAccountId || !(amount > 0) || !currency) {
     throw ApiError.badRequest('bankAccountId, amount, and currency required');
   }
-  // Same KYC limit as /withdraw (this route had none)
-  const limit = ngnWithdrawLimit(req.user);
-  if (amount > limit) {
-    throw ApiError.badRequest(`Withdrawal limit is ₦${limit.toLocaleString()} for your KYC level.`);
-  }
+  // Same KYC limit as /withdraw
+  await assertWithinLimit(req.user, amount, currency);
 
   const ip = req.headers['x-forwarded-for'] || req.ip;
   const data = await flutterwaveService.initiateTransfer(req.user.id, { bankAccountId, amount, currency }, ip);
