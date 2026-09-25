@@ -2,7 +2,7 @@
 
 const { prisma } = require('../config/database');
 const { ApiError } = require('../utils/apiResponse');
-const { lockFundsForTask, releaseEscrow } = require('./wallet.service');
+const { lockFundsForTask, logTaskFee, releaseEscrow, completeTaskIfResolved } = require('./escrow.service');
 const { logger } = require('../utils/logger');
 
 // ── Create Task ────────────────────────────────
@@ -10,13 +10,15 @@ const { logger } = require('../utils/logger');
 const createTask = async (posterId, taskData) => {
   const { reward, currency, maxWorkers, title, description, category, instructions, deadline, proofRequired, tags, estimatedTime, trackingCode, status: _, ...extra } = taskData;
 
-  // Lock the worker rewards in escrow and charge the platform fee once.
+  // Lock the worker rewards in escrow and charge the platform fee once, in the
+  // same transaction as the task insert: if anything below fails, no money moves.
   const taskSubtotal = reward * maxWorkers;
-  const escrowResult = await lockFundsForTask(posterId, 'PENDING', taskSubtotal, currency);
-  const platformFee = escrowResult.fee;
-  const totalCost = escrowResult.escrowed;
 
   const task = await prisma.$transaction(async (db) => {
+    const escrowResult = await lockFundsForTask(posterId, 'PENDING', taskSubtotal, currency, db);
+    const platformFee = escrowResult.fee;
+    const totalCost = escrowResult.escrowed;
+
     const newTask = await db.task.create({
       data: {
         posterId,
@@ -59,6 +61,7 @@ const createTask = async (posterId, taskData) => {
     return newTask;
   });
 
+  logTaskFee(task.id, Number(task.platformFee), currency);
   logger.info(`Task created: ${task.id} by poster ${posterId}`);
 
   // Notify workers whose categories match this task
@@ -253,7 +256,7 @@ const submitTask = async (workerId, taskId, { proof, workerNotes, attachments })
   });
 
   if (!submission) throw ApiError.notFound('Submission not found. Apply to the task first.');
-  if (submission.task.status !== 'OPEN') throw ApiError.badRequest(`Task is ${submission.task.status.toLowerCase()}, submissions closed`);
+  if (!['OPEN', 'COOLING_DOWN'].includes(submission.task.status)) throw ApiError.badRequest(`Task is ${submission.task.status.toLowerCase()}, submissions closed`);
   if (submission.task.expiresAt && new Date(submission.task.expiresAt) < new Date()) throw ApiError.badRequest('Task has expired');
   if (submission.status !== 'PENDING') throw ApiError.badRequest(`Submission already ${submission.status.toLowerCase()}`);
 
@@ -418,38 +421,9 @@ const reviewSubmission = async (posterId, submissionId, { status, posterNotes, r
       }
     }
 
-    // Check if all slots filled and all submissions resolved → mark task COMPLETED, refund remaining escrow
-    if (submission.task.maxWorkers <= submission.task.currentWorkers) {
-      const resolvedCount = await db.taskSubmission.count({
-        where: { taskId: submission.taskId, status: { in: ['APPROVED', 'REJECTED'] } },
-      });
-      if (resolvedCount >= submission.task.maxWorkers) {
-        const totalLocked = parseFloat(submission.task.reward) * submission.task.maxWorkers;
-        const approvedCount = await db.taskSubmission.count({
-          where: { taskId: submission.taskId, status: 'APPROVED' },
-        });
-        const paidAmount = parseFloat(submission.task.reward) * approvedCount;
-        const remaining = totalLocked - paidAmount;
-
-        if (remaining > 0) {
-          const posterWallet = await db.wallet.findUnique({
-            where: { userId_currency: { userId: submission.task.posterId, currency: submission.task.currency } },
-          });
-          await db.wallet.update({
-            where: { id: posterWallet.id },
-            data: {
-              lockedBalance: { decrement: remaining },
-              balance: { increment: remaining },
-            },
-          });
-        }
-
-        await db.task.update({
-          where: { id: submission.taskId },
-          data: { status: 'COMPLETED', escrowed: false },
-        });
-      }
-    }
+    // All slots taken and nothing left to review → complete the task and
+    // return the unused escrow (released from the hold, not credited again)
+    await completeTaskIfResolved(db, submission.taskId);
 
     // Notify poster about the review decision
     if (status === 'APPROVED') {
@@ -626,6 +600,10 @@ const rejectSubmission = async (posterId, submissionId, { posterNotes }) => {
 
 // ── Auto-Complete Expired Cooldowns ─────────────
 
+// Previously this approved every applicant who had not submitted anything and
+// told the poster they were paid, without paying them. Now it only ends the
+// cooldown: submitted work goes through normal review (and the 24h moderation
+// queue), and the task completes through completeTaskIfResolved.
 const autoCompleteExpiredCooldowns = async () => {
   const expired = await prisma.task.findMany({
     where: {
@@ -634,34 +612,27 @@ const autoCompleteExpiredCooldowns = async () => {
         lte: new Date(Date.now() - 24 * 60 * 60 * 1000),
       },
     },
-    include: {
-      submissions: {
-        where: { status: 'PENDING' },
-        select: { id: true, workerId: true },
-      },
-    },
+    select: { id: true, posterId: true, title: true },
   });
 
   for (const task of expired) {
-    await prisma.$transaction([
-      prisma.taskSubmission.updateMany({
-        where: { taskId: task.id, status: 'PENDING' },
-        data: { status: 'APPROVED', reviewedAt: new Date() },
-      }),
-      prisma.task.update({
-        where: { id: task.id },
-        data: { status: 'COMPLETED' },
-      }),
-      prisma.notification.create({
+    await prisma.$transaction(async (db) => {
+      const { count } = await db.task.updateMany({
+        where: { id: task.id, status: 'COOLING_DOWN' },
+        data: { status: 'OPEN' },
+      });
+      if (count === 0) return;
+      if (await completeTaskIfResolved(db, task.id)) return;
+      await db.notification.create({
         data: {
           userId: task.posterId,
           type: 'COOLDOWN_EXPIRED',
-          title: '⏰ Cooldown Expired',
-          body: `Cooldown expired for "${task.title}". Pending submissions auto-approved and paid.`,
+          title: '⏰ Cooldown Ended',
+          body: `Cooldown ended for "${task.title}". Review the submitted work to pay your workers.`,
           data: { taskId: task.id },
         },
-      }),
-    ]);
+      });
+    });
   }
 
   return expired.length;

@@ -206,8 +206,8 @@ router.post('/:reference/verify', async (req, res) => {
         { headers: { Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}` } },
       );
       if (data.status === 'success' && data.data.status === 'successful') {
-        await walletService.confirmDeposit(payment.reference, String(data.data.id));
-        currentStatus = 'COMPLETED';
+        const confirmed = await walletService.confirmDeposit(payment.reference, String(data.data.id), { amount: Number(data.data.amount), currency: data.data.currency });
+        currentStatus = confirmed?.status || 'FAILED';
       }
     } catch (err) {
       logger.warn(`Flutterwave verify error for ${payment.reference}: ${err.message}`);
@@ -222,8 +222,9 @@ router.post('/:reference/verify', async (req, res) => {
         { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } },
       );
       if (data.status && data.data.status === 'success') {
-        await walletService.confirmDeposit(payment.reference, String(data.data.id));
-        currentStatus = 'COMPLETED';
+        // Paystack amounts are in kobo
+        const confirmed = await walletService.confirmDeposit(payment.reference, String(data.data.id), { amount: Number(data.data.amount) / 100, currency: data.data.currency });
+        currentStatus = confirmed?.status || 'FAILED';
       }
     } catch (err) {
       logger.warn(`Paystack verify error for ${payment.reference}: ${err.message}`);

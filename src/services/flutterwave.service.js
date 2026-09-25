@@ -4,6 +4,7 @@ const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 const { prisma } = require('../config/database');
 const { ApiError } = require('../utils/apiResponse');
+const { holdFunds } = require('../utils/ledger');
 const { logger } = require('../utils/logger');
 
 const FLW_BASE = 'https://api.flutterwave.com/v3';
@@ -275,6 +276,8 @@ const setDefaultBankAccount = async (userId, bankId) => {
 
 const initiateTransfer = async (userId, { bankAccountId, amount, currency }, ipAddress) => {
   if (currency !== 'NGN') throw ApiError.badRequest('Only NGN transfers supported');
+  amount = Number(amount);
+  if (!(amount > 0)) throw ApiError.badRequest('Enter a valid amount');
 
   const bank = await prisma.bankAccount.findFirst({
     where: { id: bankAccountId, userId, deletedAt: null },
@@ -283,21 +286,28 @@ const initiateTransfer = async (userId, { bankAccountId, amount, currency }, ipA
 
   const fee = Math.max(100, amount * 0.015);
   const netAmount = amount - fee;
+  if (netAmount <= 0) throw ApiError.badRequest('Amount is too small to cover the transfer fee');
   const reference = `OGA-WIT-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
+  const bankMeta = {
+    bankName: bank.bankName,
+    bankCode: bank.bankCode,
+    accountNumber: bank.accountNumber,
+    accountName: bank.accountName,
+    netAmount,
+  };
 
-  return prisma.$transaction(async (db) => {
+  // 1. Hold the funds and record the withdrawal, committed before any money
+  //    moves. The Flutterwave call happens outside the DB transaction, so a slow
+  //    response can't roll the hold back after the money was sent.
+  const { tx, wallet } = await prisma.$transaction(async (db) => {
     const wallet = await db.wallet.findUnique({
       where: { userId_currency: { userId, currency } },
     });
     if (!wallet) throw ApiError.notFound('Wallet not found');
 
-    const available = Number(wallet.balance) - Number(wallet.lockedBalance);
-    if (available < amount) throw ApiError.badRequest('Insufficient available balance');
-
-    await db.wallet.update({
-      where: { id: wallet.id },
-      data: { lockedBalance: { increment: amount } },
-    });
+    if (!(await holdFunds(db, wallet.id, amount))) {
+      throw ApiError.badRequest('Insufficient available balance');
+    }
 
     const tx = await db.transaction.create({
       data: {
@@ -312,86 +322,89 @@ const initiateTransfer = async (userId, { bankAccountId, amount, currency }, ipA
         balanceBefore: wallet.balance,
         balanceAfter: parseFloat(String(wallet.balance)) - amount,
         description: `Withdrawal to ${bank.bankName} • ${bank.accountNumber}`,
-        metadata: {
-          bankName: bank.bankName,
-          bankCode: bank.bankCode,
-          accountNumber: bank.accountNumber,
-          accountName: bank.accountName,
-          netAmount,
-        },
+        metadata: bankMeta,
       },
     });
+    return { tx, wallet };
+  });
 
-    let transferResult;
-    try {
-      const { data } = await flwRequest.post('/transfers', {
-        account_bank: bank.bankCode,
-        account_number: bank.accountNumber,
-        amount: netAmount,
-        narration: 'OgaPay Withdrawal',
-        currency: 'NGN',
-        reference,
-        callback_url: `${process.env.BASE_URL || 'https://api.ogapay.io'}/api/v1/webhooks/flutterwave`,
-        debit_currency: 'NGN',
+  // 2. Ask Flutterwave to pay
+  let transferResult;
+  try {
+    const { data } = await flwRequest.post('/transfers', {
+      account_bank: bank.bankCode,
+      account_number: bank.accountNumber,
+      amount: netAmount,
+      narration: 'OgaPay Withdrawal',
+      currency: 'NGN',
+      reference,
+      callback_url: `${process.env.BASE_URL || 'https://api.ogapay.io'}/api/v1/webhooks/flutterwave`,
+      debit_currency: 'NGN',
+    });
+
+    if (data.status !== 'success') {
+      const err = new Error(data.message || 'Flutterwave transfer failed');
+      err.rejected = true;
+      throw err;
+    }
+    transferResult = data.data;
+  } catch (err) {
+    const status = err.response?.status;
+    const message = err.response?.data?.message || err.message;
+
+    if (err.rejected || (status >= 400 && status < 500)) {
+      // Flutterwave refused the transfer, so nothing was sent: release the hold.
+      await prisma.$transaction(async (db) => {
+        const { count } = await db.transaction.updateMany({
+          where: { id: tx.id, status: 'PROCESSING' },
+          data: { status: 'FAILED', externalRef: String(message).slice(0, 190) },
+        });
+        if (count === 1) {
+          await db.wallet.update({
+            where: { id: wallet.id },
+            data: { lockedBalance: { decrement: amount } },
+          });
+        }
+        await createAuditLog(db, {
+          userId,
+          action: 'withdrawal_failed',
+          description: `Withdrawal of ${amount} ${currency} to ${bank.bankName} failed: ${message}`,
+          amount,
+          currency,
+          reference,
+          ipAddress,
+        });
       });
-
-      if (data.status !== 'success') {
-        throw new Error(data.message || 'Flutterwave transfer failed');
-      }
-      transferResult = data.data;
-    } catch (err) {
-      await db.wallet.update({
-        where: { id: wallet.id },
-        data: { lockedBalance: { decrement: amount } },
-      });
-
-      await db.transaction.update({
-        where: { id: tx.id },
-        data: { status: 'FAILED', externalRef: err.message },
-      });
-
-      await createAuditLog(db, {
-        userId,
-        action: 'withdrawal_failed',
-        description: `Withdrawal of ${amount} ${currency} to ${bank.bankName} failed: ${err.message}`,
-        amount,
-        currency,
-        reference,
-        ipAddress,
-      });
-
-      throw ApiError.internal(`Withdrawal failed: ${err.message}`);
+      throw ApiError.badRequest(`Withdrawal failed: ${message}`);
     }
 
-    await db.transaction.update({
-      where: { id: tx.id },
-      data: {
-        externalRef: String(transferResult.id),
-        metadata: {
-          bankName: bank.bankName,
-          bankCode: bank.bankCode,
-          accountNumber: bank.accountNumber,
-          accountName: bank.accountName,
-          netAmount,
-          flutterwaveId: transferResult.id,
-        },
-      },
-    });
+    // Timeout, network error or 5xx: the transfer may or may not exist. Keep the
+    // hold; the transfer webhook settles it either way.
+    logger.error(`Withdrawal ${reference}: Flutterwave outcome unknown (${message}); funds stay held until the transfer webhook arrives`);
+    return { reference, fee, netAmount, status: 'PROCESSING', txId: tx.id };
+  }
 
-    await createAuditLog(db, {
-      userId,
-      action: 'withdrawal',
-      description: `Withdrawal of ${amount} ${currency} to ${bank.bankName} • ${bank.accountNumber}`,
-      amount,
-      currency,
-      reference,
-      metadata: { flutterwaveId: transferResult.id, netAmount },
-      ipAddress,
-    });
-
-    logger.info(`Withdrawal initiated: ${reference} — ${amount} ${currency} for user ${userId}`);
-    return { reference, fee, netAmount, status: 'PROCESSING', txId: tx.id, flutterwaveId: transferResult.id };
+  await prisma.transaction.update({
+    where: { id: tx.id },
+    data: {
+      externalRef: String(transferResult.id),
+      metadata: { ...bankMeta, flutterwaveId: transferResult.id },
+    },
   });
+
+  await createAuditLog(prisma, {
+    userId,
+    action: 'withdrawal',
+    description: `Withdrawal of ${amount} ${currency} to ${bank.bankName} • ${bank.accountNumber}`,
+    amount,
+    currency,
+    reference,
+    metadata: { flutterwaveId: transferResult.id, netAmount },
+    ipAddress,
+  });
+
+  logger.info(`Withdrawal initiated: ${reference} — ${amount} ${currency} for user ${userId}`);
+  return { reference, fee, netAmount, status: 'PROCESSING', txId: tx.id, flutterwaveId: transferResult.id };
 };
 
 // ─── Webhook: Handle DVA Credit Notification ───────────────
@@ -421,6 +434,8 @@ const handleDvaCredit = async (event) => {
   });
   if (existingTx) return;
 
+  // Two deliveries at the same moment both pass the check above; the unique
+  // reference makes the second insert fail and roll its credit back.
   await prisma.$transaction(async (db) => {
     const wallet = await db.wallet.upsert({
       where: { userId_currency: { userId: va.userId, currency: 'NGN' } },
@@ -428,16 +443,15 @@ const handleDvaCredit = async (event) => {
       create: { userId: va.userId, currency: 'NGN', balance: 0, lockedBalance: 0, pendingBalance: 0 },
     });
 
-    const balBefore = Number(wallet.balance);
-    const balAfter = balBefore + amount;
-
-    await db.wallet.update({
+    const credited = await db.wallet.update({
       where: { id: wallet.id },
       data: {
-        balance: balAfter,
+        balance: { increment: amount },
         pendingBalance: { decrement: amount <= Number(wallet.pendingBalance) ? amount : Number(wallet.pendingBalance) },
       },
     });
+    const balAfter = Number(credited.balance);
+    const balBefore = balAfter - amount;
 
     await db.transaction.create({
       data: {
@@ -466,6 +480,9 @@ const handleDvaCredit = async (event) => {
       reference,
       metadata: { flutterwaveRef, accountNumber, bankName: va.bankName },
     });
+  }).catch((err) => {
+    if (err.code === 'P2002') return logger.info(`DVA credit ${reference} already recorded`);
+    throw err;
   });
 };
 
@@ -486,36 +503,34 @@ const handleTransferUpdate = async (event) => {
 
   if (status === 'SUCCESSFUL') {
     await prisma.$transaction(async (db) => {
-      const wallet = await db.wallet.findUnique({ where: { id: tx.walletId } });
-      if (!wallet) return;
-
-      await db.wallet.update({
-        where: { id: wallet.id },
-        data: { lockedBalance: { decrement: Number(tx.amount) } },
+      // Settle exactly once, even if Flutterwave delivers the webhook twice
+      const { count } = await db.transaction.updateMany({
+        where: { id: tx.id, status: 'PROCESSING' },
+        data: { status: 'COMPLETED', externalRef: flutterwaveId, completedAt: new Date() },
       });
+      if (count === 0) return;
 
-      await db.transaction.update({
-        where: { id: tx.id },
+      // The money has left: take it out of the balance as well as the hold
+      await db.wallet.update({
+        where: { id: tx.walletId },
         data: {
-          status: 'COMPLETED',
-          externalRef: flutterwaveId,
-          completedAt: new Date(),
+          balance: { decrement: Number(tx.amount) },
+          lockedBalance: { decrement: Number(tx.amount) },
         },
       });
     });
   } else if (['FAILED', 'CANCELLED'].includes(status)) {
     await prisma.$transaction(async (db) => {
-      const wallet = await db.wallet.findUnique({ where: { id: tx.walletId } });
-      if (!wallet) return;
-
-      await db.wallet.update({
-        where: { id: wallet.id },
-        data: { lockedBalance: { decrement: Number(tx.amount) } },
-      });
-
-      await db.transaction.update({
-        where: { id: tx.id },
+      const { count } = await db.transaction.updateMany({
+        where: { id: tx.id, status: 'PROCESSING' },
         data: { status: 'FAILED', externalRef: flutterwaveId },
+      });
+      if (count === 0) return;
+
+      // Nothing was paid: release the hold
+      await db.wallet.update({
+        where: { id: tx.walletId },
+        data: { lockedBalance: { decrement: Number(tx.amount) } },
       });
     });
   }

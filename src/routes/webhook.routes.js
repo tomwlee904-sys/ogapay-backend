@@ -30,7 +30,8 @@ router.post('/paystack', async (req, res) => {
   try {
     if (event.event === 'charge.success') {
       const { reference } = event.data;
-      await confirmDeposit(reference, event.data.id);
+      // Paystack amounts are in kobo
+      await confirmDeposit(reference, event.data.id, { amount: Number(event.data.amount) / 100, currency: event.data.currency });
     }
   } catch (err) {
     logger.error('Paystack webhook processing error:', err.message);
@@ -55,7 +56,7 @@ router.post('/flutterwave', async (req, res) => {
   try {
     if (event.event === 'charge.completed' && event.data.status === 'successful') {
       const reference = event.data.tx_ref;
-      await confirmDeposit(reference, String(event.data.id));
+      await confirmDeposit(reference, String(event.data.id), { amount: Number(event.data.amount), currency: event.data.currency });
     } else if (event.event === 'va.credit_notification') {
       await flutterwaveService.handleDvaCredit(event);
     } else if (event.event === 'transfer.completed') {

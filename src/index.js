@@ -97,6 +97,7 @@ app.use(globalLimiter);
 // ── Body Parsing ──────────────────────────────
 // Raw body for webhooks MUST come before json()
 app.use(`${API}/webhooks`, express.raw({ type: 'application/json' }));
+app.use([`${API}/kyc/webhook`, `${API_ALIAS}/kyc/webhook`], express.raw({ type: '*/*' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

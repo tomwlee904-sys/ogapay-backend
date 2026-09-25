@@ -116,7 +116,9 @@ async function verifyAndCreditDeposit(userId, signedTxBase64, expectedAmountUsdc
   return { signature: sig, senderAddress, amount: transferAmount / 1_000_000 };
 }
 
-async function sendUsdc(toAddress, amountUsdc) {
+// `onSent(sig)` runs as soon as the transaction is broadcast, so the caller
+// knows money may have left even if confirmation later times out.
+async function sendUsdc(toAddress, amountUsdc, onSent) {
   const platform = getPlatformKeypair();
   const platformAta = await getPlatformUsdcATA();
   const recipient = new PublicKey(toAddress);
@@ -137,14 +139,17 @@ async function sendUsdc(toAddress, amountUsdc) {
   tx.sign(platform);
 
   const sig = await connection.sendRawTransaction(tx.serialize());
+  if (onSent) await onSent(sig);
   const confirmation = await connection.confirmTransaction(sig, 'confirmed');
   if (confirmation.value.err) {
-    throw new Error(`USDC transfer failed on-chain: ${JSON.stringify(confirmation.value.err)}`);
+    const err = new Error(`USDC transfer failed on-chain: ${JSON.stringify(confirmation.value.err)}`);
+    err.landedFailed = true; // the transaction landed and failed: no tokens moved
+    throw err;
   }
   return sig;
 }
 
-async function sendSol(toAddress, amountSol) {
+async function sendSol(toAddress, amountSol, onSent) {
   const platform = getPlatformKeypair();
   const recipient = new PublicKey(toAddress);
   const lamports = Math.round(amountSol * LAMPORTS_PER_SOL);
@@ -163,9 +168,12 @@ async function sendSol(toAddress, amountSol) {
   tx.sign(platform);
 
   const sig = await connection.sendRawTransaction(tx.serialize());
+  if (onSent) await onSent(sig);
   const confirmation = await connection.confirmTransaction(sig, 'confirmed');
   if (confirmation.value.err) {
-    throw new Error(`SOL transfer failed on-chain: ${JSON.stringify(confirmation.value.err)}`);
+    const err = new Error(`SOL transfer failed on-chain: ${JSON.stringify(confirmation.value.err)}`);
+    err.landedFailed = true; // the transaction landed and failed: no SOL moved
+    throw err;
   }
   return sig;
 }

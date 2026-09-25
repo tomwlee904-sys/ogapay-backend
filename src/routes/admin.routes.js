@@ -59,22 +59,27 @@ router.post('/moderation/resolve/:submissionId', requireAdmin, async (req, res) 
   };
 
   const result = await prisma.$transaction(async (db) => {
-    const updated = await db.taskSubmission.update({
-      where: { id: submissionId },
+    // Guarded: a second click (or a poster review at the same moment) can't pay twice
+    const { count } = await db.taskSubmission.updateMany({
+      where: { id: submissionId, status: 'SUBMITTED', moderatedAt: null },
       data: updateData,
     });
+    if (count === 0) throw ApiError.conflict('Submission was already reviewed');
 
+    const { releaseEscrow, completeTaskIfResolved } = require('../services/escrow.service');
     if (action === 'APPROVED') {
-      const { releaseEscrow } = require('../services/escrow.service');
       await releaseEscrow(
         submission.taskId,
         submission.workerId,
         parseFloat(submission.task.reward),
         submission.task.currency,
+        submissionId,
+        db,
       );
     }
+    await completeTaskIfResolved(db, submission.taskId);
 
-    return updated;
+    return db.taskSubmission.findUnique({ where: { id: submissionId } });
   });
 
   successResponse(res, { id: result.id, status: result.status }, `Submission ${action.toLowerCase()} by moderator`);

@@ -3,7 +3,7 @@
 const escrowService = require('../services/escrow.service');
 const taskService = require('../services/task.service');
 const { prisma } = require('../config/database');
-const { successResponse, paginatedResponse, paginate } = require('../utils/apiResponse');
+const { successResponse, paginatedResponse, paginate, ApiError } = require('../utils/apiResponse');
 
 const getStatus = async (req, res) => {
   const status = await escrowService.getEscrowStatus(req.params.taskId);
@@ -55,12 +55,8 @@ const refund = async (req, res) => {
     return res.status(400).json({ success: false, message: `Task already ${task.status.toLowerCase()}` });
   }
 
+  // Marks the task CANCELLED and returns the escrow in one guarded step
   const tx = await escrowService.refundEscrow(req.params.taskId, 'TASK_CANCELLED');
-
-  await prisma.task.update({
-    where: { id: req.params.taskId },
-    data: { status: 'CANCELLED' },
-  });
 
   successResponse(res, { txId: tx.id, reference: tx.reference, amount: parseFloat(tx.amount) }, 'Task cancelled and escrow refunded');
 };
@@ -77,6 +73,10 @@ const dispute = async (req, res) => {
   if (!submission) return res.status(404).json({ success: false, message: 'Submission not found' });
   if (submission.workerId !== req.user.id && req.user.role !== 'ADMIN') {
     return res.status(403).json({ success: false, message: 'Not your submission' });
+  }
+  // Only a rejection can be disputed; disputing paid work could get it paid twice
+  if (submission.status !== 'REJECTED') {
+    return res.status(400).json({ success: false, message: 'Only a rejected submission can be disputed' });
   }
 
   const existingDispute = await prisma.dispute.findUnique({
@@ -127,84 +127,38 @@ const resolve = async (req, res) => {
   });
   if (!disputeRecord) return res.status(404).json({ success: false, message: 'Dispute not found' });
 
+  if (disputeRecord.resolvedAt) {
+    return res.status(409).json({ success: false, message: 'Dispute already resolved' });
+  }
+
   const task = disputeRecord.submission.task;
-  const amount = parseFloat(task.reward);
+  const reward = parseFloat(task.reward);
+  const workerPayout = outcome === 'WORKER_WON' ? reward : outcome === 'SPLIT' ? reward / 2 : 0;
 
-  return prisma.$transaction(async (db) => {
-    let workerPayout = 0;
-    let posterRefund = 0;
-
-    if (outcome === 'WORKER_WON') {
-      workerPayout = amount;
-    } else if (outcome === 'POSTER_WON') {
-      posterRefund = amount;
-    } else if (outcome === 'SPLIT') {
-      workerPayout = amount / 2;
-      posterRefund = amount / 2;
-    }
-
-    if (workerPayout > 0) {
-      const workerWallet = await db.wallet.findUnique({
-        where: { userId_currency: { userId: disputeRecord.workerId, currency: task.currency } },
-      });
-      if (workerWallet) {
-        await db.wallet.update({
-          where: { id: workerWallet.id },
-          data: { balance: { increment: workerPayout } },
-        });
-        await db.transaction.create({
-          data: {
-            userId: disputeRecord.workerId,
-            walletId: workerWallet.id,
-            type: 'TASK_PAYMENT',
-            status: 'COMPLETED',
-            amount: workerPayout,
-            currency: task.currency,
-            reference: `OGA-DISPUTE-${require('uuid').v4().replace(/-/g, '').slice(0, 12).toUpperCase()}`,
-            balanceBefore: parseFloat(workerWallet.balance),
-            balanceAfter: parseFloat(workerWallet.balance) + workerPayout,
-            taskId: task.id,
-            completedAt: new Date(),
-            description: 'Dispute resolution — worker payout',
-          },
-        });
-      }
-    }
-
-    if (posterRefund > 0) {
-      const posterWallet = await db.wallet.findUnique({
-        where: { userId_currency: { userId: disputeRecord.posterId, currency: task.currency } },
-      });
-      if (posterWallet) {
-        await db.wallet.update({
-          where: { id: posterWallet.id },
-          data: {
-            lockedBalance: { decrement: posterRefund },
-            balance: { increment: posterRefund },
-          },
-        });
-      }
-    } else {
-      const posterWallet = await db.wallet.findUnique({
-        where: { userId_currency: { userId: disputeRecord.posterId, currency: task.currency } },
-      });
-      if (posterWallet) {
-        await db.wallet.update({
-          where: { id: posterWallet.id },
-          data: { lockedBalance: { decrement: amount } },
-        });
-      }
-    }
-
-    const updated = await db.dispute.update({
-      where: { id: disputeRecord.id },
-      data: {
-        outcome,
-        resolution,
-        resolvedById: req.user.id,
-        resolvedAt: new Date(),
-      },
+  const updated = await prisma.$transaction(async (db) => {
+    // Resolve exactly once, even if the request is sent twice
+    const { count } = await db.dispute.updateMany({
+      where: { id: disputeRecord.id, resolvedAt: null },
+      data: { outcome, resolution, resolvedById: req.user.id, resolvedAt: new Date() },
     });
+    if (count === 0) throw ApiError.conflict('Dispute already resolved');
+
+    // The worker is paid from this task's escrow, like an approval: the poster's
+    // balance and hold drop by the payout. POSTER_WON moves no money, because the
+    // rejected slot's reward is still held in escrow for the task.
+    if (workerPayout > 0) {
+      const fresh = await db.task.findUnique({ where: { id: task.id } });
+      const remaining = fresh.escrowed ? await escrowService.remainingEscrow(db, fresh) : 0;
+      if (remaining + 1e-8 < workerPayout) {
+        throw ApiError.conflict('This task no longer holds enough escrow to pay the worker. Settle it manually.');
+      }
+      await escrowService.releaseEscrow(task.id, disputeRecord.workerId, workerPayout, task.currency, disputeRecord.submissionId, db);
+
+      // The rejection reopened this worker's slot; take it back so it isn't paid twice
+      if (outcome === 'WORKER_WON' && fresh.currentWorkers < fresh.maxWorkers) {
+        await db.task.update({ where: { id: task.id }, data: { currentWorkers: { increment: 1 } } });
+      }
+    }
 
     await db.taskSubmission.update({
       where: { id: disputeRecord.submissionId },
@@ -214,8 +168,11 @@ const resolve = async (req, res) => {
       },
     });
 
-    successResponse(res, updated, 'Dispute resolved');
+    await escrowService.completeTaskIfResolved(db, task.id);
+    return db.dispute.findUnique({ where: { id: disputeRecord.id } });
   });
+
+  successResponse(res, updated, 'Dispute resolved');
 };
 
 module.exports = {

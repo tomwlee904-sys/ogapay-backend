@@ -13,8 +13,17 @@ const flutterwaveService = require('../services/flutterwave.service');
 const { successResponse, createdResponse, ApiError } = require('../utils/apiResponse');
 const { v4: uuidv4 } = require('uuid');
 const { checkIdempotency, setIdempotency } = require('../utils/idempotency');
+const { debitAvailable } = require('../utils/ledger');
+const { logger } = require('../utils/logger');
+const { PublicKey } = require('@solana/web3.js');
 
 const router = express.Router();
+
+// Per-withdrawal limit in naira by KYC level
+const ngnWithdrawLimit = (user) => {
+  const tier = user?.kyc?.kycTier ?? 0;
+  return tier >= 3 ? 200000 : tier >= 2 ? 20000 : tier >= 1 ? 10000 : 0;
+};
 
 // ─── Public: request a nonce to sign ──────────────────────────
 // Anyone can request a nonce for any wallet address (no auth needed)
@@ -182,85 +191,99 @@ router.post('/withdraw/crypto', authenticate, requireKyc, async (req, res) => {
   const cached = checkIdempotency(idempotencyKey);
   if (cached) return successResponse(res, cached, 'Withdrawal already submitted (idempotent)');
 
-  const { amount, currency, toAddress } = req.body;
-  if (!amount || amount <= 0) throw ApiError.badRequest('Valid amount required');
+  const amount = Number(req.body.amount);
+  const { currency, toAddress } = req.body;
+  if (!(amount > 0)) throw ApiError.badRequest('Valid amount required');
   if (!toAddress) throw ApiError.badRequest('toAddress required');
   if (!currency || !['USDC', 'SOL'].includes(currency)) throw ApiError.badRequest('Currency must be USDC or SOL');
+  try { new PublicKey(toAddress); } catch { throw ApiError.badRequest('Invalid Solana address'); }
 
-  const wallet = await prisma.wallet.findUnique({
-    where: { userId_currency: { userId: req.user.id, currency } },
-  });
-  if (!wallet) throw ApiError.notFound('Wallet not found');
-  if (Number(wallet.balance) - Number(wallet.lockedBalance) < amount) {
-    throw ApiError.badRequest('Insufficient available balance');
+  // The same Idempotency-Key always maps to the same reference and references
+  // are unique, so a retried request can't create a second withdrawal.
+  const ref = idempotencyKey
+    ? `OGA-WIT-CRYPTO-${crypto.createHash('sha256').update(`${req.user.id}:${idempotencyKey}`).digest('hex').slice(0, 20).toUpperCase()}`
+    : `OGA-WIT-CRYPTO-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
+
+  // 1. Take the money out of the wallet first, in one guarded step. Before this
+  //    fix the balance was checked, the coins sent, and only then debited, so
+  //    two requests at once were both paid.
+  let record;
+  try {
+    record = await prisma.$transaction(async (db) => {
+      const wallet = await db.wallet.findUnique({
+        where: { userId_currency: { userId: req.user.id, currency } },
+      });
+      if (!wallet) throw ApiError.notFound('Wallet not found');
+      if (!(await debitAvailable(db, wallet.id, amount))) {
+        throw ApiError.badRequest('Insufficient available balance');
+      }
+      return db.transaction.create({
+        data: {
+          userId: req.user.id,
+          walletId: wallet.id,
+          type: 'WITHDRAWAL',
+          status: 'PROCESSING',
+          amount,
+          currency,
+          reference: ref,
+          balanceBefore: Number(wallet.balance),
+          balanceAfter: Number(wallet.balance) - amount,
+          description: `${currency} withdrawal to ${toAddress}`,
+          metadata: { toAddress },
+        },
+      });
+    });
+  } catch (err) {
+    if (err.code === 'P2002') {
+      const existing = await prisma.transaction.findUnique({ where: { reference: ref } });
+      return successResponse(res, { signature: existing?.externalRef || null, reference: ref, status: existing?.status }, 'Withdrawal already submitted (idempotent)');
+    }
+    throw err;
   }
 
-  let txSig;
-  if (currency === 'USDC') {
-    txSig = await solanaService.sendUsdc(toAddress, amount);
-  } else {
-    txSig = await solanaService.sendSol(toAddress, amount);
+  // 2. Send on-chain
+  let sentSig = null;
+  const onSent = async (sig) => {
+    sentSig = sig;
+    await prisma.transaction.update({ where: { id: record.id }, data: { externalRef: sig } });
+  };
+
+  try {
+    const txSig = currency === 'USDC'
+      ? await solanaService.sendUsdc(toAddress, amount, onSent)
+      : await solanaService.sendSol(toAddress, amount, onSent);
+
+    await prisma.transaction.update({
+      where: { id: record.id },
+      data: { status: 'COMPLETED', externalRef: txSig, completedAt: new Date() },
+    });
+    const result = { signature: txSig, reference: ref };
+    setIdempotency(idempotencyKey, result);
+    return successResponse(res, result, 'Crypto withdrawal processed');
+  } catch (err) {
+    if (!sentSig || err.landedFailed) {
+      // Nothing left the platform wallet: give the money back
+      await prisma.$transaction(async (db) => {
+        const { count } = await db.transaction.updateMany({
+          where: { id: record.id, status: 'PROCESSING' },
+          data: { status: 'FAILED', metadata: { toAddress, error: String(err.message).slice(0, 500) } },
+        });
+        if (count === 1) {
+          await db.wallet.update({ where: { id: record.walletId }, data: { balance: { increment: amount } } });
+        }
+      });
+      throw ApiError.badRequest(`Withdrawal failed: ${err.message}`);
+    }
+
+    // Broadcast but not confirmed in time: it may still land, so the money stays
+    // debited and the withdrawal stays PROCESSING until the signature is checked.
+    logger.error(`Crypto withdrawal ${ref} sent as ${sentSig} but not confirmed: ${err.message}`);
+    return successResponse(res, { signature: sentSig, reference: ref, status: 'PROCESSING' }, 'Withdrawal sent; waiting for network confirmation');
   }
-
-  await prisma.wallet.update({
-    where: { id: wallet.id },
-    data: { balance: { decrement: amount } },
-  });
-
-  const ref = `OGA-WIT-CRYPTO-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
-  await prisma.transaction.create({
-    data: {
-      userId: req.user.id,
-      walletId: wallet.id,
-      type: 'WITHDRAWAL',
-      status: 'COMPLETED',
-      amount,
-      currency,
-      reference: ref,
-      externalRef: txSig,
-      balanceBefore: Number(wallet.balance),
-      balanceAfter: Number(wallet.balance) - amount,
-      description: `${currency} withdrawal to ${toAddress}`,
-    },
-  });
-
-  const result = { signature: txSig, reference: ref };
-  setIdempotency(idempotencyKey, result);
-  successResponse(res, result, 'Crypto withdrawal processed');
 });
 
-// POST /api/v1/wallet/credit — dev/test helper: credit a user's NGN wallet by email (no auth required)
-router.post('/credit', async (req, res) => {
-  const { email, amount, currency = 'NGN' } = req.body;
-  if (!email || !amount || amount <= 0) throw ApiError.badRequest('email and amount required');
-
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw ApiError.notFound('User not found');
-
-  const wallet = await prisma.wallet.upsert({
-    where: { userId_currency: { userId: user.id, currency } },
-    create: { userId: user.id, currency, balance: amount, lockedBalance: 0 },
-    update: { balance: { increment: amount } },
-  });
-
-  const ref = `OGA-TEST-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
-  await prisma.transaction.create({
-    data: {
-      userId: user.id,
-      walletId: wallet.id,
-      type: 'SYSTEM_CREDIT',
-      status: 'COMPLETED',
-      amount,
-      currency,
-      reference: ref,
-      balanceBefore: Number(wallet.balance) - amount,
-      balanceAfter: Number(wallet.balance),
-      description: 'Test credit',
-    },
-  });
-
-  successResponse(res, { newBalance: Number(wallet.balance) }, 'Wallet credited');
-});
+// POST /api/v1/wallet/credit (an unauthenticated "test helper" that credited any
+// wallet by email) was removed: anyone could mint money with it.
 
 // All remaining wallet routes require auth
 router.use(authenticate);
@@ -302,8 +325,7 @@ router.post('/withdraw', requireKyc, validate(withdrawSchema), async (req, res) 
   const { amount } = req.body;
 
   // Check withdrawal limit based on KYC level
-  const kycTier = req.user?.kyc?.kycTier ?? 0;
-  const MAX_WITHDRAWAL = kycTier >= 3 ? 200000 : (kycTier >= 2 ? 20000 : (kycTier >= 1 ? 10000 : 0));
+  const MAX_WITHDRAWAL = ngnWithdrawLimit(req.user);
 
   if (Number(amount) > MAX_WITHDRAWAL) {
     throw ApiError.badRequest(`Withdrawal limit is ₦${MAX_WITHDRAWAL.toLocaleString()} for your KYC level. Upgrade to Level 3 (Address + Docs) for ₦200,000 limit.`);
@@ -379,9 +401,15 @@ router.post('/transfer', requireKyc, async (req, res) => {
   const cached = checkIdempotency(idempotencyKey);
   if (cached) return successResponse(res, cached, 'Transfer already submitted (idempotent)');
 
-  const { bankAccountId, amount, currency } = req.body;
-  if (!bankAccountId || !amount || !currency) {
+  const { bankAccountId, currency } = req.body;
+  const amount = Number(req.body.amount);
+  if (!bankAccountId || !(amount > 0) || !currency) {
     throw ApiError.badRequest('bankAccountId, amount, and currency required');
+  }
+  // Same KYC limit as /withdraw (this route had none)
+  const limit = ngnWithdrawLimit(req.user);
+  if (amount > limit) {
+    throw ApiError.badRequest(`Withdrawal limit is ₦${limit.toLocaleString()} for your KYC level.`);
   }
 
   const ip = req.headers['x-forwarded-for'] || req.ip;

@@ -4,6 +4,7 @@ const express = require('express');
 const { prisma } = require('../config/database');
 const { authenticate, authorize } = require('../middleware/auth.middleware');
 const { successResponse, createdResponse, paginatedResponse, paginate, ApiError } = require('../utils/apiResponse');
+const { debitAvailable } = require('../utils/ledger');
 const walletService = require('../services/wallet.service');
 
 const router = express.Router();
@@ -393,7 +394,11 @@ router.get('/:id', async (req, res) => {
 // POST /api/v1/store/:itemId/purchase
 router.post('/:itemId/purchase', authenticate, async (req, res) => {
   const { itemId } = req.params;
-  const { quantity = 1 } = req.body;
+  // A negative quantity used to move money from the seller to the buyer
+  const quantity = Number(req.body.quantity ?? 1);
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
+    throw ApiError.badRequest('Quantity must be a whole number from 1 to 100');
+  }
 
   const item = await prisma.storeItem.findUnique({ where: { id: itemId } });
   if (!item || !item.isActive) throw ApiError.notFound('Item not found or unavailable');
@@ -417,11 +422,10 @@ router.post('/:itemId/purchase', authenticate, async (req, res) => {
   if (available < totalPrice) throw ApiError.badRequest('Insufficient wallet balance');
 
   const purchase = await prisma.$transaction(async (db) => {
-    // 1. Debit buyer
-    await db.wallet.update({
-      where: { id: buyerWallet.id },
-      data: { balance: { decrement: totalPrice } },
-    });
+    // 1. Debit buyer in one guarded step: two purchases at once can't overdraw
+    if (!(await debitAvailable(db, buyerWallet.id, totalPrice))) {
+      throw ApiError.badRequest('Insufficient wallet balance');
+    }
 
     const ref = `OGA-STORE-${Date.now()}`;
 
@@ -445,7 +449,7 @@ router.post('/:itemId/purchase', authenticate, async (req, res) => {
     const newSellerBalance = parseFloat(sellerWallet.balance) + totalPrice;
     await db.wallet.update({
       where: { id: sellerWallet.id },
-      data: { balance: newSellerBalance },
+      data: { balance: { increment: totalPrice } },
     });
 
     await db.transaction.create({

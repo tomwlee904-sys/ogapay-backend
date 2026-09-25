@@ -49,9 +49,16 @@ async function maybeTriggerReferralBonus(referredUserId) {
   const reference = `OGA-REF-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
   await prisma.$transaction(async (db) => {
+    // Claim the referral first: a second call at the same moment finds it completed
+    const { count } = await db.referral.updateMany({
+      where: { id: referral.id, status: 'pending' },
+      data: { status: 'completed', firstTaskCompletedAt: new Date(), bonusPaidAt: new Date() },
+    });
+    if (count === 0) return;
+
     await db.wallet.update({
       where: { id: referrerWallet.id },
-      data: { balance: newBalance },
+      data: { balance: { increment: REFERRAL_BONUS_NGN } },
     });
 
     await db.transaction.create({
@@ -69,14 +76,6 @@ async function maybeTriggerReferralBonus(referredUserId) {
       },
     });
 
-    await db.referral.update({
-      where: { id: referral.id },
-      data: {
-        status: 'completed',
-        firstTaskCompletedAt: new Date(),
-        bonusPaidAt: new Date(),
-      },
-    });
   });
 }
 

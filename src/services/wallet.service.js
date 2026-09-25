@@ -6,6 +6,7 @@ const { ApiError } = require('../utils/apiResponse');
 const { logger } = require('../utils/logger');
 const { createNotification, NOTIF_TYPES } = require("../utils/notify");
 const { fetchPrices, FALLBACK_PRICES } = require('./price.service');
+const { holdFunds } = require('../utils/ledger');
 
 const PLATFORM_FEE_PERCENT = parseFloat(process.env.PLATFORM_FEE_PERCENT || '10');
 
@@ -88,28 +89,50 @@ const initiateDeposit = async (userId, { amount, currency, provider, callbackUrl
 
 // ── Confirm deposit (called from webhook) ───────
 
-const confirmDeposit = async (reference, providerRef) => {
+// `paid` is what the provider reports ({ amount, currency }). A payment that
+// doesn't cover the deposit, or is in another currency, is not credited.
+const confirmDeposit = async (reference, providerRef, paid = null) => {
   const tx = await prisma.transaction.findUnique({ where: { reference } });
   if (!tx) throw ApiError.notFound('Transaction not found');
   if (tx.status !== 'PENDING') return tx; // Idempotent
 
-  const wallet = await prisma.wallet.findUnique({ where: { id: tx.walletId } });
+  if (paid) {
+    const short = paid.amount != null && Number(paid.amount) + 1e-6 < Number(tx.amount);
+    const wrongCurrency = paid.currency && String(paid.currency).toUpperCase() !== tx.currency;
+    if (short || wrongCurrency) {
+      logger.error(`Deposit ${reference} not credited: provider reported ${paid.amount} ${paid.currency}, expected ${tx.amount} ${tx.currency}`);
+      const meta = tx.metadata && typeof tx.metadata === 'object' ? tx.metadata : {};
+      await prisma.transaction.updateMany({
+        where: { id: tx.id, status: 'PENDING' },
+        data: {
+          status: 'FAILED',
+          externalRef: providerRef ? String(providerRef) : null,
+          metadata: { ...meta, providerAmount: paid.amount, providerCurrency: paid.currency },
+        },
+      });
+      return null;
+    }
+  }
 
   return prisma.$transaction(async (db) => {
-    const newBalance = parseFloat(wallet.balance) + parseFloat(tx.amount);
+    // The status change is the guard: a webhook retry or the verify endpoint
+    // arriving at the same moment finds the deposit already COMPLETED.
+    const { count } = await db.transaction.updateMany({
+      where: { id: tx.id, status: 'PENDING' },
+      data: { status: 'COMPLETED', externalRef: providerRef ? String(providerRef) : null, completedAt: new Date() },
+    });
+    if (count === 0) return db.transaction.findUnique({ where: { id: tx.id } });
 
-    await db.wallet.update({
-      where: { id: wallet.id },
-      data: { balance: newBalance },
+    const wallet = await db.wallet.update({
+      where: { id: tx.walletId },
+      data: { balance: { increment: tx.amount } },
     });
 
     const updated = await db.transaction.update({
       where: { id: tx.id },
       data: {
-        status: 'COMPLETED',
-        externalRef: providerRef,
-        balanceAfter: newBalance,
-        completedAt: new Date(),
+        balanceBefore: Number(wallet.balance) - Number(tx.amount),
+        balanceAfter: wallet.balance,
       },
     });
 
@@ -169,21 +192,16 @@ const initiateWithdrawal = async (userId, { amount, currency, bankCode, bankName
   });
   if (!wallet) throw ApiError.notFound('Wallet not found');
 
-  const availableBalance = parseFloat(wallet.balance) - parseFloat(wallet.lockedBalance);
-  if (availableBalance < amount) {
-    throw ApiError.badRequest(`Insufficient balance. Available: ${formatAmount(availableBalance, currency)}`);
-  }
-
   const fee = calculateWithdrawalFee(amount, currency);
   const netAmount = amount - fee;
   const reference = `OGA-WIT-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
 
   return prisma.$transaction(async (db) => {
-    // Lock funds
-    await db.wallet.update({
-      where: { id: wallet.id },
-      data: { lockedBalance: { increment: amount } },
-    });
+    // Hold the funds in one guarded step, so two requests at once can't both pass
+    if (!(await holdFunds(db, wallet.id, amount))) {
+      const available = Math.max(0, parseFloat(wallet.balance) - parseFloat(wallet.lockedBalance));
+      throw ApiError.badRequest(`Insufficient balance. Available: ${formatAmount(available, currency)}`);
+    }
 
     const tx = await db.transaction.create({
       data: {
@@ -323,12 +341,19 @@ const rewardForReferral = async (userId) => {
     const effectiveAmount = isPenalized ? REFERRAL_BONUS_AMOUNT - PENALTY_AMOUNT : REFERRAL_BONUS_AMOUNT;
     const descSuffix = isPenalized ? ' (cooldown penalty applied)' : '';
 
+    // Pay exactly once: claiming the flag is the guard against a second call at the same moment
+    const { count: claimed } = await db.user.updateMany({
+      where: { id: userId, referralRewardedAt: null },
+      data: { referralRewardedAt: new Date() },
+    });
+    if (claimed === 0) return null;
+
     const newBalance = parseFloat(referrerWallet.balance) + effectiveAmount;
     const reference = `OGA-REF-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
 
     await db.wallet.update({
       where: { id: referrerWallet.id },
-      data: { balance: newBalance },
+      data: { balance: { increment: effectiveAmount } },
     });
 
     await db.transaction.create({
@@ -346,11 +371,6 @@ const rewardForReferral = async (userId) => {
         completedAt: new Date(),
         metadata: { referredUserId: userId, dailyVelocityPenalized: isPenalized, dailyTotal },
       },
-    });
-
-    await db.user.update({
-      where: { id: userId },
-      data: { referralRewardedAt: new Date() },
     });
 
     await createNotification({
@@ -392,12 +412,19 @@ const rewardSignupBonus = async (userId) => {
     });
     if (!wallet) return null;
 
+    // Pay exactly once: KYC submit and the Dojah webhook can both trigger this
+    const { count: claimed } = await db.user.updateMany({
+      where: { id: userId, signupBonusPaid: false },
+      data: { signupBonusPaid: true },
+    });
+    if (claimed === 0) return null;
+
     const newBalance = parseFloat(wallet.balance) + SIGNUP_BONUS_AMOUNT;
     const reference = `OGA-SGN-${uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
 
     await db.wallet.update({
       where: { id: wallet.id },
-      data: { balance: newBalance },
+      data: { balance: { increment: SIGNUP_BONUS_AMOUNT } },
     });
 
     await db.transaction.create({
@@ -414,11 +441,6 @@ const rewardSignupBonus = async (userId) => {
         description: 'Signup bonus for completing KYC verification',
         completedAt: new Date(),
       },
-    });
-
-    await db.user.update({
-      where: { id: userId },
-      data: { signupBonusPaid: true },
     });
 
     await createNotification({
@@ -480,7 +502,8 @@ const autoConvertUsdcToNgn = async (userId, options = {}) => {
         where: { userId_currency: { userId, currency: 'USDC' } },
       });
       if (!usdcWallet) return null;
-      const usdcBalance = parseFloat(usdcWallet.balance);
+      // Only the available part: USDC held in escrow or for a withdrawal stays put
+      const usdcBalance = parseFloat(usdcWallet.balance) - parseFloat(usdcWallet.lockedBalance);
       if (usdcBalance <= 0.000001) return null;
 
       const prices = await fetchPrices();
@@ -503,8 +526,8 @@ const autoConvertUsdcToNgn = async (userId, options = {}) => {
 
       // Atomic debit with optimistic lock -- only succeeds if balance still matches
       const result = await db.wallet.updateMany({
-        where: { id: usdcWallet.id, balance: usdcBalance },
-        data: { balance: 0 },
+        where: { id: usdcWallet.id, balance: usdcWallet.balance, lockedBalance: usdcWallet.lockedBalance },
+        data: { balance: { decrement: usdcBalance } },
       });
       if (result.count === 0) {
         // Another concurrent call already converted or spent this balance
@@ -515,7 +538,7 @@ const autoConvertUsdcToNgn = async (userId, options = {}) => {
       // Credit NGN wallet
       await db.wallet.update({
         where: { id: ngnWallet.id },
-        data: { balance: newNgnBalance },
+        data: { balance: { increment: ngnAmount } },
       });
 
       // Log USDC debit transaction
@@ -528,8 +551,8 @@ const autoConvertUsdcToNgn = async (userId, options = {}) => {
           amount: -usdcBalance,
           currency: 'USDC',
           reference,
-          balanceBefore: usdcBalance,
-          balanceAfter: 0,
+          balanceBefore: parseFloat(usdcWallet.balance),
+          balanceAfter: parseFloat(usdcWallet.lockedBalance),
           description: `Auto-converted ${usdcBalance.toFixed(6)} USDC`,
           completedAt: new Date(),
           metadata: { autoConvert: true, rate, ngnAmount, fromCurrency: 'USDC', toCurrency: 'NGN' },

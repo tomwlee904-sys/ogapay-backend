@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const express = require('express');
 const multer = require('multer');
 const { authenticate, authorize } = require('../middleware/auth.middleware');
@@ -41,10 +42,21 @@ router.post('/documents/:type', authenticate, upload.single('document'), async (
 });
 
 // POST /api/v1/kyc/webhook — Dojah async verification callback
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+// Dojah signs each event: x-dojah-signature = HMAC-SHA256(raw body, DOJAH_SECRET_KEY).
+// Unsigned calls used to be accepted, so anyone could approve KYC and collect
+// the signup and referral bonuses.
+router.post('/webhook', express.raw({ type: '*/*' }), async (req, res) => {
+  const secret = process.env.DOJAH_SECRET_KEY;
+  const raw = Buffer.isBuffer(req.body) ? req.body : null;
+  const got = String(req.headers['x-dojah-signature'] || '');
+  const expected = secret && raw ? crypto.createHmac('sha256', secret).update(raw).digest('hex') : '';
+  const valid = got && expected && got.length === expected.length
+    && crypto.timingSafeEqual(Buffer.from(got), Buffer.from(expected));
+  if (!valid) return res.status(401).json({ received: false, message: 'Invalid signature' });
+
   let payload;
   try {
-    payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    payload = JSON.parse(raw.toString('utf8'));
   } catch {
     return res.status(200).json({ received: true });
   }
