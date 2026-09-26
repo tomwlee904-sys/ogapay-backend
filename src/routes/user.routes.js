@@ -80,19 +80,29 @@ router.get('/referrals/stats', authenticate, async (req, res) => {
 });
 
 // GET /api/v1/users/directory/list
+// People search (transfer recipient picker). A search term is required so the
+// whole user list can't be paged out; private profiles only match their exact
+// username, and banned accounts never show.
 router.get('/directory/list', async (req, res) => {
-  const { search, role, sort, page = 1, limit = 24 } = req.query;
+  const { role } = req.query;
+  const search = typeof req.query.search === 'string' ? req.query.search.trim().replace(/^@/, '').slice(0, 60) : '';
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 24, 1), 50);
   const skip = (page - 1) * limit;
-  
-  const where = {};
-  if (search) {
-    where.OR = [
-      { firstName: { contains: search, mode: 'insensitive' } },
-      { lastName: { contains: search, mode: 'insensitive' } },
-      { username: { contains: search, mode: 'insensitive' } },
-    ];
-  }
-  if (role) where.role = role;
+  if (search.length < 2) return paginatedResponse(res, [], paginate(page, limit, 0));
+
+  const where = {
+    isBanned: false,
+    OR: [
+      { isPublic: true, OR: [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { username: { contains: search, mode: 'insensitive' } },
+      ] },
+      { username: { equals: search, mode: 'insensitive' } },
+    ],
+  };
+  if (['WORKER', 'POSTER', 'ADMIN'].includes(role)) where.role = role;
 
   const [users, total] = await Promise.all([
     prisma.user.findMany({
@@ -109,9 +119,9 @@ router.get('/directory/list', async (req, res) => {
           select: { level: true, reputationScore: true, tasksCompleted: true, bio: true, isAvailable: true },
         },
       },
-      skip: parseInt(skip),
-      take: parseInt(limit),
-      orderBy: sort === 'newest' ? { createdAt: 'desc' } : { createdAt: 'desc' },
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
     }),
     prisma.user.count({ where }),
   ]);

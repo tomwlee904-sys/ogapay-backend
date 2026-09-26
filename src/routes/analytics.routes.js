@@ -1,89 +1,114 @@
 'use strict';
-
 const express = require('express');
 const { prisma } = require('../config/database');
 const { authenticate } = require('../middleware/auth.middleware');
-const { successResponse, ApiError } = require('../utils/apiResponse');
+const { successResponse } = require('../utils/apiResponse');
 
 const router = express.Router();
 
-// GET /api/v1/analytics — User analytics overview
+// Days and months are bucketed on Lagos time (UTC+1, no daylight saving)
+const LAGOS_MS = 60 * 60 * 1000;
+const DAY_MS = 86400000;
+const lagosDay = (d) => new Date(new Date(d).getTime() + LAGOS_MS).toISOString().slice(0, 10);
+const lagosMonth = (d) => lagosDay(d).slice(0, 7);
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function buckets(period) {
+  const now = Date.now();
+  if (period === 'year') {
+    const out = [];
+    const today = new Date(now + LAGOS_MS);
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - i, 1));
+      out.push({ key: d.toISOString().slice(0, 7), label: `${MONTHS[d.getUTCMonth()]} ${String(d.getUTCFullYear()).slice(2)}` });
+    }
+    const first = out[0].key;
+    return { list: out, since: new Date(Date.parse(`${first}-01T00:00:00Z`) - LAGOS_MS), keyOf: lagosMonth };
+  }
+  const days = period === 'month' ? 30 : 7;
+  const out = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const key = lagosDay(now - i * DAY_MS);
+    const d = new Date(`${key}T00:00:00Z`);
+    out.push({ key, label: days === 7 ? DAYS[d.getUTCDay()] : `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}` });
+  }
+  return { list: out, since: new Date(Date.parse(`${out[0].key}T00:00:00Z`) - LAGOS_MS), keyOf: lagosDay };
+}
+
+// GET /api/v1/analytics?period=week|month|year - the signed-in user's own numbers.
+// Earnings are naira paid for jobs (not deposits or escrow); spending is naira the
+// user's own jobs paid out to workers.
 router.get('/', authenticate, async (req, res) => {
   const userId = req.user.id;
+  const period = ['week', 'month', 'year'].includes(req.query.period) ? req.query.period : 'week';
+  const { list, since, keyOf } = buckets(period);
+  const paid = { type: 'TASK_PAYMENT', status: 'COMPLETED', taskId: { not: null }, createdAt: { gte: since } };
 
-  const [workerProfile, tasks, submissions, recentSubmissions] = await Promise.all([
-    prisma.workerProfile.findUnique({ where: { userId } }),
-    prisma.task.findMany({ where: { posterId: userId } }),
-    prisma.taskSubmission.findMany({ where: { workerId: userId }, include: { task: true } }),
-    prisma.taskSubmission.findMany({
-      where: { workerId: userId },
+  // Workers are paid with COMPLETED TASK_PAYMENT lines; a poster's own escrow line
+  // stays PENDING, so these are the user's job earnings only.
+  const myTaskIds = (await prisma.task.findMany({ where: { posterId: userId }, select: { id: true } })).map((t) => t.id);
+  const notMine = myTaskIds.length ? { taskId: { not: null, notIn: myTaskIds } } : {};
+  const [earned, spent, reviewed, workerProfile, recent] = await Promise.all([
+    prisma.transaction.findMany({
+      where: { ...paid, userId, ...notMine },
+      select: { amount: true, currency: true, createdAt: true },
+    }),
+    myTaskIds.length
+      ? prisma.transaction.findMany({
+          where: { ...paid, userId: { not: userId }, taskId: { in: myTaskIds } },
+          select: { amount: true, currency: true, createdAt: true },
+        })
+      : [],
+    prisma.taskSubmission.groupBy({
+      by: ['status'],
+      where: { workerId: userId, reviewedAt: { gte: since }, status: { in: ['APPROVED', 'REJECTED'] } },
+      _count: { _all: true },
+    }),
+    prisma.workerProfile.findUnique({ where: { userId }, select: { avgRating: true, totalRatings: true } }),
+    prisma.transaction.findMany({
+      where: { type: 'TASK_PAYMENT', status: 'COMPLETED', userId, taskId: { not: null }, ...notMine },
       orderBy: { createdAt: 'desc' },
       take: 10,
-      include: { task: { select: { title: true, reward: true, currency: true } } },
+      select: { id: true, amount: true, currency: true, createdAt: true, taskId: true },
     }),
   ]);
+  const titles = new Map((await prisma.task.findMany({
+    where: { id: { in: [...new Set(recent.map((t) => t.taskId))] } },
+    select: { id: true, title: true },
+  })).map((t) => [t.id, t.title]));
 
-  const completedSubs = submissions.filter(s => s.status === 'APPROVED');
-  const totalEarnings = completedSubs.reduce((s, sub) => s + Number(sub.task?.reward || 0), 0);
-  const successRate = submissions.length > 0 ? completedSubs.length / submissions.length : 0;
-  const avgRating = workerProfile?.avgRating || 0;
-
-  // Build weekly and monthly data
-  const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 86400000);
-  const monthAgo = new Date(now.getTime() - 30 * 86400000);
-
-  const weeklySubs = submissions.filter(s => new Date(s.createdAt) >= weekAgo);
-  const monthlySubs = submissions.filter(s => new Date(s.createdAt) >= monthAgo);
-
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const weeklyMap = {};
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * 86400000);
-    const key = dayNames[d.getDay()];
-    weeklyMap[key] = { day: key, tasks: 0, earnings: 0 };
+  const rows = new Map(list.map((b) => [b.key, { label: b.label, jobs: 0, earnedNgn: 0, spentNgn: 0 }]));
+  for (const t of earned) {
+    const row = rows.get(keyOf(t.createdAt));
+    if (!row) continue;
+    row.jobs += 1;
+    if (t.currency === 'NGN') row.earnedNgn += Number(t.amount);
   }
-  weeklySubs.forEach(s => {
-    const key = dayNames[new Date(s.createdAt).getDay()];
-    if (weeklyMap[key]) {
-      weeklyMap[key].tasks++;
-      weeklyMap[key].earnings += Number(s.task?.reward || 0);
-    }
-  });
-
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const monthlyMap = {};
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = monthNames[d.getMonth()];
-    monthlyMap[key] = { month: key, tasks: 0, earnings: 0 };
+  for (const t of spent) {
+    const row = rows.get(keyOf(t.createdAt));
+    if (row && t.currency === 'NGN') row.spentNgn += Number(t.amount);
   }
-  monthlySubs.forEach(s => {
-    const key = monthNames[new Date(s.createdAt).getMonth()];
-    if (monthlyMap[key]) {
-      monthlyMap[key].tasks++;
-      monthlyMap[key].earnings += Number(s.task?.reward || 0);
-    }
-  });
+  const series = [...rows.values()].map((r) => ({ ...r, earnedNgn: Math.round(r.earnedNgn * 100) / 100, spentNgn: Math.round(r.spentNgn * 100) / 100 }));
 
-  const recentActivity = recentSubmissions.map(s => ({
-    period: new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    task: s.task?.title || 'Unknown',
-    status: s.status,
-    earnings: Number(s.task?.reward || 0),
-    currency: s.task?.currency || 'NGN',
-  }));
+  const approved = reviewed.find((r) => r.status === 'APPROVED')?._count._all || 0;
+  const rejected = reviewed.find((r) => r.status === 'REJECTED')?._count._all || 0;
+  const sum = (k) => series.reduce((a, r) => a + r[k], 0);
 
   successResponse(res, {
-    stats: {
-      tasksCompleted: submissions.length,
-      totalEarnings,
-      successRate: Math.round(successRate * 100),
-      avgRating: Math.round(avgRating * 10) / 10,
+    period,
+    totals: {
+      jobsPaid: earned.length,
+      earnedNgn: Math.round(sum('earnedNgn') * 100) / 100,
+      otherCurrencyJobs: earned.filter((t) => t.currency !== 'NGN').length,
+      spentNgn: Math.round(sum('spentNgn') * 100) / 100,
+      approvalRate: approved + rejected ? Math.round((approved / (approved + rejected)) * 100) : null,
+      reviewed: approved + rejected,
+      avgRating: workerProfile?.totalRatings ? Math.round(Number(workerProfile.avgRating) * 10) / 10 : null,
+      ratings: workerProfile?.totalRatings || 0,
     },
-    weekly: Object.values(weeklyMap),
-    monthly: Object.values(monthlyMap),
-    recentActivity,
+    series,
+    recent: recent.map((t) => ({ id: t.id, amount: Number(t.amount), currency: t.currency, at: t.createdAt, task: { id: t.taskId, title: titles.get(t.taskId) || 'Job' } })),
   });
 });
 

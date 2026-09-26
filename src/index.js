@@ -38,6 +38,7 @@ const serviceRoutes = require('./routes/service.routes');
 const wurkerRoutes = require('./routes/wurker.routes');
 const bookmarkRoutes = require('./routes/bookmark.routes');
 const reportRoutes = require('./routes/report.routes');
+const analyticsRoutes = require('./routes/analytics.routes');
 const editrequestRoutes = require('./routes/editrequest.routes');
 const communityV2Routes = require('./routes/community-v2.routes');
 const escrowRoutes = require('./routes/escrow.routes');
@@ -195,6 +196,7 @@ function mountRoutes(base) {
   app.use(`${base}/services`, serviceRoutes);
   app.use(`${base}/bookmarks`, bookmarkRoutes);
   app.use(`${base}/reports`, reportRoutes);
+  app.use(`${base}/analytics`, analyticsRoutes);
   app.use(`${base}/editrequests`, editrequestRoutes);
   app.use(`${base}/social`, socialRoutes);
   app.use(`${base}/devices`, deviceRoutes);
