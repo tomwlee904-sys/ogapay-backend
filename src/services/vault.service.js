@@ -204,35 +204,51 @@ const creditPayoutToWallet = async (userId, amountNgp) => {
   });
 };
 
-// ── Credit user's Solana wallet with USDC payout ──
-// Records the payout to user's USDC wallet (Solana wallet transfer handled by external worker)
-const creditPayoutToSolana = async (userId, walletAddress, amountUsd) => {
-  // Credit to user's USDC wallet
-  const usdcWallet = await prisma.wallet.upsert({
-    where: { userId_currency: { userId, currency: 'USDC' } },
-    update: { balance: { increment: amountUsd } },
-    create: { userId, currency: 'USDC', balance: amountUsd, lockedBalance: 0, isActive: true },
+// ── Claim pending payouts ───────────────────────
+// Payouts are naira (the pool is naira from fees), so they go to the NGN wallet.
+// (They used to be credited to the USDC wallet as if the naira amount were
+// dollars.) Each payout flips pending -> paid in a guarded update inside the
+// same transaction as the credit, so concurrent claims can't pay twice.
+const claimPendingPayouts = async (userId) => prisma.$transaction(async (db) => {
+  const pending = await db.vaultPayout.findMany({
+    where: { userId, status: 'pending' },
+    select: { id: true, shareNgp: true },
   });
-
-  const reference = `OGA-VAULT-SOL-${require('uuid').v4().replace(/-/g, '').slice(0, 16).toUpperCase()}`;
-
-  await prisma.transaction.create({
-    data: {
-      userId,
-      walletId: usdcWallet.id,
-      type: 'TASK_REWARD',
-      status: 'COMPLETED',
-      amount: amountUsd,
-      currency: 'USDC',
-      reference,
-      balanceBefore: Number(usdcWallet.balance) - amountUsd,
-      balanceAfter: Number(usdcWallet.balance),
-      description: `Vault distribution payout to Solana: ${walletAddress}`,
-    },
-  });
-
-  logger.info(`Solana payout credited: $${amountUsd} to ${walletAddress} (user ${userId})`);
-};
+  let total = 0;
+  let claimed = 0;
+  for (const p of pending) {
+    const { count } = await db.vaultPayout.updateMany({
+      where: { id: p.id, status: 'pending' },
+      data: { status: 'paid', paidAt: new Date() },
+    });
+    if (!count) continue; // claimed by another request
+    total = Math.round((total + Number(p.shareNgp)) * 100) / 100;
+    claimed += 1;
+  }
+  if (total > 0) {
+    const wallet = await db.wallet.upsert({
+      where: { userId_currency: { userId, currency: 'NGN' } },
+      update: { balance: { increment: total } },
+      create: { userId, currency: 'NGN', balance: total, lockedBalance: 0, isActive: true },
+    });
+    await db.transaction.create({
+      data: {
+        userId,
+        walletId: wallet.id,
+        type: 'TASK_REWARD',
+        status: 'COMPLETED',
+        amount: total,
+        currency: 'NGN',
+        reference: `OGA-VAULT-${require('uuid').v4().replace(/-/g, '').slice(0, 16).toUpperCase()}`,
+        balanceBefore: Number(wallet.balance) - total,
+        balanceAfter: Number(wallet.balance),
+        description: `Vault payout (${claimed} ${claimed === 1 ? 'distribution' : 'distributions'})`,
+        completedAt: new Date(),
+      },
+    });
+  }
+  return { claimed, totalNgp: total };
+});
 
 module.exports = {
   logRevenue,
@@ -241,5 +257,5 @@ module.exports = {
   seedPayTokens,
   runDistribution,
   creditPayoutToWallet,
-  creditPayoutToSolana,
+  claimPendingPayouts,
 };

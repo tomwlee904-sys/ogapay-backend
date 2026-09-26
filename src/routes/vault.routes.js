@@ -18,9 +18,16 @@ router.get('/', async (req, res) => {
   });
 
   const distributionCount = await prisma.vaultDistribution.count();
-  const eligibleCount = await prisma.vaultUserStats.count({
-    where: { isEligible: true },
+  // Everyone holding $PAY right now shares the next distribution
+  const holders = await prisma.wallet.aggregate({
+    where: { currency: 'PAY', balance: { gt: 0 }, isActive: true },
+    _sum: { balance: true },
+    _count: { _all: true },
   });
+  const eligibleCount = holders._count._all;
+  // Runs at 00:00 and 12:00 UTC
+  const now = new Date();
+  const nextRun = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours() < 12 ? 12 : 24));
 
   successResponse(res, {
     pool: pool ? {
@@ -33,7 +40,40 @@ router.get('/', async (req, res) => {
     totalDistributedPay: Number(totalDistributed._sum.totalPay || 0),
     distributionCount,
     eligibleCount,
+    paySupply: Number(holders._sum.balance || 0),
+    nextRunAt: nextRun,
   });
+});
+
+// ── Public: recent money into the vault (platform fees) ──
+const SOURCE_LABEL = { task_fee: 'Job fee', task_fee_refund: 'Fee refunded', store_commission: 'Store fee', service_cut: 'Service fee' };
+router.get('/contributions', async (req, res) => {
+  const logs = await prisma.vaultRevenueLog.findMany({
+    orderBy: { recordedAt: 'desc' },
+    take: Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20)),
+    select: { id: true, source: true, sourceId: true, amountNgp: true, recordedAt: true },
+  });
+  successResponse(res, logs.map((l) => ({
+    id: l.id,
+    at: l.recordedAt,
+    amountNgp: Number(l.amountNgp),
+    reason: SOURCE_LABEL[l.source] || 'Other',
+    ref: l.sourceId ? '#' + String(l.sourceId).slice(0, 8) : null,
+  })));
+});
+
+// ── Public: last 30 days, per UTC day (what came in, what was shared) ──
+router.get('/trend', async (req, res) => {
+  const since = new Date(Date.now() - 30 * 86400000);
+  const [dists, logs] = await Promise.all([
+    prisma.vaultDistribution.findMany({ where: { distributedAt: { gte: since } }, select: { distributedAt: true, totalNgp: true } }),
+    prisma.vaultRevenueLog.findMany({ where: { recordedAt: { gte: since } }, select: { recordedAt: true, amountNgp: true } }),
+  ]);
+  const days = {};
+  for (let d = 29; d >= 0; d--) days[new Date(Date.now() - d * 86400000).toISOString().slice(0, 10)] = { distributedNgp: 0, revenueNgp: 0 };
+  for (const x of dists) { const k = new Date(x.distributedAt).toISOString().slice(0, 10); if (days[k]) days[k].distributedNgp += Number(x.totalNgp); }
+  for (const x of logs) { const k = new Date(x.recordedAt).toISOString().slice(0, 10); if (days[k]) days[k].revenueNgp += Number(x.amountNgp); }
+  successResponse(res, Object.entries(days).map(([day, v]) => ({ day, distributedNgp: Math.round(v.distributedNgp * 100) / 100, revenueNgp: Math.round(v.revenueNgp * 100) / 100 })));
 });
 
 // ── Public: Lookup vault eligibility by Solana wallet address ──
@@ -241,46 +281,9 @@ router.get('/pending-payouts', async (req, res) => {
 // ── POST /vault/claim ───────────────────────────┐
 router.post('/claim', async (req, res) => {
   const vaultService = require('../services/vault.service');
-  const userId = req.user.id;
-
-  // Check if user has a connected Solana wallet
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { walletAddress: true },
-  });
-
-  if (!user?.walletAddress) {
-    return successResponse(res, { claimed: 0, totalNgp: 0, needsWallet: true }, 'Connect your Solana wallet first to claim payouts');
-  }
-
-  // Get all pending payouts
-  const pendingPayouts = await prisma.vaultPayout.findMany({
-    where: { userId, status: 'pending' },
-  });
-
-  if (pendingPayouts.length === 0) {
-    return successResponse(res, { claimed: 0, totalNgp: 0 }, 'No pending payouts to claim');
-  }
-
-  let totalClaimed = 0;
-  for (const payout of pendingPayouts) {
-    // Send to Solana wallet via USDC transfer (handled by external service/hook)
-    await vaultService.creditPayoutToSolana(userId, user.walletAddress, Number(payout.shareNgp));
-
-    // Mark as paid
-    await prisma.vaultPayout.update({
-      where: { id: payout.id },
-      data: { status: 'paid', paidAt: new Date() },
-    });
-
-    totalClaimed += Number(payout.shareNgp);
-  }
-
-  successResponse(res, {
-    claimed: pendingPayouts.length,
-    totalNgp: totalClaimed,
-    walletAddress: user.walletAddress,
-  }, `Claimed $${totalClaimed.toLocaleString()} to your Solana wallet from ${pendingPayouts.length} payout(s)`);
+  const result = await vaultService.claimPendingPayouts(req.user.id);
+  if (!result.claimed) return successResponse(res, result, 'No pending payouts to claim');
+  successResponse(res, result, `Claimed ₦${result.totalNgp.toLocaleString('en-US')} to your wallet`);
 });
 
 // ── GET /vault/history/batches — Paginated batch list ──
