@@ -14,11 +14,20 @@ const router = express.Router();
 const httpsUrl = (v) => typeof v === 'string' && /^https:\/\/[^\s"'()<>]+$/i.test(v.trim()) && v.length <= 2048;
 const hexColor = (v) => (typeof v === 'string' && /^#[0-9a-f]{3,8}$/i.test(v) ? v : undefined);
 const clip = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : undefined);
-// twitter / telegram / discord from a request body (only the keys that were sent)
+// twitter / telegram / discord from a request body (only the keys that were sent).
+// Pages render these as links, so only https links (or an @handle for X and
+// Telegram) are accepted; anything else could be a javascript: link.
+const SOCIAL_HOME = { twitter: 'https://x.com/', telegram: 'https://t.me/' };
 function socialFields(body) {
   const out = {};
   for (const k of ['twitter', 'telegram', 'discord']) {
-    if (body[k] !== undefined) out[k] = clip(String(body[k] ?? ''), 200) || null;
+    if (body[k] === undefined) continue;
+    const v = String(body[k] ?? '').trim();
+    if (!v) { out[k] = null; continue; }
+    if (/^https:\/\/[^\s"'<>]+$/i.test(v) && v.length <= 200) { out[k] = v; continue; }
+    const handle = v.replace(/^@/, '');
+    if (SOCIAL_HOME[k] && /^[A-Za-z0-9_.]{1,64}$/.test(handle)) { out[k] = SOCIAL_HOME[k] + handle; continue; }
+    throw ApiError.badRequest(`Enter your ${k} link starting with https://`);
   }
   return out;
 }
