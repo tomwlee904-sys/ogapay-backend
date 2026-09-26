@@ -27,7 +27,7 @@ function socialFields(body) {
     if (/^https:\/\/[^\s"'<>]+$/i.test(v) && v.length <= 200) { out[k] = v; continue; }
     const handle = v.replace(/^@/, '');
     if (SOCIAL_HOME[k] && /^[A-Za-z0-9_.]{1,64}$/.test(handle)) { out[k] = SOCIAL_HOME[k] + handle; continue; }
-    throw ApiError.badRequest(`Enter your ${k} link starting with https://`);
+    throw ApiError.badRequest(`Enter the ${{ twitter: 'X', telegram: 'Telegram', discord: 'Discord' }[k]} link starting with https://`);
   }
   return out;
 }
