@@ -9,9 +9,21 @@ const crypto = require('crypto');
 
 const router = express.Router();
 
-// ─── In-memory stores (DB schema can't be migrated live) ─────
-const communitySocials = new Map(); // communityId -> { twitter, telegram, discord }
-const communityChats = new Map();   // communityId -> [{ id, senderId, sender, text, createdAt }]
+// Social links and chat live in the database (they used to be kept in memory
+// and vanished on every deploy).
+const httpsUrl = (v) => typeof v === 'string' && /^https:\/\/[^\s"'()<>]+$/i.test(v.trim()) && v.length <= 2048;
+const hexColor = (v) => (typeof v === 'string' && /^#[0-9a-f]{3,8}$/i.test(v) ? v : undefined);
+const clip = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : undefined);
+// twitter / telegram / discord from a request body (only the keys that were sent)
+function socialFields(body) {
+  const out = {};
+  for (const k of ['twitter', 'telegram', 'discord']) {
+    if (body[k] !== undefined) out[k] = clip(String(body[k] ?? ''), 200) || null;
+  }
+  return out;
+}
+const CHAT_MAX = 1000;
+const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 
 // ─── Featured Communities (with real stats) ────────────────────
 // Map community-style category names to TaskCategory enum values
@@ -185,7 +197,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
     },
     include: {
       owner: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
-      _count: { select: { members: true, requests: true } },
+      _count: { select: { members: true, requests: true, invites: true } },
       members: {
         include: {
           user: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
@@ -232,8 +244,6 @@ router.get('/:id', optionalAuth, async (req, res) => {
   });
   const totalDistributed = completedSubmissions.reduce((sum, s) => sum + Number(s.task.reward), 0);
 
-  const socials = communitySocials.get(community.id) || {};
-
   successResponse(res, {
     id: community.id,
     slug: community.slug,
@@ -248,13 +258,14 @@ router.get('/:id', optionalAuth, async (req, res) => {
     isActive: community.isActive,
     isPublic: community.isPublic,
     owner: community.owner,
-    twitter: socials.twitter || '',
-    telegram: socials.telegram || '',
-    discord: socials.discord || '',
+    twitter: community.twitter || '',
+    telegram: community.telegram || '',
+    discord: community.discord || '',
     memberCount: community._count.members,
     inviteCount: community._count.invites,
     requestCount: community._count.requests,
-    recentMembers: community.members,
+    // A private community's member list is for its members
+    recentMembers: community.isPublic || userRole ? community.members : [],
     userRole,
     hasRequested,
     challengeCount: openJobs + completedJobs,
@@ -269,7 +280,9 @@ router.get('/:id', optionalAuth, async (req, res) => {
 router.post('/', authenticate, async (req, res) => {
   const { name, description, category, accentColor, coverColor, coverTextColor, isActive, isPublic, twitter, telegram, discord } = req.body;
 
-  if (!name || name.trim().length < 2) throw ApiError.badRequest('Community name must be at least 2 characters');
+  if (!name || typeof name !== 'string' || name.trim().length < 2) throw ApiError.badRequest('Community name must be at least 2 characters');
+  if (name.trim().length > 60) throw ApiError.badRequest('Community name must be 60 characters or fewer');
+  if (description && String(description).length > 1000) throw ApiError.badRequest('Description must be 1,000 characters or fewer');
 
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + crypto.randomBytes(3).toString('hex');
 
@@ -277,24 +290,17 @@ router.post('/', authenticate, async (req, res) => {
     data: {
       name: name.trim(),
       slug,
-      description: description?.trim(),
-      category,
-      accentColor: accentColor || '#7C3AED',
-      coverColor,
-      coverTextColor,
-      isActive: isActive !== undefined ? isActive : true,
+      description: clip(description, 1000),
+      category: clip(category, 40),
+      accentColor: hexColor(accentColor) || '#7C3AED',
+      coverColor: hexColor(coverColor),
+      coverTextColor: hexColor(coverTextColor),
+      isActive: isActive !== undefined ? isActive !== false : true,
       isPublic: isPublic !== false,
       ownerId: req.user.id,
+      ...socialFields({ twitter, telegram, discord }),
     },
   });
-  // Store social links in-memory
-  if (twitter || telegram || discord) {
-    communitySocials.set(community.id, {
-      twitter: twitter || '',
-      telegram: telegram || '',
-      discord: discord || '',
-    });
-  }
 
   // Auto-join the creator as OWNER
   await prisma.communityMember.create({
@@ -314,6 +320,7 @@ router.post('/:id/cover', authenticate, async (req, res, next) => {
   // Only handle if JSON body with coverUrl is sent
   if (!req.body || !req.body.coverUrl) return next();
   try {
+    if (!httpsUrl(req.body.coverUrl)) throw ApiError.badRequest('Cover image must be an https link');
     const community = await prisma.community.findUnique({ where: { id: req.params.id } });
     if (!community) throw ApiError.notFound('Community not found');
     const membership = await prisma.communityMember.findUnique({
@@ -346,6 +353,7 @@ router.post('/:id/cover', authenticate, upload.single('cover'), async (req, res)
     throw ApiError.forbidden('Only owners and admins can upload a cover image');
   }
   if (!req.file) throw ApiError.badRequest('No file uploaded');
+  if (!IMAGE_TYPES.includes(req.file.mimetype)) throw ApiError.badRequest('Upload a PNG, JPG, WebP or GIF image');
 
   const safeName = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '-');
   const key = `communities/${community.id}/${Date.now()}-${safeName}`;
@@ -369,6 +377,7 @@ router.post('/:id/cover', authenticate, upload.single('cover'), async (req, res)
 router.post('/:id/avatar', authenticate, async (req, res, next) => {
   if (!req.body || !req.body.avatarUrl) return next();
   try {
+    if (!httpsUrl(req.body.avatarUrl)) throw ApiError.badRequest('Avatar must be an https link');
     const community = await prisma.community.findUnique({ where: { id: req.params.id } });
     if (!community) throw ApiError.notFound('Community not found');
     const membership = await prisma.communityMember.findUnique({
@@ -428,29 +437,24 @@ router.patch('/:id', authenticate, async (req, res) => {
     }
   }
 
-  const { name, description, category, accentColor, coverColor, coverTextColor, isActive, isPublic, twitter, telegram, discord } = req.body;
-
-  // Update social links in-memory
-  if (twitter !== undefined || telegram !== undefined || discord !== undefined) {
-    const existing = communitySocials.get(community.id) || {};
-    const updates = {};
-    if (twitter !== undefined) updates.twitter = twitter;
-    if (telegram !== undefined) updates.telegram = telegram;
-    if (discord !== undefined) updates.discord = discord;
-    communitySocials.set(community.id, { ...existing, ...updates });
+  const { name, description, category, accentColor, coverColor, coverTextColor, isActive, isPublic } = req.body;
+  if (name !== undefined && (typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 60)) {
+    throw ApiError.badRequest('Community name must be 2 to 60 characters');
   }
+  if (description && String(description).length > 1000) throw ApiError.badRequest('Description must be 1,000 characters or fewer');
 
   const updated = await prisma.community.update({
     where: { id: community.id },
     data: {
       ...(name && { name: name.trim() }),
-      ...(description !== undefined && { description: description?.trim() }),
-      ...(category && { category }),
-      ...(accentColor && { accentColor }),
-      ...(coverColor && { coverColor }),
-      ...(coverTextColor && { coverTextColor }),
-      ...(isActive !== undefined && { isActive }),
-      ...(isPublic !== undefined && { isPublic }),
+      ...(description !== undefined && { description: clip(String(description ?? ''), 1000) }),
+      ...(category && { category: clip(category, 40) }),
+      ...(hexColor(accentColor) && { accentColor }),
+      ...(hexColor(coverColor) && { coverColor }),
+      ...(hexColor(coverTextColor) && { coverTextColor }),
+      ...(isActive !== undefined && { isActive: isActive !== false }),
+      ...(isPublic !== undefined && { isPublic: isPublic !== false }),
+      ...socialFields(req.body),
     },
   });
 
@@ -514,8 +518,14 @@ router.patch('/:id/members/:memberId', authenticate, async (req, res) => {
     throw ApiError.forbidden('Only the owner can assign admin role');
   }
 
+  // The member must belong to this community (not one the requester doesn't lead)
+  const target = await prisma.communityMember.findUnique({ where: { id: req.params.memberId } });
+  if (!target || target.communityId !== community.id) throw ApiError.notFound('Member not found');
+  if (target.role === 'OWNER') throw ApiError.forbidden("The owner's role can't be changed");
+  if (target.role === 'ADMIN' && requester.role !== 'OWNER') throw ApiError.forbidden('Only the owner can change an admin');
+
   const updated = await prisma.communityMember.update({
-    where: { id: req.params.memberId },
+    where: { id: target.id },
     data: { role },
   });
 
@@ -535,8 +545,9 @@ router.delete('/:id/members/:memberId', authenticate, async (req, res) => {
   }
 
   const target = await prisma.communityMember.findUnique({ where: { id: req.params.memberId } });
-  if (!target) throw ApiError.notFound('Member not found');
+  if (!target || target.communityId !== community.id) throw ApiError.notFound('Member not found');
   if (target.role === 'OWNER') throw ApiError.forbidden('Cannot remove the owner');
+  if (target.role === 'ADMIN' && requester.role !== 'OWNER') throw ApiError.forbidden('Only the owner can remove an admin');
 
   await prisma.communityMember.delete({ where: { id: target.id } });
   successResponse(res, null, 'Member removed');
@@ -864,16 +875,21 @@ router.patch('/:id/requests/:requestId', authenticate, async (req, res) => {
   }
 
   const request = await prisma.communityRequest.findUnique({ where: { id: req.params.requestId } });
-  if (!request) throw ApiError.notFound('Request not found');
+  // Leaders can only answer requests to their own community
+  if (!request || request.communityId !== community.id) throw ApiError.notFound('Request not found');
   if (request.status !== 'PENDING') throw ApiError.conflict('Request already handled');
 
+  const { count } = await prisma.communityRequest.updateMany({
+    where: { id: request.id, status: 'PENDING' },
+    data: { status: action === 'accept' ? 'ACCEPTED' : 'DECLINED', respondedAt: new Date(), responderId: req.user.id },
+  });
+  if (!count) throw ApiError.conflict('Request already handled');
+
   if (action === 'accept') {
-    await prisma.communityMember.create({
-      data: { communityId: request.communityId, userId: request.userId, role: 'MEMBER' },
-    });
-    await prisma.communityRequest.update({
-      where: { id: request.id },
-      data: { status: 'ACCEPTED', respondedAt: new Date(), responderId: req.user.id },
+    await prisma.communityMember.upsert({
+      where: { communityId_userId: { communityId: community.id, userId: request.userId } },
+      update: {},
+      create: { communityId: community.id, userId: request.userId, role: 'MEMBER' },
     });
 
     // Notify requester that their request was accepted
@@ -893,10 +909,6 @@ router.patch('/:id/requests/:requestId', authenticate, async (req, res) => {
 
     successResponse(res, { userId: request.userId }, 'Request accepted');
   } else {
-    await prisma.communityRequest.update({
-      where: { id: request.id },
-      data: { status: 'DECLINED', respondedAt: new Date(), responderId: req.user.id },
-    });
     successResponse(res, null, 'Request declined');
   }
 });
@@ -913,24 +925,22 @@ router.get('/:id/leaderboard', async (req, res) => {
   const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
   const skip = (page - 1) * limit;
 
+  // Rank every member first, then take the page (sorting one page alone gave wrong ranks)
   const members = await prisma.communityMember.findMany({
-    where: { communityId: community.id },
+    where: { communityId: community.id, user: { isBanned: false } },
     include: {
       user: {
         select: {
-          id: true, username: true, firstName: true, lastName: true, avatarUrl: true,
+          id: true, username: true, firstName: true, lastName: true, avatarUrl: true, preferences: true,
           workerProfile: { select: { level: true, tasksCompleted: true, totalEarned: true } },
         },
       },
     },
-    orderBy: { createdAt: 'desc' },
-    skip,
-    take: limit,
+    orderBy: { createdAt: 'asc' },
+    take: 2000,
   });
+  const total = members.length;
 
-  const total = await prisma.communityMember.count({ where: { communityId: community.id } });
-
-  // Sort by tasksCompleted descending
   const sorted = members
     .map(m => ({
       id: m.user.id,
@@ -941,13 +951,13 @@ router.get('/:id/leaderboard', async (req, res) => {
       role: m.role,
       level: m.user.workerProfile?.level || 'BEGINNER',
       tasksCompleted: m.user.workerProfile?.tasksCompleted || 0,
-      totalEarned: m.user.workerProfile?.totalEarned || 0,
+      // Earnings only for people who chose to show them
+      totalEarned: m.user.preferences?.showEarnings === true ? Number(m.user.workerProfile?.totalEarned || 0) : null,
       joinedAt: m.createdAt,
     }))
     .sort((a, b) => b.tasksCompleted - a.tasksCompleted);
 
-  // Assign rank considering pagination offset
-  const ranked = sorted.map((m, i) => ({ rank: skip + i + 1, ...m }));
+  const ranked = sorted.slice(skip, skip + limit).map((m, i) => ({ rank: skip + i + 1, ...m }));
 
   successResponse(res, {
     members: ranked,
@@ -1027,7 +1037,7 @@ router.get('/:id/jobs/completed', async (req, res) => {
       where,
       select: {
         id: true, title: true, reward: true, currency: true,
-        category: true, completedAt: true,
+        category: true, updatedAt: true,
         poster: { select: { id: true, username: true } },
         submissions: {
           where: { status: 'APPROVED' },
@@ -1049,7 +1059,7 @@ router.get('/:id/jobs/completed', async (req, res) => {
       currency: j.currency,
       rewardPaid: Number(j.reward),
       poster: j.poster,
-      completedAt: j.submissions[0]?.completedAt || j.updatedAt,
+      completedAt: j.updatedAt,
       workers: j.submissions.map(s => s.worker),
     })),
     total,
@@ -1071,14 +1081,20 @@ router.get('/:id/chat', authenticate, async (req, res) => {
   });
   if (!membership) throw ApiError.forbidden('Only community members can view chat');
 
-  const messages = communityChats.get(community.id) || [];
-  successResponse(res, messages.slice(-100)); // last 100 messages
+  const rows = await prisma.communityChatMessage.findMany({
+    where: { communityId: community.id },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+    include: { sender: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } } },
+  });
+  successResponse(res, rows.reverse().map((m) => ({ id: m.id, communityId: m.communityId, sender: m.sender, text: m.text, createdAt: m.createdAt })));
 });
 
 // POST /:id/chat — members only
 router.post('/:id/chat', authenticate, async (req, res) => {
-  const { text } = req.body;
-  if (!text || !text.trim()) throw ApiError.badRequest('Message text is required');
+  const text = typeof req.body?.text === 'string' ? req.body.text.trim() : '';
+  if (!text) throw ApiError.badRequest('Message text is required');
+  if (text.length > CHAT_MAX) throw ApiError.badRequest(`Messages can be up to ${CHAT_MAX} characters`);
 
   const community = await prisma.community.findFirst({
     where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
@@ -1090,44 +1106,23 @@ router.post('/:id/chat', authenticate, async (req, res) => {
   });
   if (!membership) throw ApiError.forbidden('Only community members can send messages');
 
-  const user = await prisma.user.findUnique({
-    where: { id: req.user.id },
-    select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true },
+  // A little flood control: 20 messages a minute per person
+  const recent = await prisma.communityChatMessage.count({
+    where: { communityId: community.id, senderId: req.user.id, createdAt: { gte: new Date(Date.now() - 60000) } },
+  });
+  if (recent >= 20) throw ApiError.tooManyRequests('Slow down a little before sending more messages');
+
+  const m = await prisma.communityChatMessage.create({
+    data: { communityId: community.id, senderId: req.user.id, text },
+    include: { sender: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } } },
   });
 
-  const msg = {
-    id: crypto.randomBytes(8).toString('hex'),
-    communityId: community.id,
-    sender: {
-      id: user.id,
-      username: user.username,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      avatarUrl: user.avatarUrl,
-    },
-    text: text.trim(),
-    createdAt: new Date().toISOString(),
-  };
-
-  if (!communityChats.has(community.id)) {
-    communityChats.set(community.id, []);
-  }
-  communityChats.get(community.id).push(msg);
-
-  // Keep only last 500 messages
-  const msgs = communityChats.get(community.id);
-  if (msgs.length > 500) {
-    communityChats.set(community.id, msgs.slice(-500));
-  }
-
-  createdResponse(res, msg, 'Message sent');
+  createdResponse(res, { id: m.id, communityId: m.communityId, sender: m.sender, text: m.text, createdAt: m.createdAt }, 'Message sent');
 });
 
 // ─── Social Links ─────────────────────────────────────────────
 // PATCH /:id/socials — owner/admins only
 router.patch('/:id/socials', authenticate, async (req, res) => {
-  const { twitter, telegram, discord } = req.body;
-
   const community = await prisma.community.findUnique({ where: { id: req.params.id } });
   if (!community) throw ApiError.notFound('Community not found');
 
@@ -1138,14 +1133,13 @@ router.patch('/:id/socials', authenticate, async (req, res) => {
     throw ApiError.forbidden('Only owners and admins can update social links');
   }
 
-  const existing = communitySocials.get(community.id) || {};
-  const updates = {};
-  if (twitter !== undefined) updates.twitter = twitter;
-  if (telegram !== undefined) updates.telegram = telegram;
-  if (discord !== undefined) updates.discord = discord;
-  communitySocials.set(community.id, { ...existing, ...updates });
+  const updated = await prisma.community.update({
+    where: { id: community.id },
+    data: socialFields(req.body),
+    select: { twitter: true, telegram: true, discord: true },
+  });
 
-  successResponse(res, communitySocials.get(community.id), 'Social links updated');
+  successResponse(res, updated, 'Social links updated');
 });
 
 module.exports = router;
