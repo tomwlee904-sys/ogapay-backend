@@ -108,13 +108,9 @@ router.get('/lookup', async (req, res) => {
   const distributionsReceived = stats?.distributionsReceived || 0;
   const isEligible = payBalance > 0;
 
+  // Public endpoint: never reveal who owns a wallet (name/username/avatar)
   successResponse(res, {
     wallet: user.walletAddress,
-    user: {
-      username: user.username,
-      name: `${user.firstName} ${user.lastName}`,
-      avatarUrl: user.avatarUrl,
-    },
     vault: {
       payBalance,
       totalEarned,
