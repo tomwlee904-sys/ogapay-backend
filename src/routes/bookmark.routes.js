@@ -5,26 +5,38 @@ const { authenticate } = require('../middleware/auth.middleware');
 const { successResponse, createdResponse, ApiError } = require('../utils/apiResponse');
 const router = express.Router();
 
+// Saved jobs. The Bookmark model is keyed by (userId, taskId); this route used
+// fields the model doesn't have (targetId), so every call failed. The app uses
+// /users/bookmarks; these stay for older clients.
+
 router.get('/', authenticate, async (req, res) => {
-  const { type } = req.query;
-  const where = { userId: req.user.id, ...(type && { type }) };
-  const bookmarks = await prisma.bookmark.findMany({ where, orderBy: { createdAt: 'desc' } });
+  const bookmarks = await prisma.bookmark.findMany({
+    where: { userId: req.user.id },
+    include: { task: { select: { id: true, title: true, description: true, reward: true, currency: true, category: true, status: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
   successResponse(res, bookmarks);
 });
 
 router.post('/', authenticate, async (req, res) => {
-  const { type, targetId, metadata } = req.body;
-  if (!type || !targetId) throw ApiError.badRequest('Type and targetId are required');
-  const existing = await prisma.bookmark.findUnique({ where: { userId_type_targetId: { userId: req.user.id, type, targetId } } });
-  if (existing) throw ApiError.badRequest('Already bookmarked');
-  const bookmark = await prisma.bookmark.create({ data: { userId: req.user.id, type, targetId, metadata } });
+  const taskId = String(req.body.taskId || req.body.targetId || '');
+  if (!taskId) throw ApiError.badRequest('taskId is required');
+  const task = await prisma.task.findUnique({ where: { id: taskId }, select: { id: true } });
+  if (!task) throw ApiError.notFound('Task not found');
+  const bookmark = await prisma.bookmark.upsert({
+    where: { userId_taskId: { userId: req.user.id, taskId } },
+    update: {},
+    create: { userId: req.user.id, taskId },
+  });
   createdResponse(res, bookmark, 'Bookmarked');
 });
 
+// :id may be the bookmark id or the task id
 router.delete('/:id', authenticate, async (req, res) => {
-  const bookmark = await prisma.bookmark.findFirst({ where: { id: req.params.id, userId: req.user.id } });
-  if (!bookmark) throw ApiError.notFound('Bookmark not found');
-  await prisma.bookmark.delete({ where: { id: req.params.id } });
+  const { count } = await prisma.bookmark.deleteMany({
+    where: { userId: req.user.id, OR: [{ id: req.params.id }, { taskId: req.params.id }] },
+  });
+  if (!count) throw ApiError.notFound('Bookmark not found');
   successResponse(res, null, 'Removed from bookmarks');
 });
 

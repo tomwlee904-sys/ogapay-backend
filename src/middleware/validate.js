@@ -73,6 +73,31 @@ const createTaskSchema = z.object({
   }
 });
 
+// PATCH /users/me: only these fields, with sane limits (unknown keys, e.g. role, are dropped)
+const optText = (max) => z.string().trim().max(max).optional().nullable();
+const updateProfileSchema = z.object({
+  firstName: z.string().trim().min(1).max(50).optional(),
+  lastName: z.string().trim().max(50).optional(),
+  username: z.string().trim().regex(/^[A-Za-z0-9_]{3,30}$/, 'Username must be 3-30 letters, numbers or _').optional(),
+  phone: optText(20),
+  avatarUrl: z.string().trim().url().max(2048).optional().nullable(),
+  coverUrl: z.string().trim().url().max(2048).optional().nullable(),
+  twitter: optText(100),
+  telegram: optText(100),
+  discord: optText(100),
+  website: optText(200).refine((v) => !v || /^https?:\/\//i.test(v), 'Website must start with http:// or https://'),
+  preferences: z.record(z.any()).optional(),
+  isPublic: z.boolean().optional(),
+  bio: optText(1000),
+  skills: z.array(z.string().trim().min(1).max(40)).max(15).optional(),
+  categories: z.array(z.enum([
+    'SOCIAL_MEDIA', 'DATA_ENTRY', 'CONTENT_WRITING', 'APP_TESTING',
+    'SURVEY', 'DESIGN', 'TRANSLATION', 'WEB_RESEARCH', 'VIDEO_REVIEW', 'OTHER',
+  ])).max(10).optional(),
+  isAvailable: z.boolean().optional(),
+  companyName: optText(100),
+});
+
 // Private direct hire from a profile (NGN, one worker)
 const hireSchema = z.object({
   title: z.string().trim().min(5).max(200).optional(),
@@ -150,6 +175,7 @@ module.exports = {
   refreshTokenSchema,
   createTaskSchema,
   hireSchema,
+  updateProfileSchema,
   portfolioItemSchema,
   submitTaskSchema,
   reviewSubmissionSchema,

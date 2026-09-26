@@ -3,7 +3,7 @@
 const express = require('express');
 const multer = require('multer');
 const { authenticate, authorize } = require('../middleware/auth.middleware');
-const { validate, hireSchema, portfolioItemSchema } = require('../middleware/validate');
+const { validate, hireSchema, portfolioItemSchema, updateProfileSchema } = require('../middleware/validate');
 const taskService = require('../services/task.service');
 const { ApiError } = require('../utils/apiResponse');
 const userService = require('../services/user.service');
@@ -20,7 +20,7 @@ router.get('/me', authenticate, async (req, res) => {
 });
 
 // PATCH /api/v1/users/me - current frontend alias
-router.patch('/me', authenticate, async (req, res) => {
+router.patch('/me', authenticate, validate(updateProfileSchema), async (req, res) => {
   const data = await userService.updateProfile(req.user.id, req.body);
   successResponse(res, data, 'Profile updated');
 });
@@ -32,7 +32,7 @@ router.get('/profile', authenticate, async (req, res) => {
 });
 
 // PATCH /api/v1/users/profile
-router.patch('/profile', authenticate, async (req, res) => {
+router.patch('/profile', authenticate, validate(updateProfileSchema), async (req, res) => {
   const data = await userService.updateProfile(req.user.id, req.body);
   successResponse(res, data, 'Profile updated');
 });
