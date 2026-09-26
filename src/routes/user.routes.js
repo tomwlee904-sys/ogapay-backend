@@ -366,13 +366,20 @@ router.get('/search', authenticate, async (req, res) => {
     return res.json({ success: true, data: [] });
   }
 
+  // No email matching: it let anyone find out who owns an email address.
+  // Private profiles only match their exact username; banned accounts never show.
+  const term = String(q).trim().replace(/^@/, '').slice(0, 60);
   const users = await prisma.user.findMany({
     where: {
+      isBanned: false,
+      id: { not: req.user.id },
       OR: [
-        { username: { contains: q, mode: 'insensitive' } },
-        { firstName: { contains: q, mode: 'insensitive' } },
-        { lastName: { contains: q, mode: 'insensitive' } },
-        { email: { contains: q, mode: 'insensitive' } },
+        { isPublic: true, OR: [
+          { username: { contains: term, mode: 'insensitive' } },
+          { firstName: { contains: term, mode: 'insensitive' } },
+          { lastName: { contains: term, mode: 'insensitive' } },
+        ] },
+        { username: { equals: term, mode: 'insensitive' } },
       ],
     },
     select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true },
