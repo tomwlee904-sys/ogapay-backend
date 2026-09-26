@@ -195,7 +195,7 @@ router.get('/public/:username/reviews', async (req, res) => {
 router.get('/public/:username/products', async (req, res) => {
   const user = await findPublicUser(req.params.username);
   const items = await prisma.storeItem.findMany({
-    where: { sellerId: user.id, isActive: true },
+    where: { sellerId: user.id, isActive: true, deletedAt: null },
     orderBy: { createdAt: 'desc' },
     take: 50,
     include: { reviews: { select: { rating: true } } },
@@ -213,6 +213,8 @@ router.get('/public/:username/products', async (req, res) => {
       stock: item.stock,
       rating: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0,
       reviewsCount: ratings.length,
+      delivery: item.metadata?.delivery ? String(item.metadata.delivery).slice(0, 30) : null,
+      revisions: item.metadata?.revisions ?? null,
       createdAt: item.createdAt,
     };
   }));

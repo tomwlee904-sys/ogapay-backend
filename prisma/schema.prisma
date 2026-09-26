@@ -517,6 +517,8 @@ model StoreItem {
   metadata    Json?
   createdAt   DateTime       @default(now()) @map("created_at")
   updatedAt   DateTime       @updatedAt @map("updated_at")
+  // Set when the seller deletes it (isActive=false alone means draft)
+  deletedAt DateTime? @map("deleted_at")
 
   seller    User?           @relation("StoreSeller", fields: [sellerId], references: [id])
   purchases StorePurchase[]

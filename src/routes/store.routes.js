@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
   const { page = 1, limit = 20, category, search, sort } = req.query;
   const skip = (page - 1) * limit;
 
-  const where = { isActive: true };
+  const where = { isActive: true, deletedAt: null };
   if (category) where.category = category;
   if (search) {
     where.OR = [
@@ -62,6 +62,7 @@ router.get('/', async (req, res) => {
       image: item.imageUrl || '',
       category: item.category,
       stock: item.stock,
+      metadata: publicMeta(item.metadata),
       createdAt: item.createdAt,
     };
   });
@@ -220,7 +221,7 @@ router.post('/:itemId/reviews', authenticate, async (req, res) => {
 // GET /api/v1/store/my-products — Seller's own products
 router.get('/my-products', authenticate, async (req, res) => {
   const items = await prisma.storeItem.findMany({
-    where: { sellerId: req.user.id, isActive: true },
+    where: { sellerId: req.user.id, deletedAt: null }, // drafts too; deleted ones are gone
     orderBy: { createdAt: 'desc' },
     include: {
       purchases: { select: { id: true, quantity: true, totalPrice: true, createdAt: true } },
@@ -289,6 +290,7 @@ router.patch('/products/:id', authenticate, validate(storeProductUpdateSchema), 
   const item = await prisma.storeItem.findUnique({ where: { id: req.params.id } });
   if (!item) throw ApiError.notFound('Product not found');
   if (item.sellerId !== req.user.id) throw ApiError.forbidden('Not your product');
+  if (item.deletedAt) throw ApiError.notFound('Product not found');
 
   const { name, description, price, currency, category, imageUrl, stock, status, subcategory, revisions, delivery, tags } = req.body;
   const effCurrency = currency ?? item.currency;
@@ -324,14 +326,15 @@ router.delete('/products/:id', authenticate, async (req, res) => {
   if (!item) throw ApiError.notFound('Product not found');
   if (item.sellerId !== req.user.id) throw ApiError.forbidden('Not your product');
 
-  await prisma.storeItem.update({ where: { id: req.params.id }, data: { isActive: false } });
+  // Soft delete: past orders still point at it
+  await prisma.storeItem.update({ where: { id: req.params.id }, data: { isActive: false, deletedAt: new Date() } });
   successResponse(res, null, 'Product removed');
 });
 
 // GET /api/v1/store/my-stats — Seller dashboard stats
 router.get('/my-stats', authenticate, async (req, res) => {
   const [products, purchases] = await Promise.all([
-    prisma.storeItem.findMany({ where: { sellerId: req.user.id }, select: { id: true, isActive: true } }),
+    prisma.storeItem.findMany({ where: { sellerId: req.user.id, deletedAt: null }, select: { id: true, isActive: true } }),
     prisma.storePurchase.findMany({
       where: { item: { sellerId: req.user.id } },
       select: { totalPrice: true, quantity: true, status: true },
@@ -349,6 +352,76 @@ router.get('/my-stats', authenticate, async (req, res) => {
   successResponse(res, stats, 'Store stats fetched');
 });
 
+// Only these seller-set fields are public (older items may carry other keys)
+function publicMeta(meta) {
+  const m = meta && typeof meta === 'object' ? meta : {};
+  const out = {};
+  if (m.delivery) out.delivery = String(m.delivery).slice(0, 30);
+  if (m.revisions !== undefined && m.revisions !== null) out.revisions = Number(m.revisions);
+  if (m.subcategory) out.subcategory = String(m.subcategory).slice(0, 60);
+  if (Array.isArray(m.tags)) out.tags = m.tags.slice(0, 8).map((t) => String(t).slice(0, 30));
+  return out;
+}
+
+const ORDER_STATUSES = ['PENDING', 'IN_PROGRESS', 'DELIVERED'];
+
+// GET /api/v1/store/my-orders — what people bought from me
+router.get('/my-orders', authenticate, async (req, res) => {
+  const orders = await prisma.storePurchase.findMany({
+    where: { item: { sellerId: req.user.id } },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+    select: {
+      id: true, quantity: true, totalPrice: true, currency: true, status: true, createdAt: true,
+      item: { select: { id: true, name: true, imageUrl: true } },
+      user: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
+    },
+  });
+  // The chat the purchase opened with each buyer
+  const buyerIds = [...new Set(orders.map((o) => o.user.id))];
+  const convs = buyerIds.length ? await prisma.conversation.findMany({
+    where: { AND: [{ participants: { some: { userId: req.user.id } } }, { participants: { some: { userId: { in: buyerIds } } } }] },
+    select: { id: true, participants: { select: { userId: true } } },
+  }) : [];
+  const convFor = (buyerId) => convs.find((c) => c.participants.some((p) => p.userId === buyerId))?.id || null;
+
+  successResponse(res, orders.map((o) => ({
+    id: o.id,
+    quantity: o.quantity,
+    total: parseFloat(o.totalPrice),
+    currency: o.currency,
+    status: ORDER_STATUSES.includes(o.status) ? o.status : 'PENDING',
+    createdAt: o.createdAt,
+    product: o.item,
+    buyer: { username: o.user.username, name: [o.user.firstName, o.user.lastName].filter(Boolean).join(' ') || o.user.username, avatarUrl: o.user.avatarUrl },
+    conversationId: convFor(o.user.id),
+  })));
+});
+
+// PATCH /api/v1/store/orders/:id — seller moves an order along; the buyer is told
+router.patch('/orders/:id', authenticate, async (req, res) => {
+  const status = String(req.body?.status || '').toUpperCase();
+  if (!['IN_PROGRESS', 'DELIVERED'].includes(status)) throw ApiError.badRequest('Status must be IN_PROGRESS or DELIVERED');
+  const order = await prisma.storePurchase.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, status: true, userId: true, item: { select: { sellerId: true, name: true } } },
+  });
+  if (!order || order.item.sellerId !== req.user.id) throw ApiError.notFound('Order not found');
+  if (order.status === 'DELIVERED') throw ApiError.conflict('This order is already delivered');
+  const { count } = await prisma.storePurchase.updateMany({ where: { id: order.id, status: order.status }, data: { status } });
+  if (!count) throw ApiError.conflict('The order changed; refresh and try again');
+  await prisma.notification.create({
+    data: {
+      userId: order.userId,
+      type: 'STORE_ORDER_UPDATE',
+      title: status === 'DELIVERED' ? '📦 Your order was delivered' : '🛠️ Your order is in progress',
+      body: `${order.item.name}: ${status === 'DELIVERED' ? 'the seller marked it delivered.' : 'the seller has started working on it.'}`,
+      data: { purchaseId: order.id },
+    },
+  }).catch(() => {});
+  successResponse(res, { id: order.id, status }, 'Order updated');
+});
+
 // GET /api/v1/store/:id — Single product detail
 router.get('/:id', async (req, res) => {
   const item = await prisma.storeItem.findUnique({
@@ -362,7 +435,7 @@ router.get('/:id', async (req, res) => {
       },
     },
   });
-  if (!item) throw ApiError.notFound('Product not found');
+  if (!item || item.deletedAt) throw ApiError.notFound('Product not found');
 
   const ratings = item.reviews.map(r => r.rating);
   successResponse(res, {
@@ -390,6 +463,7 @@ router.get('/:id', async (req, res) => {
     category: item.category,
     stock: item.stock,
     isActive: item.isActive,
+    metadata: publicMeta(item.metadata),
     createdAt: item.createdAt,
   }, 'Product fetched');
 });
