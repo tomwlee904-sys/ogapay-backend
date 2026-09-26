@@ -159,7 +159,9 @@ const login = async ({ email, password }, ipAddress, userAgent) => {
   }
 
   const tokens = generateTokenPair(user);
+  const known = await isKnownBrowser(user.id, userAgent);
   await saveRefreshToken(user.id, tokens.refreshToken, ipAddress, userAgent);
+  sendSignInAlert(user, ipAddress, userAgent, known);
 
   logger.info(`User logged in: ${user.email}`);
   return { user: sanitizeUser(user), tokens };
@@ -181,11 +183,15 @@ const refreshTokens = async (token) => {
 
   const user = await prisma.user.findUnique({ where: { id: decoded.sub } });
   if (!user) throw ApiError.unauthorized('User not found');
+  if (user.isBanned) {
+    await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
+    throw ApiError.unauthorized('This account is closed');
+  }
 
-  // Rotate refresh token
+  // Rotate refresh token (keeping the browser and paired device it belongs to)
   await prisma.refreshToken.delete({ where: { id: stored.id } });
   const tokens = generateTokenPair(user);
-  await saveRefreshToken(user.id, tokens.refreshToken);
+  await saveRefreshToken(user.id, tokens.refreshToken, stored.ipAddress, stored.userAgent, stored.deviceId || null);
 
   return { tokens };
 };
@@ -299,13 +305,34 @@ const logout = async (userId, refreshToken) => {
 
 // ── Helpers ─────────────────────────────────────
 
-const saveRefreshToken = async (userId, token, ipAddress, userAgent) => {
+const saveRefreshToken = async (userId, token, ipAddress, userAgent, deviceId = null) => {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 30);
 
   await prisma.refreshToken.create({
-    data: { userId, token, expiresAt, ipAddress, userAgent },
+    data: { userId, token, expiresAt, ipAddress: ipAddress || null, userAgent: userAgent ? String(userAgent).slice(0, 500) : null, deviceId },
   });
+};
+
+// ── Sign-in alerts (Settings → Security → "Sign-in alerts") ──
+// A browser is "known" if it already holds an unexpired session for this account.
+const isKnownBrowser = async (userId, userAgent) => {
+  if (!userAgent) return false;
+  const n = await prisma.refreshToken.count({
+    where: { userId, userAgent: String(userAgent).slice(0, 500), expiresAt: { gt: new Date() } },
+  });
+  return n > 0;
+};
+
+const sendSignInAlert = (user, ipAddress, userAgent, known) => {
+  if (known || !user?.email || !user.isEmailVerified || user.isBanned) return;
+  // Not straight after sign-up
+  if (user.createdAt && Date.now() - new Date(user.createdAt).getTime() < 10 * 60 * 1000) return;
+  const prefs = (user.preferences && typeof user.preferences === 'object') ? user.preferences : {};
+  if (prefs.loginAlerts === false) return;
+  const { buildSignInAlertEmail } = require('./email.service');
+  const email = buildSignInAlertEmail({ name: user.firstName, userAgent, ipAddress, at: new Date() });
+  sendEmail({ to: user.email, ...email }).catch((e) => logger.warn(`Sign-in alert failed for ${user.id}: ${e.message}`));
 };
 
 const sanitizeUser = (user) => ({
@@ -381,6 +408,10 @@ const resetPassword = async (token, newPassword) => {
 const changePassword = async (userId, currentPassword, newPassword) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw ApiError.notFound('User not found');
+  // Same rules as sign-up (this endpoint accepted any length before)
+  if (typeof newPassword !== 'string' || newPassword.length < 8 || newPassword.length > 128 || !/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+    throw ApiError.badRequest('Use at least 8 characters, with an uppercase letter and a number');
+  }
 
   if (!user.passwordHash) {
     // User signed up with Google — set password
@@ -407,7 +438,7 @@ const changePassword = async (userId, currentPassword, newPassword) => {
   return { message: 'Password changed successfully' };
 };
 
-const verify2FAChallenge = async (userId, challengeToken, twoFactorCode) => {
+const verify2FAChallenge = async (userId, challengeToken, twoFactorCode, ipAddress, userAgent) => {
   const challenge = await prisma.twoFactorChallenge.findUnique({
     where: { userId },
   });
@@ -440,7 +471,9 @@ const verify2FAChallenge = async (userId, challengeToken, twoFactorCode) => {
   });
 
   const tokens = generateTokenPair(user);
-  await saveRefreshToken(user.id, tokens.refreshToken);
+  const known = await isKnownBrowser(user.id, userAgent);
+  await saveRefreshToken(user.id, tokens.refreshToken, ipAddress, userAgent);
+  sendSignInAlert(user, ipAddress, userAgent, known);
 
   logger.info(`2FA challenge passed for user: ${user.email}`);
   return { user: sanitizeUser(user), tokens };
@@ -450,7 +483,7 @@ const verify2FAChallenge = async (userId, challengeToken, twoFactorCode) => {
 
 // Same outcome as a password login: a 2FA challenge when the account has 2FA
 // on (unless skipped), otherwise a session.
-const startSession = async (user, ipAddress, userAgent, { skipTwoFactor = false } = {}) => {
+const startSession = async (user, ipAddress, userAgent, { skipTwoFactor = false, deviceId = null } = {}) => {
   if (user.isBanned) throw ApiError.forbidden('Account has been banned. Contact support.');
 
   await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
@@ -467,7 +500,9 @@ const startSession = async (user, ipAddress, userAgent, { skipTwoFactor = false 
   }
 
   const tokens = generateTokenPair(user);
-  await saveRefreshToken(user.id, tokens.refreshToken, ipAddress, userAgent);
+  const known = await isKnownBrowser(user.id, userAgent);
+  await saveRefreshToken(user.id, tokens.refreshToken, ipAddress, userAgent, deviceId);
+  sendSignInAlert(user, ipAddress, userAgent, known);
   return { user: sanitizeUser(user), tokens };
 };
 
@@ -536,7 +571,7 @@ const pairLogin = async ({ code }, ipAddress, userAgent) => {
   if (!user) throw ApiError.notFound('Account not found');
 
   logger.info(`Pairing sign-in: ${user.email}`);
-  return startSession(user, ipAddress, userAgent, { skipTwoFactor: true });
+  return startSession(user, ipAddress, userAgent, { skipTwoFactor: true, deviceId: device.id });
 };
 
 module.exports = { register, login, googleExchange, refreshTokens, logout, forgotPassword, resetPassword, changePassword, verify2FAChallenge, walletLogin, pairLogin };

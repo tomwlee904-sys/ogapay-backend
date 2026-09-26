@@ -159,6 +159,9 @@ if (process.env.NODE_ENV !== 'test') {
 
   const { scheduleVaultDistribution } = require('./services/vault.cron');
   scheduleVaultDistribution();
+
+  // Email alerts for Settings → Notifications
+  require('./services/alerts.service').scheduleAlerts();
 }
 
 // ── API Routes ────────────────────────────────

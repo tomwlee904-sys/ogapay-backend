@@ -140,7 +140,7 @@ router.post('/2fa/challenge', async (req, res) => {
   if (!userId || !challengeToken || !token) {
     throw require('../utils/apiResponse').ApiError.badRequest('userId, challengeToken, and token are required');
   }
-  const result = await authService.verify2FAChallenge(userId, challengeToken, token);
+  const result = await authService.verify2FAChallenge(userId, challengeToken, token, req.ip, req.headers['user-agent']);
   successResponse(res, result, '2FA verification successful');
 });
 
@@ -150,7 +150,7 @@ router.get('/me', authenticate, async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
       include: {
-        kyc: { select: { status: true } },
+        kyc: { select: { status: true, kycTier: true } },
         wallets: {
           select: { balance: true, currency: true, lockedBalance: true, isActive: true },
         },
@@ -183,7 +183,15 @@ router.get('/me', authenticate, async (req, res) => {
       walletAddress: safeUser.walletAddress || null, walletProvider: safeUser.walletProvider || null,
       walletConnectedAt: safeUser.walletConnectedAt ? safeUser.walletConnectedAt.toISOString() : null,
       referralCode: safeUser.referralCode, isEmailVerified: safeUser.isEmailVerified,
-      kycStatus: kyc?.status || null, humanVerified: !!safeUser.humanVerifiedAt, humanVerifiedAt: safeUser.humanVerifiedAt || null, phone: safeUser.phone || null, isPhoneVerified: safeUser.isPhoneVerified || false, onboardingComplete: safeUser.onboardingComplete || false,
+      kycStatus: kyc?.status || null,
+      // KYC level and 2FA state: the withdraw form and Settings need them (the
+      // withdraw form treated everyone as unverified and capped them at ₦5,000)
+      kyc: { status: kyc?.status || null, kycTier: kyc?.status === 'APPROVED' ? (kyc.kycTier || 0) : 0 },
+      kycTier: kyc?.status === 'APPROVED' ? (kyc.kycTier || 0) : 0,
+      isTwoFactorEnabled: !!safeUser.isTwoFactorEnabled,
+      hasPassword: !!passwordHash,
+      ogaScore: safeUser.ogaScore || 0,
+      humanVerified: !!safeUser.humanVerifiedAt, humanVerifiedAt: safeUser.humanVerifiedAt || null, phone: safeUser.phone || null, isPhoneVerified: safeUser.isPhoneVerified || false, onboardingComplete: safeUser.onboardingComplete || false,
       wallet: walletMap, bankAccount, onboarding, _count: user._count, createdAt: safeUser.createdAt,
     };
     return res.json({ success: true, user: response });
@@ -218,46 +226,11 @@ router.post("/change-password", authenticate, async (req, res) => {
 
 
 // POST /api/v1/auth/connect/:platform — OAuth account connection
-const PLATFORM_POINTS = { linkedin: 10, twitter: 8, github: 8, google: 5, telegram: 5 };
 
 router.post('/connect/:platform', authenticate, async (req, res) => {
-  const { platform } = req.params;
-  const { code, redirectUri } = req.body;
-  
-  if (!['linkedin', 'twitter', 'github', 'google', 'telegram'].includes(platform)) {
-    throw require('../utils/apiResponse').ApiError.badRequest('Unsupported platform');
-  }
-  
-  // In production, exchange the auth code for an access token using stored client_secret
-  // Then fetch the user's profile from the platform's API
-  // For now, mark the account as connected and update the score
-  
-  const user = await prisma.user.findUnique({ where: { id: req.user.id } });
-  if (!user) throw require('../utils/apiResponse').ApiError.notFound('User not found');
-  
-  const currentAccounts = (user.connectedAccounts && typeof user.connectedAccounts === 'object')
-    ? user.connectedAccounts
-    : {};
-  
-  if (currentAccounts[platform]) {
-    throw require('../utils/apiResponse').ApiError.conflict('Account already connected');
-  }
-  
-  const updatedAccounts = { ...currentAccounts, [platform]: true };
-  const scoreIncrease = PLATFORM_POINTS[platform] || 0;
-  
-  await prisma.user.update({
-    where: { id: req.user.id },
-    data: {
-      connectedAccounts: updatedAccounts,
-      ogaScore: { increment: scoreIncrease },
-    },
-  });
-  
-  require('../utils/apiResponse').successResponse(res, {
-    connectedAccounts: updatedAccounts,
-    ogaScore: (user.ogaScore || 0) + scoreIncrease,
-  }, `${platform} connected successfully`);
+  // This used to mark any account "connected" and add OgaScore without OAuth.
+  // Accounts are connected through /social/:platform/init now.
+  res.status(410).json({ success: false, message: 'Connect accounts from Settings → Connections.' });
 });
 
 // POST /api/v1/auth/wallet/connect — Connect Solana wallet address

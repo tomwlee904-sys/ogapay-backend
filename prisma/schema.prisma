@@ -567,11 +567,13 @@ model Notification {
   body      String
   data      Json?
   isRead    Boolean  @default(false) @map("is_read")
+  emailedAt DateTime? @map("emailed_at") // when the email alert went out (or was skipped)
   createdAt DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead])
+  @@index([emailedAt, createdAt])
   @@map("notifications")
 }
 
@@ -582,10 +584,12 @@ model RefreshToken {
   expiresAt DateTime @map("expires_at")
   userAgent String?  @map("user_agent")
   ipAddress String?  @map("ip_address")
+  deviceId  String?  @map("device_id") // set for sessions started by pairing a device
   createdAt DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([deviceId])
   @@map("refresh_tokens")
 }
 

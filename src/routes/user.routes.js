@@ -340,12 +340,8 @@ router.get('/me/earnings', authenticate, async (req, res) => {
 
 // PATCH /api/v1/users/me/preferences
 router.patch('/me/preferences', authenticate, async (req, res) => {
-  const { preferences } = req.body;
-  if (!preferences || typeof preferences !== 'object') {
-    return res.status(400).json({ success: false, message: 'preferences object required' });
-  }
-  const user = await userService.updateProfile(req.user.id, { preferences });
-  successResponse(res, { preferences: user.preferences }, 'Preferences updated');
+  const preferences = await userService.updatePreferences(req.user.id, req.body?.preferences);
+  successResponse(res, { preferences }, 'Preferences updated');
 });
 
 // DELETE /api/v1/users/me

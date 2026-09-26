@@ -20,6 +20,20 @@ const { PublicKey } = require('@solana/web3.js');
 
 const router = express.Router();
 
+// With two-factor authentication on, sending money out needs a code from the
+// authenticator app. Runs before validation (which drops unknown fields).
+const secondFactor = async (req, res, next) => {
+  try {
+    const u = await prisma.user.findUnique({ where: { id: req.user.id }, select: { isTwoFactorEnabled: true } });
+    if (!u?.isTwoFactorEnabled) return next();
+    const code = String(req.body?.otp ?? '').replace(/\s/g, '');
+    if (!code) return next(ApiError.forbidden('Enter the 6-digit code from your authenticator app (2FA) to continue.'));
+    const ok = await require('../services/2fa.service').verifyChallenge(req.user.id, code);
+    if (!ok) return next(ApiError.forbidden('That 2FA code is wrong or has expired. Try the current code.'));
+    return next();
+  } catch (e) { return next(e); }
+};
+
 // Per-withdrawal limit in naira by KYC level
 const ngnWithdrawLimit = (user) => {
   const tier = user?.kyc?.kycTier ?? 0;
@@ -209,7 +223,7 @@ router.post('/fund/swap', authenticate, async (req, res) => {
 });
 
 // ─── Crypto withdrawal ───────────────────────────────────────
-router.post('/withdraw/crypto', authenticate, requireKyc, async (req, res) => {
+router.post('/withdraw/crypto', authenticate, requireKyc, secondFactor, async (req, res) => {
   const idempotencyKey = req.headers['idempotency-key'];
   const cached = checkIdempotency(idempotencyKey);
   if (cached) return successResponse(res, cached, 'Withdrawal already submitted (idempotent)');
@@ -341,13 +355,13 @@ router.post('/deposit', validate(depositSchema), async (req, res) => {
 
 // POST /api/v1/wallets/send — send money to another OgaPay user (internal ledger).
 // (/transfer is the bank payout via Flutterwave.)
-router.post('/send', validate(sendSchema), async (req, res) => {
+router.post('/send', secondFactor, validate(sendSchema), async (req, res) => {
   const data = await walletService.sendToUser(req.user.id, req.body);
   successResponse(res, data, 'Transfer completed.');
 });
 
 // POST /api/v1/wallets/withdraw
-router.post('/withdraw', requireKyc, validate(withdrawSchema), async (req, res) => {
+router.post('/withdraw', requireKyc, secondFactor, validate(withdrawSchema), async (req, res) => {
   const idempotencyKey = req.headers['idempotency-key'];
   const cached = checkIdempotency(idempotencyKey);
   if (cached) return successResponse(res, cached, 'Withdrawal already submitted (idempotent)');
@@ -422,7 +436,7 @@ router.delete('/banks/:id', async (req, res) => {
 // ─── Enhanced Withdrawal via Flutterwave Transfer ──────────
 
 // POST /api/v1/wallets/transfer — withdraw to saved bank via Flutterwave Transfer
-router.post('/transfer', requireKyc, async (req, res) => {
+router.post('/transfer', requireKyc, secondFactor, async (req, res) => {
   const idempotencyKey = req.headers['idempotency-key'];
   const cached = checkIdempotency(idempotencyKey);
   if (cached) return successResponse(res, cached, 'Transfer already submitted (idempotent)');

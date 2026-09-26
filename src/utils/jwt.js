@@ -43,7 +43,9 @@ const generateTokenPair = (user) => {
   };
   return {
     accessToken: signAccessToken(payload),
-    refreshToken: signRefreshToken({ sub: user.id }),
+    // jti keeps two sign-ins in the same second from minting the same token
+    // (refresh tokens are unique in the database, so the second one failed)
+    refreshToken: signRefreshToken({ sub: user.id, jti: require('crypto').randomUUID() }),
   };
 };
 

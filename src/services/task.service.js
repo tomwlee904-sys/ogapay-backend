@@ -225,14 +225,12 @@ const checkWorkerRequirements = async (task, workerId) => {
   const needScore = Number(task.minSorsaScore) || 0;
   if (!task.workerRequirement && needRank <= 1 && needScore <= 0 && !task.requiresWallet && !task.requiresX) return;
 
+  const { SCORE_FIELDS, computeOgaScore } = require('./ogascore.service');
   const worker = await prisma.user.findUnique({
     where: { id: workerId },
     select: {
-      humanVerifiedAt: true,
-      ogaScore: true,
+      ...SCORE_FIELDS,
       walletAddress: true,
-      twitterOAuthConnected: true,
-      kyc: { select: { status: true, kycTier: true } },
       workerProfile: { select: { level: true } },
       wallets: { where: { currency: 'SOL', walletAddress: { not: null } }, select: { id: true }, take: 1 },
     },
@@ -243,7 +241,9 @@ const checkWorkerRequirements = async (task, workerId) => {
   const need = (text, settable) => { missing.push(text); fixInSettings = fixInSettings || settable; };
   if (task.workerRequirement === 'KYC' && !(worker?.kyc?.status === 'APPROVED' && (worker?.kyc?.kycTier ?? 0) >= 1)) need('verified KYC', true);
   if (task.workerRequirement === 'HUMAN' && !worker?.humanVerifiedAt) need('human verification with VeryAI', true);
-  if (needScore > 0 && (worker?.ogaScore || 0) < needScore) need(`an OgaScore of ${needScore} (yours is ${worker?.ogaScore || 0})`, false);
+  // Worked out live from verified signals (the stored number could be inflated)
+  const score = computeOgaScore(worker);
+  if (needScore > 0 && score < needScore) need(`an OgaScore of ${needScore} (yours is ${score})`, true);
   if (task.requiresWallet && !worker?.walletAddress && !worker?.wallets?.length) need('a connected Solana wallet', true);
   if (task.requiresX && !worker?.twitterOAuthConnected) need('a connected X account', true);
   if (needRank > 1) {

@@ -19,6 +19,21 @@ setInterval(() => {
 }, 60_000);
 
 const FRONTEND = () => process.env.FRONTEND_URL || 'https://ogapay.vercel.app';
+const { syncOgaScore } = require('../services/ogascore.service');
+
+// GET /api/v1/social/providers — which connections are set up on this server
+// (Settings only offers the ones that will work). No secrets are returned.
+router.get('/providers', (req, res) => {
+  const e = process.env;
+  successResponse(res, {
+    linkedin: !!(e.LINKEDIN_CLIENT_ID && e.LINKEDIN_CLIENT_SECRET),
+    github: !!(e.GITHUB_CLIENT_ID && e.GITHUB_CLIENT_SECRET),
+    twitter: !!(e.TWITTER_CLIENT_ID && e.TWITTER_CLIENT_SECRET),
+    google: !!(e.GOOGLE_CLIENT_ID && e.GOOGLE_CLIENT_SECRET),
+    telegram: !!(e.TELEGRAM_BOT_TOKEN && /^\d+:/.test(e.TELEGRAM_BOT_TOKEN)),
+    very: !!(e.VERY_CLIENT_ID && e.VERY_CLIENT_SECRET),
+  });
+});
 
 // ─── LinkedIn OAuth ──────────────────────────────
 
@@ -47,11 +62,11 @@ router.post('/linkedin/init', authenticate, async (req, res) => {
 // GET /api/v1/social/linkedin/callback
 router.get('/linkedin/callback', async (req, res) => {
   const { code, state, error } = req.query;
-  if (error) return res.redirect(`${FRONTEND()}/settings?linkedin=error&message=${encodeURIComponent(error)}`);
-  if (!code || !state) return res.redirect(`${FRONTEND()}/settings?linkedin=error&message=missing_params`);
+  if (error) return res.redirect(`${FRONTEND()}/settings/connections?linkedin=error&message=${encodeURIComponent(error)}`);
+  if (!code || !state) return res.redirect(`${FRONTEND()}/settings/connections?linkedin=error&message=missing_params`);
 
   const stored = oauthStore.get(state);
-  if (!stored) return res.redirect(`${FRONTEND()}/settings?linkedin=error&message=invalid_state`);
+  if (!stored) return res.redirect(`${FRONTEND()}/settings/connections?linkedin=error&message=invalid_state`);
   oauthStore.delete(state);
 
   const clientId = process.env.LINKEDIN_CLIENT_ID;
@@ -75,7 +90,7 @@ router.get('/linkedin/callback', async (req, res) => {
     tokenData = tokenRes.data;
   } catch (err) {
     const msg = err.response?.data?.error_description || err.message;
-    return res.redirect(`${FRONTEND()}/settings?linkedin=error&message=${encodeURIComponent(msg)}`);
+    return res.redirect(`${FRONTEND()}/settings/connections?linkedin=error&message=${encodeURIComponent(msg)}`);
   }
 
   let linkedinUser;
@@ -102,7 +117,8 @@ router.get('/linkedin/callback', async (req, res) => {
     },
   });
 
-  res.redirect(`${FRONTEND()}/dashboard?linkedin=connected`);
+  await syncOgaScore(stored.userId);
+  res.redirect(`${FRONTEND()}/settings/connections?linkedin=connected`);
 });
 
 // GET /api/v1/social/linkedin/status
@@ -128,6 +144,7 @@ router.delete('/linkedin/disconnect', authenticate, async (req, res) => {
       linkedinOAuthHandle: null, linkedinOAuthConnected: false,
     },
   });
+  await syncOgaScore(req.user.id);
   successResponse(res, null, 'LinkedIn disconnected');
 });
 
@@ -213,6 +230,7 @@ router.post('/very/complete', authenticate, async (req, res) => {
       data: { veryUserId: sub, humanVerifiedAt: new Date() },
       select: { humanVerifiedAt: true },
     });
+    await syncOgaScore(req.user.id);
     successResponse(res, { verified: true, verifiedAt: user.humanVerifiedAt }, 'Human verification complete');
   } catch (err) {
     if (err.code === 'P2002') {
@@ -258,11 +276,11 @@ router.post('/github/init', authenticate, async (req, res) => {
 // GET /api/v1/social/github/callback
 router.get('/github/callback', async (req, res) => {
   const { code, state, error } = req.query;
-  if (error) return res.redirect(`${FRONTEND()}/settings?github=error&message=${encodeURIComponent(error)}`);
-  if (!code || !state) return res.redirect(`${FRONTEND()}/settings?github=error&message=missing_params`);
+  if (error) return res.redirect(`${FRONTEND()}/settings/connections?github=error&message=${encodeURIComponent(error)}`);
+  if (!code || !state) return res.redirect(`${FRONTEND()}/settings/connections?github=error&message=missing_params`);
 
   const stored = oauthStore.get(state);
-  if (!stored) return res.redirect(`${FRONTEND()}/settings?github=error&message=invalid_state`);
+  if (!stored) return res.redirect(`${FRONTEND()}/settings/connections?github=error&message=invalid_state`);
   oauthStore.delete(state);
 
   const clientId = process.env.GITHUB_CLIENT_ID;
@@ -284,7 +302,7 @@ router.get('/github/callback', async (req, res) => {
     tokenData = tokenRes.data;
   } catch (err) {
     const msg = err.response?.data?.error_description || err.message;
-    return res.redirect(`${FRONTEND()}/settings?github=error&message=${encodeURIComponent(msg)}`);
+    return res.redirect(`${FRONTEND()}/settings/connections?github=error&message=${encodeURIComponent(msg)}`);
   }
 
   let githubUser;
@@ -308,7 +326,8 @@ router.get('/github/callback', async (req, res) => {
     },
   });
 
-  res.redirect(`${FRONTEND()}/dashboard?github=connected`);
+  await syncOgaScore(stored.userId);
+  res.redirect(`${FRONTEND()}/settings/connections?github=connected`);
 });
 
 // GET /api/v1/social/github/status
@@ -333,6 +352,7 @@ router.delete('/github/disconnect', authenticate, async (req, res) => {
       githubOAuthHandle: null, githubOAuthConnected: false,
     },
   });
+  await syncOgaScore(req.user.id);
   successResponse(res, null, 'GitHub disconnected');
 });
 
@@ -368,11 +388,11 @@ router.post('/twitter/init', authenticate, async (req, res) => {
 // GET /api/v1/social/twitter/callback
 router.get('/twitter/callback', async (req, res) => {
   const { code, state, error } = req.query;
-  if (error) return res.redirect(`${FRONTEND()}/settings?twitter=error&message=${encodeURIComponent(error)}`);
-  if (!code || !state) return res.redirect(`${FRONTEND()}/settings?twitter=error&message=missing_params`);
+  if (error) return res.redirect(`${FRONTEND()}/settings/connections?twitter=error&message=${encodeURIComponent(error)}`);
+  if (!code || !state) return res.redirect(`${FRONTEND()}/settings/connections?twitter=error&message=missing_params`);
 
   const stored = oauthStore.get(state);
-  if (!stored) return res.redirect(`${FRONTEND()}/settings?twitter=error&message=invalid_state`);
+  if (!stored) return res.redirect(`${FRONTEND()}/settings/connections?twitter=error&message=invalid_state`);
   oauthStore.delete(state);
 
   const clientId = process.env.TWITTER_CLIENT_ID;
@@ -398,7 +418,7 @@ router.get('/twitter/callback', async (req, res) => {
     tokenData = tokenRes.data;
   } catch (err) {
     const msg = err.response?.data?.error_description || err.message;
-    return res.redirect(`${FRONTEND()}/settings?twitter=error&message=${encodeURIComponent(msg)}`);
+    return res.redirect(`${FRONTEND()}/settings/connections?twitter=error&message=${encodeURIComponent(msg)}`);
   }
 
   let twitterUser;
@@ -424,7 +444,8 @@ router.get('/twitter/callback', async (req, res) => {
     },
   });
 
-  res.redirect(`${FRONTEND()}/dashboard?twitter=connected`);
+  await syncOgaScore(stored.userId);
+  res.redirect(`${FRONTEND()}/settings/connections?twitter=connected`);
 });
 
 // GET /api/v1/social/twitter/status
@@ -449,6 +470,7 @@ router.delete('/twitter/disconnect', authenticate, async (req, res) => {
       twitterOAuthHandle: null, twitterOAuthConnected: false,
     },
   });
+  await syncOgaScore(req.user.id);
   successResponse(res, null, 'Twitter disconnected');
 });
 
@@ -480,11 +502,11 @@ router.post('/google/init', authenticate, async (req, res) => {
 // GET /api/v1/social/google/callback
 router.get('/google/callback', async (req, res) => {
   const { code, state, error } = req.query;
-  if (error) return res.redirect(`${FRONTEND()}/settings?google=error&message=${encodeURIComponent(error)}`);
-  if (!code || !state) return res.redirect(`${FRONTEND()}/settings?google=error&message=missing_params`);
+  if (error) return res.redirect(`${FRONTEND()}/settings/connections?google=error&message=${encodeURIComponent(error)}`);
+  if (!code || !state) return res.redirect(`${FRONTEND()}/settings/connections?google=error&message=missing_params`);
 
   const stored = oauthStore.get(state);
-  if (!stored) return res.redirect(`${FRONTEND()}/settings?google=error&message=invalid_state`);
+  if (!stored) return res.redirect(`${FRONTEND()}/settings/connections?google=error&message=invalid_state`);
   oauthStore.delete(state);
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -507,7 +529,7 @@ router.get('/google/callback', async (req, res) => {
     tokenData = tokenRes.data;
   } catch (err) {
     const msg = err.response?.data?.error_description || err.message;
-    return res.redirect(`${FRONTEND()}/settings?google=error&message=${encodeURIComponent(msg)}`);
+    return res.redirect(`${FRONTEND()}/settings/connections?google=error&message=${encodeURIComponent(msg)}`);
   }
 
   let googleUser;
@@ -534,7 +556,8 @@ router.get('/google/callback', async (req, res) => {
     },
   });
 
-  res.redirect(`${FRONTEND()}/dashboard?google=connected`);
+  await syncOgaScore(stored.userId);
+  res.redirect(`${FRONTEND()}/settings/connections?google=connected`);
 });
 
 // GET /api/v1/social/google/status
@@ -560,62 +583,84 @@ router.delete('/google/disconnect', authenticate, async (req, res) => {
       googleOAuthHandle: null, googleOAuthConnected: false,
     },
   });
+  await syncOgaScore(req.user.id);
   successResponse(res, null, 'Google disconnected');
 });
 
 // ─── Telegram OAuth ──────────────────────────────
 
 // POST /api/v1/social/telegram/init
-router.post('/telegram/init', authenticate, async (req, res) => {
-  const botUsername = process.env.TELEGRAM_BOT_USERNAME;
-  if (!botUsername) return res.status(500).json({ success: false, message: 'Telegram bot not configured' });
+// Telegram login (oauth.telegram.org). Telegram signs the result with our bot
+// token; the old callback skipped that check whenever no hash was sent, so
+// anyone could attach any Telegram username to their account.
+const telegramBotId = () => (process.env.TELEGRAM_BOT_TOKEN || '').split(':')[0];
 
-  const state = require('crypto').randomBytes(16).toString('hex');
-  oauthStore.set(state, { userId: req.user.id, ts: Date.now() });
-
-  // Telegram uses a deep link for bot-based auth
-  const deepLink = `https://t.me/${botUsername}?start=${state}`;
-
-  successResponse(res, { authUrl: deepLink, state });
-});
-
-// GET /api/v1/social/telegram/callback?state=...&id=...&username=...
-router.get('/telegram/callback', async (req, res) => {
-  const { state, id, username, first_name, last_name, photo_url, auth_date, hash } = req.query;
-
-  if (!state || !id) return res.redirect(`${FRONTEND()}/settings?telegram=error&message=missing_params`);
-
-  const stored = oauthStore.get(state);
-  if (!stored) return res.redirect(`${FRONTEND()}/settings?telegram=error&message=invalid_state`);
-  oauthStore.delete(state);
-
-  // Verify the hash if bot token is available (Telegram login widget verification)
+function checkTelegramAuth(auth) {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  if (botToken && hash) {
-    const crypto = require('crypto');
-    const checkString = Object.entries({ auth_date, first_name, id, last_name, photo_url, username })
-      .filter(([, v]) => v != null)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([k, v]) => `${k}=${v}`)
-      .join('\n');
-    const secretKey = crypto.createHash('sha256').update(botToken).digest();
-    const computedHash = crypto.createHmac('sha256', secretKey).update(checkString).digest('hex');
-    if (computedHash !== hash) {
-      return res.redirect(`${FRONTEND()}/settings?telegram=error&message=invalid_hash`);
-    }
-  }
+  if (!botToken || !auth || typeof auth !== 'object' || !auth.hash || !auth.id || !auth.auth_date) return 'invalid';
+  const crypto = require('crypto');
+  const fields = ['auth_date', 'first_name', 'id', 'last_name', 'photo_url', 'username'];
+  const checkString = fields
+    .filter((k) => auth[k] != null && auth[k] !== '')
+    .map((k) => `${k}=${auth[k]}`)
+    .join('\n');
+  const secretKey = crypto.createHash('sha256').update(botToken).digest();
+  const computed = crypto.createHmac('sha256', secretKey).update(checkString).digest('hex');
+  const given = String(auth.hash);
+  if (computed.length !== given.length || !crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(given))) return 'invalid_hash';
+  if (Date.now() / 1000 - Number(auth.auth_date) > 86400) return 'expired';
+  return null;
+}
 
+async function saveTelegram(userId, auth) {
   await prisma.user.update({
-    where: { id: stored.userId },
+    where: { id: userId },
     data: {
-      telegramOAuthChatId: String(id),
-      telegramOAuthHandle: username || null,
+      telegramOAuthChatId: String(auth.id),
+      telegramOAuthHandle: auth.username || null,
       telegramOAuthConnected: true,
-      telegram: username || undefined,
     },
   });
+  await syncOgaScore(userId);
+}
 
-  res.redirect(`${FRONTEND()}/dashboard?telegram=connected`);
+router.post('/telegram/init', authenticate, async (req, res) => {
+  const botId = telegramBotId();
+  if (!process.env.TELEGRAM_BOT_TOKEN || !/^\d+$/.test(botId)) {
+    return res.status(503).json({ success: false, message: 'Telegram connection is not available yet' });
+  }
+  const state = require('crypto').randomBytes(16).toString('hex');
+  oauthStore.set(`tg:${state}`, { userId: req.user.id, ts: Date.now() });
+  const origin = new URL(FRONTEND()).origin;
+  const returnTo = `${FRONTEND()}/settings/connections?telegram=callback&state=${state}`;
+  const params = new URLSearchParams({ bot_id: botId, origin, embed: '0', request_access: 'write', return_to: returnTo });
+  successResponse(res, { authUrl: `https://oauth.telegram.org/auth?${params.toString()}`, state });
+});
+
+// POST /api/v1/social/telegram/complete — Settings posts Telegram's signed result here
+router.post('/telegram/complete', authenticate, async (req, res) => {
+  const { state, auth } = req.body || {};
+  const stored = state && oauthStore.get(`tg:${state}`);
+  if (!stored || stored.userId !== req.user.id) {
+    return res.status(400).json({ success: false, message: 'This Telegram sign-in has expired. Please try again.' });
+  }
+  const problem = checkTelegramAuth(auth);
+  if (problem) return res.status(400).json({ success: false, message: "Telegram couldn't confirm your account. Please try again." });
+  oauthStore.delete(`tg:${state}`);
+  await saveTelegram(req.user.id, auth);
+  successResponse(res, { connected: true, handle: auth.username || null }, 'Telegram connected');
+});
+
+// GET /api/v1/social/telegram/callback?state=...&id=...&hash=... (login widget redirect)
+router.get('/telegram/callback', async (req, res) => {
+  const { state } = req.query;
+  const stored = state && oauthStore.get(`tg:${state}`);
+  if (!stored) return res.redirect(`${FRONTEND()}/settings/connections?telegram=error&message=invalid_state`);
+  const problem = checkTelegramAuth(req.query);
+  if (problem) return res.redirect(`${FRONTEND()}/settings/connections?telegram=error&message=${problem}`);
+  oauthStore.delete(`tg:${state}`);
+  await saveTelegram(stored.userId, req.query);
+  res.redirect(`${FRONTEND()}/settings/connections?telegram=connected`);
 });
 
 // GET /api/v1/social/telegram/status
@@ -640,6 +685,7 @@ router.delete('/telegram/disconnect', authenticate, async (req, res) => {
       telegramOAuthConnected: false,
     },
   });
+  await syncOgaScore(req.user.id);
   successResponse(res, null, 'Telegram disconnected');
 });
 

@@ -10,9 +10,11 @@ const router = express.Router();
 
 // List all paired devices for the current user
 router.get('/', authenticate, async (req, res) => {
+  // Only devices that finished pairing (rows with a code are unused codes)
   const devices = await prisma.device.findMany({
-    where: { userId: req.user.id },
+    where: { userId: req.user.id, code: null },
     orderBy: { lastActiveAt: 'desc' },
+    select: { id: true, name: true, browser: true, os: true, lastActiveAt: true, createdAt: true },
   });
   res.json({ success: true, data: devices });
 });
@@ -84,8 +86,12 @@ router.delete('/:id', authenticate, async (req, res) => {
     return res.status(404).json({ success: false, message: 'Device not found' });
   }
 
-  await prisma.device.delete({ where: { id: req.params.id } });
-  successResponse(res, null, 'Device removed');
+  // Removing a device also signs it out (its sessions stayed valid before)
+  await prisma.$transaction([
+    prisma.refreshToken.deleteMany({ where: { userId: req.user.id, deviceId: device.id } }),
+    prisma.device.delete({ where: { id: device.id } }),
+  ]);
+  successResponse(res, null, 'Device removed and signed out');
 });
 
 module.exports = router;

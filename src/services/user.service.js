@@ -6,11 +6,65 @@ const { ApiError } = require('../utils/apiResponse');
 
 // ── Get current user profile ───────────────────
 
+// Settings preferences. Unknown keys are ignored and each value is type-checked,
+// so the JSON column can't be filled with junk. "isPublic" lives in its own column.
+const PREF_DEFAULTS = {
+  emailNotifications: true, // master switch for email alerts
+  taskAlerts: true,         // job updates (applications, approvals, rejections)
+  payoutAlerts: true,       // money received
+  communityAlerts: true,    // invites and join requests
+  newTaskAlerts: false,     // daily email of new jobs in your categories
+  weeklyDigest: false,      // Monday summary of what you earned
+  loginAlerts: true,        // email when your account signs in on a new browser
+  autoConvert: false,       // convert USDC earnings to NGN
+  showEarnings: false,      // public profile / leaderboards
+  showRank: false,          // OgaScore badge on public profile
+  defaultCurrency: 'NGN',
+};
+const CURRENCY_MODES = ['NGN', 'USDC', 'USDT', 'SOL', 'BOTH'];
+
+const effectivePreferences = (stored) => {
+  const p = (stored && typeof stored === 'object' && !Array.isArray(stored)) ? stored : {};
+  const out = {};
+  for (const [k, d] of Object.entries(PREF_DEFAULTS)) {
+    out[k] = typeof d === 'boolean' ? (typeof p[k] === 'boolean' ? p[k] : d) : (CURRENCY_MODES.includes(p[k]) ? p[k] : d);
+  }
+  return out;
+};
+
+// Merge a partial update into the saved preferences (never replace them wholesale;
+// the display-currency switcher sends one key at a time and used to wipe the rest)
+const updatePreferences = async (userId, incoming = {}) => {
+  if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) {
+    throw ApiError.badRequest('preferences object required');
+  }
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { preferences: true, isPublic: true } });
+  if (!user) throw ApiError.notFound('User not found');
+  const current = (user.preferences && typeof user.preferences === 'object' && !Array.isArray(user.preferences)) ? user.preferences : {};
+  const next = { ...current };
+  for (const [k, v] of Object.entries(incoming)) {
+    if (k === 'isPublic') continue;
+    if (!(k in PREF_DEFAULTS)) continue;
+    if (typeof PREF_DEFAULTS[k] === 'boolean') {
+      if (typeof v !== 'boolean') throw ApiError.badRequest(`${k} must be true or false`);
+      next[k] = v;
+    } else if (k === 'defaultCurrency') {
+      if (!CURRENCY_MODES.includes(v)) throw ApiError.badRequest('Unknown currency');
+      next[k] = v;
+    }
+  }
+  const data = { preferences: next };
+  if (typeof incoming.isPublic === 'boolean') data.isPublic = incoming.isPublic;
+  if (typeof incoming.emailNotifications === 'boolean') data.emailNotifications = incoming.emailNotifications;
+  const saved = await prisma.user.update({ where: { id: userId }, data, select: { preferences: true, isPublic: true } });
+  return { ...effectivePreferences(saved.preferences), isPublic: saved.isPublic };
+};
+
 const getProfile = async (userId) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {
-      kyc: { select: { status: true, verifiedAt: true } },
+      kyc: { select: { status: true, kycTier: true, verifiedAt: true, rejectionReason: true, idType: true } },
       wallets: { where: { isActive: true } },
       workerProfile: true,
       posterProfile: true,
@@ -29,13 +83,34 @@ const getProfile = async (userId) => {
     twitterOAuthToken, twitterOAuthTokenSecret, googleOAuthToken, googleOAuthRefreshToken,
     ...safeUser
   } = user;
-  return safeUser;
+  const { computeOgaScore, syncOgaScore } = require('./ogascore.service');
+  const score = computeOgaScore(user);
+  if (score !== user.ogaScore) await syncOgaScore(userId);
+  return {
+    ...safeUser,
+    ogaScore: score,
+    hasPassword: !!passwordHash,
+    preferences: effectivePreferences(user.preferences),
+    // Accounts connected through OAuth (the old connectedAccounts JSON was never set by OAuth)
+    connections: {
+      linkedin: { connected: user.linkedinOAuthConnected, handle: user.linkedinOAuthHandle || null },
+      twitter: { connected: user.twitterOAuthConnected, handle: user.twitterOAuthHandle || null },
+      github: { connected: user.githubOAuthConnected, handle: user.githubOAuthHandle || null },
+      google: { connected: user.googleOAuthConnected, handle: user.googleOAuthHandle || null },
+      telegram: { connected: user.telegramOAuthConnected, handle: user.telegramOAuthHandle || null },
+    },
+  };
 };
 
 // ── Update profile ─────────────────────────────
 
 const updateProfile = async (userId, updates) => {
-  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'coverUrl', 'username', 'twitter', 'telegram', 'discord', 'website', 'preferences', 'isPublic'];
+  if (updates.preferences !== undefined) {
+    await updatePreferences(userId, updates.preferences);
+    updates = { ...updates };
+    delete updates.preferences;
+  }
+  const allowed = ['firstName', 'lastName', 'phone', 'avatarUrl', 'coverUrl', 'username', 'twitter', 'telegram', 'discord', 'website', 'isPublic'];
   const data = Object.fromEntries(
     Object.entries(updates).filter(([k]) => allowed.includes(k))
   );
@@ -254,6 +329,9 @@ const getEarnings = async (userId) => {
 };
 
 module.exports = {
+  PREF_DEFAULTS,
+  effectivePreferences,
+  updatePreferences,
   getProfile,
   updateProfile,
   uploadAvatar,
