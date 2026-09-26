@@ -9,7 +9,8 @@
     "build": "vite build && node scripts/copy-static.mjs",
     "preview": "vite preview",
     "push": "prisma db push",
-    "test:agents": "node scripts/e2e-agent-test.js"
+    "test:agents": "node scripts/e2e-agent-test.js",
+    "test:account-delete": "node __tests__/account-delete.it.js"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
@@ -46,6 +47,8 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite-socket": "^0.2.11",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",

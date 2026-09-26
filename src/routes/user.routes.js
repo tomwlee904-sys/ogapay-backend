@@ -348,14 +348,18 @@ router.patch('/me/preferences', authenticate, async (req, res) => {
   successResponse(res, { preferences: user.preferences }, 'Preferences updated');
 });
 
-// DELETE /api/v1/users/me
+// GET /api/v1/users/me/delete-check — what must happen before the account can go,
+// and how to confirm ('password', or 'text' = type DELETE)
+router.get('/me/delete-check', authenticate, async (req, res) => {
+  const data = await userService.getDeletionCheck(req.user.id);
+  successResponse(res, data);
+});
+
+// DELETE /api/v1/users/me — body { password } (or { confirm: 'DELETE' } if the
+// account has no password). 409 while it still holds money or has open jobs,
+// withdrawals, vault payouts, store orders, disputes or work awaiting review.
 router.delete('/me', authenticate, async (req, res) => {
-  const { prisma } = require('../config/database');
-  const { successResponse } = require('../utils/apiResponse');
-  await prisma.user.update({
-    where: { id: req.user.id },
-    data: { isBanned: true, email: 'deleted_' + req.user.id + '@ogapay.com' },
-  });
+  await userService.deleteAccount(req.user.id, req.body || {});
   successResponse(res, null, 'Account deleted successfully');
 });
 
