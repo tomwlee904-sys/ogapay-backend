@@ -275,7 +275,7 @@ router.delete('/me/portfolio/:id', authenticate, async (req, res) => {
 });
 
 // POST /api/v1/users/:username/hire — private direct hire (escrowed like any job)
-router.post('/:username/hire', authenticate, authorize('POSTER', 'ADMIN'), validate(hireSchema), async (req, res) => {
+router.post('/:username/hire', authenticate, validate(hireSchema), async (req, res) => {
   const data = await taskService.hireWorker(req.user.id, req.params.username, req.body);
   successResponse(res, data, 'Hire created and funds escrowed');
 });

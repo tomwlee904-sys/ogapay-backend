@@ -56,9 +56,10 @@ const createTask = async (posterId, taskData) => {
       data: { taskId: newTask.id },
     });
 
-    await db.posterProfile.update({
+    await db.posterProfile.upsert({
       where: { userId: posterId },
-      data: { totalPosted: { increment: 1 }, totalSpent: { increment: totalCost } },
+      update: { totalPosted: { increment: 1 }, totalSpent: { increment: totalCost } },
+      create: { userId: posterId, totalPosted: 1, totalSpent: totalCost },
     });
 
     return newTask;
@@ -219,7 +220,7 @@ const checkWorkerRequirements = async (task, workerId) => {
       ogaScore: true,
       walletAddress: true,
       twitterOAuthConnected: true,
-      kyc: { select: { status: true } },
+      kyc: { select: { status: true, kycTier: true } },
       workerProfile: { select: { level: true } },
       wallets: { where: { currency: 'SOL', walletAddress: { not: null } }, select: { id: true }, take: 1 },
     },
@@ -228,7 +229,7 @@ const checkWorkerRequirements = async (task, workerId) => {
   const missing = [];
   let fixInSettings = false;
   const need = (text, settable) => { missing.push(text); fixInSettings = fixInSettings || settable; };
-  if (task.workerRequirement === 'KYC' && worker?.kyc?.status !== 'APPROVED') need('verified KYC', true);
+  if (task.workerRequirement === 'KYC' && !(worker?.kyc?.status === 'APPROVED' && (worker?.kyc?.kycTier ?? 0) >= 1)) need('verified KYC', true);
   if (task.workerRequirement === 'HUMAN' && !worker?.humanVerifiedAt) need('human verification with VeryAI', true);
   if (needScore > 0 && (worker?.ogaScore || 0) < needScore) need(`an OgaScore of ${needScore} (yours is ${worker?.ogaScore || 0})`, false);
   if (task.requiresWallet && !worker?.walletAddress && !worker?.wallets?.length) need('a connected Solana wallet', true);
@@ -398,7 +399,7 @@ const reviewSubmission = async (posterId, submissionId, { status, posterNotes, r
 
       // Update worker reputation
       if (rating) {
-        const workerProfile = await db.workerProfile.findUnique({ where: { userId: submission.workerId } });
+        const workerProfile = await db.workerProfile.upsert({ where: { userId: submission.workerId }, update: {}, create: { userId: submission.workerId } });
         const newTotal = workerProfile.totalRatings + 1;
         const newAvg = ((workerProfile.avgRating * workerProfile.totalRatings) + rating) / newTotal;
         const successRate = (workerProfile.tasksCompleted + 1) / (workerProfile.tasksCompleted + workerProfile.tasksRejected + 1) * 100;
@@ -427,9 +428,10 @@ const reviewSubmission = async (posterId, submissionId, { status, posterNotes, r
     }
 
     if (status === 'REJECTED') {
-      await db.workerProfile.update({
+      await db.workerProfile.upsert({
         where: { userId: submission.workerId },
-        data: { tasksRejected: { increment: 1 } },
+        update: { tasksRejected: { increment: 1 } },
+        create: { userId: submission.workerId, tasksRejected: 1 },
       });
 
       await db.notification.create({
@@ -600,9 +602,10 @@ const rejectSubmission = async (posterId, submissionId, { posterNotes }) => {
       where: { id: submissionId },
     });
 
-    await db.workerProfile.update({
+    await db.workerProfile.upsert({
       where: { userId: submission.workerId },
-      data: { tasksRejected: { increment: 1 } },
+      update: { tasksRejected: { increment: 1 } },
+      create: { userId: submission.workerId, tasksRejected: 1 },
     });
 
     await db.notification.create({

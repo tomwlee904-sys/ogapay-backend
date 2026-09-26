@@ -60,7 +60,8 @@ const lockFundsForTask = async (userId, taskId, amount, currency, db) => {
 
 // Add a task's platform fee to the vault pool, in naira. Call once the task is
 // committed. Never throws.
-const logTaskFee = async (taskId, fee, currency) => {
+// A refunded fee is logged as negative revenue so the vault doesn't pay it out
+const logTaskFee = async (taskId, fee, currency, { refund = false } = {}) => {
   try {
     let ngn = Number(fee);
     if (currency !== 'NGN') {
@@ -74,10 +75,10 @@ const logTaskFee = async (taskId, fee, currency) => {
       ngn = Number(fee) * rate;
     }
     await vaultService.logRevenue({
-      source: 'task_fee',
+      source: refund ? 'task_fee_refund' : 'task_fee',
       sourceId: taskId,
-      amountNgp: round8(ngn),
-      description: `Platform fee for task ${taskId} (${fee} ${currency})`,
+      amountNgp: round8(refund ? -ngn : ngn),
+      description: `${refund ? 'Refunded platform fee' : 'Platform fee'} for task ${taskId} (${fee} ${currency})`,
     });
   } catch (err) {
     logger.error(`Vault revenue log failed for task ${taskId}: ${err.message}`);
@@ -144,9 +145,10 @@ const releaseEscrow = async (taskId, workerId, amount, currency, submissionId, t
       },
     });
 
-    await db.workerProfile.update({
+    await db.workerProfile.upsert({
       where: { userId: workerId },
-      data: { totalEarned: { increment: amount }, tasksCompleted: { increment: 1 } },
+      update: { totalEarned: { increment: amount }, tasksCompleted: { increment: 1 } },
+      create: { userId: workerId, totalEarned: amount, tasksCompleted: 1 },
     });
 
     await db.notification.create({
@@ -236,7 +238,8 @@ const completeTaskIfResolved = async (db, taskId) => {
 
 // Cancel a task nobody has joined yet and return its escrow. The status change
 // is the guard, so a second request finds the task already cancelled.
-const refundEscrow = async (taskId, reason = 'TASK_CANCELLED') => prisma.$transaction(async (db) => {
+const refundEscrow = async (taskId, reason = 'TASK_CANCELLED') => {
+  const out = await prisma.$transaction(async (db) => {
   const { count } = await db.task.updateMany({
     where: { id: taskId, currentWorkers: 0, status: { notIn: ['CANCELLED', 'COMPLETED'] } },
     data: { status: 'CANCELLED' },
@@ -245,8 +248,13 @@ const refundEscrow = async (taskId, reason = 'TASK_CANCELLED') => prisma.$transa
     throw ApiError.conflict('This task can no longer be cancelled: it is already closed or workers have joined');
   }
 
-  const task = await db.task.findUnique({ where: { id: taskId }, select: { posterId: true, currency: true } });
+  const task = await db.task.findUnique({ where: { id: taskId }, select: { posterId: true, currency: true, platformFee: true, reward: true, maxWorkers: true } });
   const refunded = await releaseRemainingEscrow(db, taskId);
+
+  // The fee is returned in proportion to the budget that was never used
+  // (all of it for a job nobody did). It left the balance, so it goes back into it.
+  const budget = Number(task.reward) * Number(task.maxWorkers);
+  const feeRefund = budget > 0 ? Math.min(Number(task.platformFee), round8(Number(task.platformFee) * (refunded / budget))) : 0;
 
   const posterWallet = await db.wallet.findUnique({
     where: { userId_currency: { userId: task.posterId, currency: task.currency } },
@@ -276,14 +284,45 @@ const refundEscrow = async (taskId, reason = 'TASK_CANCELLED') => prisma.$transa
       userId: task.posterId,
       type: 'ESCROW_REFUNDED',
       title: '💰 Escrow Refunded',
-      body: `${formatAmount(refunded, task.currency)} has been returned to your wallet.`,
+      body: `${formatAmount(round8(refunded + feeRefund), task.currency)} has been returned to your wallet${feeRefund > 0 ? ' (including the fee)' : ''}.`,
       data: { taskId, amount: refunded, currency: task.currency, reason },
     },
   });
 
-  logger.info(`Escrow refunded: task ${taskId} - ${refunded} ${task.currency} — ${reason}`);
-  return refundTx;
-});
+  if (feeRefund > 0) {
+    const w = await db.wallet.update({
+      where: { userId_currency: { userId: task.posterId, currency: task.currency } },
+      data: { balance: { increment: feeRefund } },
+    });
+    await db.transaction.create({
+      data: {
+        userId: task.posterId,
+        walletId: w.id,
+        type: 'TASK_REFUND',
+        status: 'COMPLETED',
+        amount: feeRefund,
+        currency: task.currency,
+        reference: `OGA-FEEREF-${uuidv4().replace(/-/g, '').slice(0, 12).toUpperCase()}`,
+        balanceBefore: round8(Number(w.balance) - feeRefund),
+        balanceAfter: w.balance,
+        taskId,
+        description: 'Platform fee refund — job cancelled',
+        completedAt: new Date(),
+      },
+    });
+  }
+  await db.posterProfile.updateMany({
+    where: { userId: task.posterId },
+    data: { totalSpent: { decrement: round8(refunded + feeRefund) } },
+  });
+
+  logger.info(`Escrow refunded: task ${taskId} - ${refunded} + fee ${feeRefund} ${task.currency} — ${reason}`);
+  return { refundTx, feeRefund, currency: task.currency };
+  });
+
+  if (out.feeRefund > 0) await logTaskFee(taskId, out.feeRefund, out.currency, { refund: true });
+  return out.refundTx;
+};
 
 const getEscrowStatus = async (taskId) => {
   const task = await prisma.task.findUnique({

@@ -28,7 +28,6 @@ router.get('/', async (req, res) => {
 router.post(
   '/',
   authenticate,
-  authorize('POSTER', 'ADMIN'),
   validate(createTaskSchema),
   async (req, res) => {
     const task = await taskService.createTask(req.user.id, req.body);
@@ -40,7 +39,6 @@ router.post(
 router.post(
   '/:id/apply',
   authenticate,
-  authorize('WORKER', 'ADMIN'),
   async (req, res) => {
     const submission = await taskService.applyToTask(req.user.id, req.params.id);
     createdResponse(res, submission, 'Applied to task successfully');
@@ -51,7 +49,6 @@ router.post(
 router.post(
   '/:id/submit',
   authenticate,
-  authorize('WORKER', 'ADMIN'),
   validate(submitTaskSchema),
   async (req, res) => {
     const attachments = Array.isArray(req.body?.attachments) ? req.body.attachments : [];
@@ -67,7 +64,6 @@ router.post(
 router.patch(
   '/submissions/:submissionId/review',
   authenticate,
-  authorize('POSTER', 'ADMIN'),
   validate(reviewSubmissionSchema),
   async (req, res) => {
     const result = await taskService.reviewSubmission(req.user.id, req.params.submissionId, req.body);
@@ -85,7 +81,6 @@ router.patch(
 router.patch(
   '/submissions/:submissionId/reject',
   authenticate,
-  authorize('POSTER', 'ADMIN'),
   async (req, res) => {
     const result = await taskService.rejectSubmission(req.user.id, req.params.submissionId, req.body);
     successResponse(res, result, 'Submission rejected, slot reopened');
@@ -172,7 +167,6 @@ router.get('/featured', async (req, res) => {
 router.post(
   '/:id/waitlist',
   authenticate,
-  authorize('WORKER', 'ADMIN'),
   async (req, res) => {
     const result = await taskService.joinWaitlist(req.user.id, req.params.id);
     createdResponse(res, result, `You are number ${result.position} on the waitlist`);
@@ -201,18 +195,37 @@ router.get('/:id', optionalAuth, async (req, res) => {
   successResponse(res, data, 'Task fetched');
 });
 // PATCH /api/v1/tasks/:id — Update task (poster only)
-router.patch('/:id', authenticate, authorize('POSTER', 'ADMIN'), async (req, res) => {
+router.patch('/:id', authenticate, async (req, res) => {
   try {
     const { prisma } = require('../config/database');
-    const task = await prisma.task.findUnique({ where: { id: req.params.id }, select: { posterId: true } });
+    const task = await prisma.task.findUnique({ where: { id: req.params.id }, select: { posterId: true, status: true } });
     if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
     if (task.posterId !== req.user.id && req.user.role !== 'ADMIN') {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
-    const allowedFields = ['title', 'description', 'status', 'reward', 'currency', 'maxWorkers', 'deadline', 'instructions', 'proofRequired', 'tags', 'category', 'estimatedTime'];
+    // Reward, currency and slots are fixed once the escrow is locked. Status can only
+    // pause (DRAFT) or resume (OPEN); cancelling goes through /escrow/refund so the
+    // money is returned, and completion happens when the work is approved.
+    const allowedFields = ['title', 'description', 'instructions', 'proofRequired', 'tags', 'category', 'estimatedTime'];
     const updates = {};
     for (const key of allowedFields) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
+    if (req.body.status !== undefined) {
+      const to = String(req.body.status).toUpperCase();
+      if (!['OPEN', 'DRAFT'].includes(to) || !['OPEN', 'DRAFT'].includes(task.status)) {
+        return res.status(400).json({ success: false, message: to === 'CANCELLED' ? 'Use Cancel job to close it and get the money back.' : 'You can only pause or resume an open job.' });
+      }
+      updates.status = to;
+    }
+    if (req.body.deadline !== undefined) {
+      const d = new Date(req.body.deadline);
+      if (Number.isNaN(d.getTime()) || d < new Date()) return res.status(400).json({ success: false, message: 'Deadline must be in the future' });
+      updates.deadline = d;
+      updates.expiresAt = d;
+    }
+    if (['reward', 'currency', 'maxWorkers'].some((k) => req.body[k] !== undefined)) {
+      return res.status(400).json({ success: false, message: 'Reward, currency and slots can\'t change after funding. Cancel the job and post a new one.' });
     }
     const updated = await prisma.task.update({
       where: { id: req.params.id },
@@ -226,7 +239,7 @@ router.patch('/:id', authenticate, authorize('POSTER', 'ADMIN'), async (req, res
 });
 
 // DELETE /api/v1/tasks/:id — Delete task (poster only)
-router.delete('/:id', authenticate, authorize('POSTER', 'ADMIN'), async (req, res) => {
+router.delete('/:id', authenticate, async (req, res) => {
   try {
     const { prisma } = require('../config/database');
     const task = await prisma.task.findUnique({ where: { id: req.params.id }, select: { posterId: true, status: true, escrowed: true } });

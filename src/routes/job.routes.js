@@ -8,7 +8,7 @@ const { successResponse } = require('../utils/apiResponse');
 const router = express.Router();
 
 // GET /api/v1/jobs/monitor — Poster's job monitor with summary
-router.get('/monitor', authenticate, authorize('POSTER', 'ADMIN'), async (req, res) => {
+router.get('/monitor', authenticate, async (req, res) => {
   const tasks = await prisma.task.findMany({
     where: { posterId: req.user.id },
     orderBy: { createdAt: 'desc' },

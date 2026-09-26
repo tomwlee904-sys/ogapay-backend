@@ -88,12 +88,9 @@ const register = async ({ firstName, lastName, email, password, username, role, 
       })),
     });
 
-    // Create role-specific profile
-    if (role === 'WORKER') {
-      await tx.workerProfile.create({ data: { userId: newUser.id } });
-    } else if (role === 'POSTER') {
-      await tx.posterProfile.create({ data: { userId: newUser.id } });
-    }
+    // Everyone can both earn and post jobs
+    await tx.workerProfile.create({ data: { userId: newUser.id } });
+    await tx.posterProfile.create({ data: { userId: newUser.id } });
 
     // Referral welcome notification
     if (referredById) {
@@ -271,13 +268,11 @@ const googleExchange = async ({ supabaseAccessToken, role }, ipAddress, userAgen
         })),
       });
 
-      if (newUser.role === 'WORKER') {
-        await tx.workerProfile.create({ data: { userId: newUser.id } });
-      } else if (newUser.role === 'POSTER') {
-        await tx.posterProfile.create({ data: { userId: newUser.id } });
-      }
+      await tx.workerProfile.create({ data: { userId: newUser.id } });
+      await tx.posterProfile.create({ data: { userId: newUser.id } });
 
-      await tx.kycVerification.create({ data: { userId: newUser.id, status: 'APPROVED' } });
+      // Starts unverified like everyone else (a Google account is not ID verification)
+      await tx.kycVerification.create({ data: { userId: newUser.id } });
 
       logger.info(`New user from Google: ${newUser.email} (${newUser.role})`);
       const newTokens = generateTokenPair(newUser);

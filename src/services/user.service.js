@@ -143,7 +143,7 @@ const getPublicProfile = async (username) => {
       humanVerifiedAt: true,
       workerProfileBio: true,
       createdAt: true,
-      kyc: { select: { status: true } },
+      kyc: { select: { status: true, kycTier: true } },
       workerProfile: {
         select: {
           level: true, reputationScore: true, totalEarned: true, tasksCompleted: true,
@@ -179,7 +179,7 @@ const getPublicProfile = async (username) => {
     bio: workerProfile?.bio || workerProfileBio || null,
     // Only the display switches; preferences is free-form and client-written
     preferences: { showEarnings: prefs.showEarnings === true, showRank: prefs.showRank === true },
-    kycVerified: kyc?.status === 'APPROVED',
+    kycVerified: kyc?.status === 'APPROVED' && (kyc?.kycTier ?? 0) >= 1,
     humanVerified: !!humanVerifiedAt,
     // Earnings are shown only if the user opted in (Settings → show earnings)
     workerProfile: workerProfile && {
