@@ -98,6 +98,30 @@ const updateProfileSchema = z.object({
   companyName: optText(100),
 });
 
+// Store products (seller-created). Price must be positive: a negative price used to
+// move money from seller to buyer. Only these fields are kept (no free-form metadata).
+const storeProductBase = z.object({
+  name: z.string().trim().min(3).max(120),
+  description: z.string().trim().min(10).max(5000),
+  price: z.coerce.number().positive().max(100000000),
+  currency: z.enum(['NGN', 'USDC', 'SOL']),
+  category: z.string().trim().min(2).max(60),
+  subcategory: z.string().trim().max(60).optional().nullable(),
+  imageUrl: z.string().trim().url().max(2048).refine((u) => /^https:\/\//i.test(u), 'Image must be an https link').optional().nullable(),
+  stock: z.coerce.number().int().min(0).max(1000000).optional().nullable(),
+  delivery: z.string().trim().max(30).optional().nullable(),
+  revisions: z.coerce.number().int().min(0).max(50).optional().nullable(),
+  tags: z.array(z.string().trim().min(1).max(30)).max(8).optional(),
+  status: z.enum(['ACTIVE', 'DRAFT']).optional(),
+});
+const STORE_MIN_NGN = 100;
+const storeProductSchema = storeProductBase.extend({ currency: z.enum(['NGN', 'USDC', 'SOL']).default('NGN') })
+  .superRefine((d, ctx) => {
+    if (d.currency === 'NGN' && d.price < STORE_MIN_NGN) ctx.addIssue({ code: 'custom', path: ['price'], message: `Minimum price is ₦${STORE_MIN_NGN}` });
+  });
+// Edits: any subset (the ₦ minimum is checked in the route against the saved currency)
+const storeProductUpdateSchema = storeProductBase.partial();
+
 // Private direct hire from a profile (NGN, one worker)
 const hireSchema = z.object({
   title: z.string().trim().min(5).max(200).optional(),
@@ -175,6 +199,8 @@ module.exports = {
   refreshTokenSchema,
   createTaskSchema,
   hireSchema,
+  storeProductSchema,
+  storeProductUpdateSchema,
   updateProfileSchema,
   portfolioItemSchema,
   submitTaskSchema,

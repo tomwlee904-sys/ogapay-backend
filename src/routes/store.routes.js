@@ -5,6 +5,7 @@ const { prisma } = require('../config/database');
 const { authenticate, authorize } = require('../middleware/auth.middleware');
 const { successResponse, createdResponse, paginatedResponse, paginate, ApiError } = require('../utils/apiResponse');
 const { debitAvailable } = require('../utils/ledger');
+const { validate, storeProductSchema, storeProductUpdateSchema } = require('../middleware/validate');
 const walletService = require('../services/wallet.service');
 
 const router = express.Router();
@@ -260,23 +261,22 @@ router.get('/my-products', authenticate, async (req, res) => {
 });
 
 // POST /api/v1/store/products — Create product
-router.post('/products', authenticate, async (req, res) => {
-  const { name, description, price, currency, category, imageUrl, stock, subcategory, revisions, delivery, tags, ...rest } = req.body;
-  if (!name || !description || !price || !category) throw ApiError.badRequest('Name, description, price, and category are required');
-
-  const extra = { subcategory, revisions, delivery, tags, ...rest };
-  const metadata = Object.fromEntries(Object.entries(extra).filter(([, v]) => v !== undefined && v !== null));
+router.post('/products', authenticate, validate(storeProductSchema), async (req, res) => {
+  const { name, description, price, currency, category, imageUrl, stock, subcategory, revisions, delivery, tags, status } = req.body;
+  const extra = { subcategory, revisions, delivery, tags };
+  const metadata = Object.fromEntries(Object.entries(extra).filter(([, v]) => v !== undefined && v !== null && v !== ''));
 
   const item = await prisma.storeItem.create({
     data: {
       sellerId: req.user.id,
       name,
       description,
-      price: parseFloat(price),
-      currency: currency || 'SOL',
+      price,
+      currency,
       category,
-      imageUrl,
-      stock: stock ? parseInt(stock) : null,
+      imageUrl: imageUrl || null,
+      stock: stock ?? null,
+      isActive: status !== 'DRAFT',
       metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
     },
   });
@@ -285,23 +285,26 @@ router.post('/products', authenticate, async (req, res) => {
 });
 
 // PATCH /api/v1/store/products/:id — Update product
-router.patch('/products/:id', authenticate, async (req, res) => {
+router.patch('/products/:id', authenticate, validate(storeProductUpdateSchema), async (req, res) => {
   const item = await prisma.storeItem.findUnique({ where: { id: req.params.id } });
   if (!item) throw ApiError.notFound('Product not found');
   if (item.sellerId !== req.user.id) throw ApiError.forbidden('Not your product');
 
-  const { name, description, price, currency, category, imageUrl, stock, status, subcategory, revisions, delivery, tags, ...rest } = req.body;
+  const { name, description, price, currency, category, imageUrl, stock, status, subcategory, revisions, delivery, tags } = req.body;
+  const effCurrency = currency ?? item.currency;
+  const effPrice = price ?? Number(item.price);
+  if (effCurrency === 'NGN' && effPrice < 100) throw ApiError.badRequest('Minimum price is ₦100');
   const data = {};
   if (name !== undefined) data.name = name;
   if (description !== undefined) data.description = description;
-  if (price !== undefined) data.price = parseFloat(price);
+  if (price !== undefined) data.price = price;
   if (currency !== undefined) data.currency = currency;
   if (category !== undefined) data.category = category;
-  if (imageUrl !== undefined) data.imageUrl = imageUrl;
-  if (stock !== undefined) data.stock = stock ? parseInt(stock) : null;
+  if (imageUrl !== undefined) data.imageUrl = imageUrl || null;
+  if (stock !== undefined) data.stock = stock ?? null;
   if (status !== undefined) data.isActive = status === 'ACTIVE';
 
-  const extra = { subcategory, revisions, delivery, tags, ...rest };
+  const extra = { subcategory, revisions, delivery, tags };
   const newMeta = Object.fromEntries(Object.entries(extra).filter(([, v]) => v !== undefined && v !== null));
   if (Object.keys(newMeta).length > 0) {
     data.metadata = { ...(item.metadata || {}), ...newMeta };
@@ -409,6 +412,8 @@ router.post('/:itemId/purchase', authenticate, async (req, res) => {
   if (item.stock !== null && item.stock < quantity) throw ApiError.badRequest('Insufficient stock');
 
   const totalPrice = parseFloat(item.price) * quantity;
+  // Existing items with a zero/negative price must never be bought (money would flow backwards)
+  if (!Number.isFinite(totalPrice) || totalPrice <= 0) throw ApiError.badRequest('This product is not available for purchase');
 
   // Load wallets for buyer and seller
   const [buyerWallet, sellerWallet] = await Promise.all([

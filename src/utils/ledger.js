@@ -16,7 +16,16 @@ const num = (v) => String(Number(v));
 
 // Take `spend` out of the wallet and move `hold` into the locked part, only if
 // the available balance covers both. Returns true when applied.
-const spendAndHold = async (db, walletId, spend, hold) => (await db.$executeRaw`
+const spendAndHold = async (db, walletId, spend, hold) => {
+  // A negative amount would pass the funds check and ADD money (e.g. a negative
+  // store price moved money to the buyer), so refuse anything but real amounts.
+  if (![spend, hold].every((v) => Number.isFinite(Number(v)) && Number(v) >= 0)) {
+    throw new Error('Wallet movement amounts must be zero or positive');
+  }
+  return spendAndHoldRaw(db, walletId, spend, hold);
+};
+
+const spendAndHoldRaw = async (db, walletId, spend, hold) => (await db.$executeRaw`
   UPDATE wallets
      SET balance = balance - ${num(spend)}::numeric,
          locked_balance = locked_balance + ${num(hold)}::numeric,
