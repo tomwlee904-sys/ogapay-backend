@@ -14,9 +14,10 @@ router.get('/', async (req, res) => {
     openTasks,
     totalUsers,
   ] = await Promise.all([
+    // Naira only: adding USDC amounts to naira would inflate the total
     prisma.transaction.aggregate({
       _sum: { amount: true },
-      where: { type: 'TASK_PAYMENT', status: 'COMPLETED' },
+      where: { type: 'TASK_PAYMENT', status: 'COMPLETED', currency: 'NGN', taskId: { not: null } },
     }),
     prisma.taskSubmission.groupBy({
       by: ['workerId'],
@@ -58,7 +59,7 @@ router.get('/live', async (req, res) => {
     prisma.task.count({ where: { status: 'OPEN' } }),
     prisma.transaction.aggregate({
       _sum: { amount: true },
-      where: { type: 'TASK_PAYMENT', status: 'COMPLETED' },
+      where: { type: 'TASK_PAYMENT', status: 'COMPLETED', currency: 'NGN', taskId: { not: null } },
     }),
     prisma.workerProfile.count({ where: { tasksCompleted: { gt: 0 } } }),
     prisma.taskSubmission.count({ where: { status: 'APPROVED' } }),
@@ -67,6 +68,8 @@ router.get('/live', async (req, res) => {
       where: {
         type: 'TASK_PAYMENT',
         status: 'COMPLETED',
+        currency: 'NGN',
+        taskId: { not: null },
         createdAt: { gte: new Date(Date.now() - 86400000) },
       },
     }),
