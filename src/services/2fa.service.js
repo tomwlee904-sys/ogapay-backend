@@ -24,9 +24,15 @@ const generateBackupCodes = (count = 8) => {
   );
 };
 
+// otplib v13's verify() is async and resolves to { valid }; returning that
+// Promise made every code count as correct (a Promise is truthy), so 2FA
+// accepted any 6 digits at sign-in and when turning it off. verifySync gives
+// the real answer. 30 seconds either side allows for a phone clock that's off.
 const verifyToken = (token, secret) => {
+  const code = String(token ?? '').replace(/\s/g, '');
+  if (!/^\d{6}$/.test(code) || !secret) return false;
   try {
-    return otplib.verify({ token, secret });
+    return otplib.verifySync({ token: code, secret, epochTolerance: 30 })?.valid === true;
   } catch {
     return false;
   }
