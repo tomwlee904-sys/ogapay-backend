@@ -25,10 +25,12 @@ const verifyNinWithDojah = async (nin) => {
       headers: dojahHeaders(),
     });
     if (data.entity) return { verified: true, data: data.entity };
-    return { verified: false, reason: 'NIN not found' };
+    return { verified: false, notFound: true, reason: 'NIN not found' };
   } catch (err) {
     logger.error('Dojah NIN verification error:', err.response?.data || err.message);
-    return { verified: false, reason: 'Verification service unavailable' };
+    const code = err.response?.status;
+    if (code === 400 || code === 404 || code === 422) return { verified: false, notFound: true, reason: 'NIN not found' };
+    return { verified: false, unavailable: true, reason: 'Verification service unavailable' };
   }
 };
 
@@ -39,10 +41,12 @@ const verifyBvnWithDojah = async (bvn) => {
       headers: dojahHeaders(),
     });
     if (data.entity) return { verified: true, data: data.entity };
-    return { verified: false, reason: 'BVN not found' };
+    return { verified: false, notFound: true, reason: 'BVN not found' };
   } catch (err) {
     logger.error('Dojah BVN verification error:', err.response?.data || err.message);
-    return { verified: false, reason: 'Verification service unavailable' };
+    const code = err.response?.status;
+    if (code === 400 || code === 404 || code === 422) return { verified: false, notFound: true, reason: 'BVN not found' };
+    return { verified: false, unavailable: true, reason: 'Verification service unavailable' };
   }
 };
 
@@ -62,8 +66,32 @@ const TIER_THRESHOLDS = { 1: 'NIN', 2: 'BVN', 3: 'ADDRESS' };
 
 // ── Submit KYC with live Dojah verification ───
 
+// YYYY-MM-DD from Dojah's date (formats vary: 1990-01-31, 31-01-1990, 31-Jan-1990)
+const isoDay = (v) => {
+  if (!v) return null;
+  const t = String(v).trim();
+  const m = t.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
+  const d = m ? new Date(`${m[3]}-${m[2]}-${m[1]}T00:00:00Z`) : new Date(t.length === 10 ? `${t}T00:00:00Z` : t);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+};
+
 const submitKyc = async (userId, { idType, idNumber, dateOfBirth, address, city, state }) => {
   const existing = await prisma.kycVerification.findUnique({ where: { userId } });
+
+  if (idType !== 'NIN' && idType !== 'BVN') {
+    throw ApiError.badRequest('Verify with your NIN first, then your BVN. For higher limits, contact support.');
+  }
+  idNumber = String(idNumber || '').replace(/\D/g, '');
+  if (idNumber.length !== 11) throw ApiError.badRequest(`Your ${idType} is 11 digits`);
+  const dob = isoDay(dateOfBirth);
+  if (!dob) throw ApiError.badRequest('Enter your date of birth');
+
+  // One identity, one account (stops the same NIN farming sign-up bonuses)
+  const taken = await prisma.kycVerification.findFirst({
+    where: { idNumber, userId: { not: userId }, status: { in: ['APPROVED', 'SUBMITTED'] } },
+    select: { id: true },
+  });
+  if (taken) throw ApiError.conflict(`This ${idType} is already used by another OgaPay account. Contact support if that's wrong.`);
 
   // Determine which level/tier this submission targets
   let targetLevel = 0;
@@ -94,8 +122,26 @@ const submitKyc = async (userId, { idType, idNumber, dateOfBirth, address, city,
     verification = await verifyBvnWithDojah(idNumber);
   }
 
+  // This used to approve every submission, verified or not, which also paid the
+  // sign-up and referral bonuses. Now:
+  //  - Dojah can't find the number -> rejected, nothing saved
+  //  - Dojah confirms it but the date of birth differs -> rejected
+  //  - Dojah is down or not set up -> a first NIN waits for manual review;
+  //    an upgrade is refused so the user keeps the level they have
+  if (verification?.notFound) {
+    throw ApiError.badRequest(`We couldn't find that ${idType}. Check the number and try again.`);
+  }
+  if (verification?.verified) {
+    const recorded = isoDay(verification.data?.date_of_birth || verification.data?.dateOfBirth);
+    if (recorded && recorded !== dob) {
+      throw ApiError.badRequest(`The date of birth doesn't match the record for this ${idType}.`);
+    }
+  } else if (existing?.status === 'APPROVED' && (existing.kycTier || 0) >= 1) {
+    throw new ApiError(503, 'Verification is busy right now. Please try again in a few minutes.');
+  }
+
   let enrichedData = {};
-  let autoApprove = true;
+  const autoApprove = !!verification?.verified;
 
   if (verification?.verified) {
     const entity = verification.data;
@@ -118,7 +164,7 @@ const submitKyc = async (userId, { idType, idNumber, dateOfBirth, address, city,
     kycTier: newTier,
     idType,
     idNumber,
-    dateOfBirth: enrichedData.dateOfBirth || (dateOfBirth ? new Date(dateOfBirth) : null),
+    dateOfBirth: new Date(`${dob}T00:00:00Z`),
     address,
     city,
     state,
@@ -141,10 +187,11 @@ const submitKyc = async (userId, { idType, idNumber, dateOfBirth, address, city,
 
   const message = autoApprove
     ? `Level ${newTier} verified successfully!`
-    : 'Verification submitted. We\'ll notify you once verified.';
+    : "We couldn't reach the verification service, so your details are saved for our team to check. We'll notify you when it's done.";
 
   // Send notification if auto-approved
   if (autoApprove) {
+    require('./ogascore.service').syncOgaScore(userId);
     const levelName = newTier >= KYC_LEVELS.BVN_VERIFIED ? 'Level 2' : 'Level 1';
     await prisma.notification.create({
       data: {
@@ -282,6 +329,7 @@ const handleDojahWebhook = async (payload) => {
     }).catch(() => {});
     walletService.rewardForReferral(kyc.userId).catch(e => logger.warn('Referral reward check failed:', e.message));
     walletService.rewardSignupBonus(kyc.userId).catch(e => logger.warn('Signup bonus check failed:', e.message));
+    require('./ogascore.service').syncOgaScore(kyc.userId);
     logger.info(`KYC auto-approved via webhook for user ${kyc.userId}`);
   } else if (event === 'verification.failed' || event === 'kyc.rejected') {
     const reason = data?.reason || data?.message || 'Documents did not pass verification';
@@ -342,6 +390,7 @@ const adminReviewKyc = async (adminId, userId, { action, rejectionReason, tierUp
 
     walletService.rewardSignupBonus(userId).catch(e => logger.warn('Signup bonus check failed:', e.message));
   logger.info(`KYC ${newStatus} (Level ${newTier}) for user ${userId} by admin ${adminId}`);
+  require('./ogascore.service').syncOgaScore(userId);
   return { status: newStatus, tier: newTier, level: newTier };
 };
 
