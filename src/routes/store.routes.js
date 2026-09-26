@@ -81,15 +81,19 @@ router.get('/workers', async (req, res) => {
 
   // Only people who keep their profile public show up in the directory
   const where = { isAvailable: true, user: { isBanned: false, isPublic: true } };
+  // Skills are free text ("design", "Design"), so match the common spellings
+  const spellings = (v) => [...new Set([v, v.toLowerCase(), v.charAt(0).toUpperCase() + v.slice(1).toLowerCase()])];
   if (search) {
     where.OR = [
       { bio: { contains: search, mode: 'insensitive' } },
-      { skills: { has: search } },
+      { skills: { hasSome: spellings(search) } },
       { user: { username: { contains: search, mode: 'insensitive' } } },
+      { user: { firstName: { contains: search, mode: 'insensitive' } } },
+      { user: { lastName: { contains: search, mode: 'insensitive' } } },
     ];
   }
   if (category) {
-    where.skills = { has: category };
+    where.skills = { hasSome: spellings(category) };
   }
 
   let orderBy;
