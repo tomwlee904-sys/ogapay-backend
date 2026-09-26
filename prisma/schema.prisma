@@ -796,6 +796,7 @@ model CommunityRequest {
   communityId String    @map("community_id")
   userId      String    @map("user_id")
   status      String    @default("PENDING")
+  message     String? // optional note from the person asking to join
   responderId String?   @map("responder_id")
   respondedAt DateTime? @map("responded_at")
   createdAt   DateTime  @default(now()) @map("created_at")

@@ -624,7 +624,7 @@ router.post('/:id/join', authenticate, async (req, res) => {
 
 // ─── Request to Join (with message) ────────────────────────────
 router.post('/:id/request', authenticate, async (req, res) => {
-  const { message, attachments } = req.body;
+  const message = typeof req.body?.message === 'string' ? req.body.message.trim().slice(0, 500) : '';
   const community = await prisma.community.findFirst({
     where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
   });
@@ -641,11 +641,11 @@ router.post('/:id/request', authenticate, async (req, res) => {
   if (existingRequest) throw ApiError.conflict('Join request already exists');
 
   const request = await prisma.communityRequest.create({
+    // (this also saved "attachments", a field the table doesn't have, so every request failed)
     data: {
       communityId: community.id,
       userId: req.user.id,
-      message: message?.trim() || '',
-      attachments: attachments || [],
+      message: message || null,
     },
   });
 
