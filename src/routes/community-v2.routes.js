@@ -32,6 +32,15 @@ function socialFields(body) {
   return out;
 }
 const CHAT_MAX = 1000;
+
+// A private community's member list is only for its members
+async function assertCanSeeMembers(community, req) {
+  if (community.isPublic) return;
+  const m = req.user && await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: community.id, userId: req.user.id } },
+  });
+  if (!m) throw ApiError.forbidden('Only members can see who is in this community');
+}
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 
 // ─── Featured Communities (with real stats) ────────────────────
@@ -481,11 +490,12 @@ router.delete('/:id', authenticate, async (req, res) => {
 });
 
 // ─── List Members ─────────────────────────────────────────────
-router.get('/:id/members', async (req, res) => {
+router.get('/:id/members', optionalAuth, async (req, res) => {
   const community = await prisma.community.findFirst({
     where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
   });
   if (!community) throw ApiError.notFound('Community not found');
+  await assertCanSeeMembers(community, req);
 
   const members = await prisma.communityMember.findMany({
     where: { communityId: community.id },
@@ -924,11 +934,12 @@ router.patch('/:id/requests/:requestId', authenticate, async (req, res) => {
 
 // ─── Leaderboard ──────────────────────────────────────────────
 // GET  /:id/leaderboard?page=1&limit=20
-router.get('/:id/leaderboard', async (req, res) => {
+router.get('/:id/leaderboard', optionalAuth, async (req, res) => {
   const community = await prisma.community.findFirst({
     where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
   });
   if (!community) throw ApiError.notFound('Community not found');
+  await assertCanSeeMembers(community, req);
 
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
