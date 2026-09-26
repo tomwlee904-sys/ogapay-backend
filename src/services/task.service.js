@@ -97,7 +97,19 @@ const createTask = async (posterId, taskData) => {
 
 // ── List Tasks ─────────────────────────────────
 
+// The public job list only shows jobs that have been published: drafts and
+// cancelled jobs belong to their poster (?status=DRAFT used to list everyone's drafts)
+const PUBLIC_STATUSES = ['OPEN', 'ACTIVE', 'COOLING_DOWN', 'IN_PROGRESS', 'COMPLETED'];
+const TASK_CATEGORIES = ['SOCIAL_MEDIA', 'DATA_ENTRY', 'CONTENT_WRITING', 'APP_TESTING', 'SURVEY', 'DESIGN', 'TRANSLATION', 'WEB_RESEARCH', 'VIDEO_REVIEW', 'OTHER'];
+
 const listTasks = async ({ category, status = 'OPEN', page = 1, limit = 20, search, currency, minReward, maxReward, sortBy = 'createdAt', sortOrder = 'desc' }) => {
+  if (!PUBLIC_STATUSES.includes(status)) status = 'OPEN';
+  if (category && !TASK_CATEGORIES.includes(category)) category = undefined;
+  if (currency && !['NGN', 'USDC', 'SOL'].includes(currency)) currency = undefined;
+  if (!['createdAt', 'reward', 'deadline', 'views', 'submissionsCount'].includes(sortBy)) sortBy = 'createdAt';
+  if (sortOrder !== 'asc') sortOrder = 'desc';
+  page = Math.max(parseInt(page, 10) || 1, 1);
+  limit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
   const skip = (page - 1) * limit;
 
   const now = new Date();

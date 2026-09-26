@@ -8,6 +8,12 @@ const { ApiError, createdResponse } = require('../utils/apiResponse');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+// Store, blog and community pictures are public: images only (no HTML/SVG pages)
+const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+const requireImage = (file) => {
+  if (!file) throw ApiError.badRequest('No file uploaded');
+  if (!IMAGE_TYPES.includes(file.mimetype)) throw ApiError.badRequest('Upload a PNG, JPG, WebP or GIF image');
+};
 
 router.post('/proof', authenticate, upload.single('file'), async (req, res) => {
   if (!req.file) throw ApiError.badRequest('No file uploaded');
@@ -25,7 +31,7 @@ router.post('/proof', authenticate, upload.single('file'), async (req, res) => {
 
 // POST /uploads/store — Upload product image for store
 router.post('/store', authenticate, upload.single('file'), async (req, res) => {
-  if (!req.file) throw ApiError.badRequest('No file uploaded');
+  requireImage(req.file);
   const safeName = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '-');
   const key = `store/${req.user.id}/${Date.now()}-${safeName}`;
   const bucket = process.env.SUPABASE_STORE_BUCKET || 'task-proofs';
@@ -42,7 +48,7 @@ router.post('/store', authenticate, upload.single('file'), async (req, res) => {
 
 // POST /uploads/community — Upload community cover image
 router.post('/community', authenticate, upload.single('cover'), async (req, res) => {
-  if (!req.file) throw ApiError.badRequest('No file uploaded');
+  requireImage(req.file);
   const safeName = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '-');
   const key = `community/${req.user.id}/${Date.now()}-${safeName}`;
   const bucket = process.env.SUPABASE_STORE_BUCKET || 'task-proofs';
