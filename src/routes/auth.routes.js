@@ -296,6 +296,10 @@ router.post('/resend-verification', authenticate, async (req, res) => {
   if (!user) return res.status(404).json({ success: false, message: 'User not found' });
   if (user.isEmailVerified) return res.json({ success: true, message: 'Email already verified' });
 
+  // One email a minute, so the button can't be used to spam an inbox
+  if (user.emailVerificationTokenExpiry && user.emailVerificationTokenExpiry.getTime() - Date.now() > 24 * 3600000 - 60000) {
+    throw require('../utils/apiResponse').ApiError.tooManyRequests('We just sent one. Check your inbox (and spam), or try again in a minute.');
+  }
   const authService = require('../services/auth.service');
   await authService.sendVerificationEmail(user);
 

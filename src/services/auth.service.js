@@ -574,4 +574,5 @@ const pairLogin = async ({ code }, ipAddress, userAgent) => {
   return startSession(user, ipAddress, userAgent, { skipTwoFactor: true, deviceId: device.id });
 };
 
-module.exports = { register, login, googleExchange, refreshTokens, logout, forgotPassword, resetPassword, changePassword, verify2FAChallenge, walletLogin, pairLogin };
+// sendVerificationEmail is used by POST /auth/resend-verification (it wasn't exported, so resending always failed)
+module.exports = { register, login, googleExchange, refreshTokens, logout, forgotPassword, resetPassword, changePassword, verify2FAChallenge, walletLogin, pairLogin, sendVerificationEmail };
