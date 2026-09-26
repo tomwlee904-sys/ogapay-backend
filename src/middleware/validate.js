@@ -192,6 +192,28 @@ const kycSubmitSchema = z.object({
   state: z.string().optional(),
 });
 
+// Blog posts written by users. Tags may come as "a, b" or ["a", "b"].
+const blogTags = z.union([z.array(z.string()), z.string()])
+  .transform((t) => (Array.isArray(t) ? t : t.split(',')).map((x) => String(x).trim()).filter(Boolean))
+  .pipe(z.array(z.string().max(30)).max(10));
+const blogPostSchema = z.object({
+  title: z.string().trim().min(5).max(150),
+  excerpt: z.string().trim().max(300).optional().nullable(),
+  content: z.string().trim().min(50, 'Write at least 50 characters').max(50000),
+  category: z.string().trim().max(40).optional().nullable(),
+  tags: blogTags.optional(),
+  coverImage: z.string().trim().url().max(2048).refine((u) => /^https:\/\//i.test(u), 'Cover image must be an https link').optional().nullable().or(z.literal('').transform(() => null)),
+  status: z.enum(['draft', 'published']).optional(),
+});
+
+// Support tickets (stored as reports with targetType "support")
+const supportTicketSchema = z.object({
+  subject: z.string().trim().min(3).max(120),
+  category: z.string().trim().min(2).max(40),
+  description: z.string().trim().min(10, 'Tell us a bit more (at least 10 characters)').max(5000),
+  email: z.string().trim().email().max(200).optional().nullable().or(z.literal('').transform(() => null)),
+});
+
 module.exports = {
   validate,
   registerSchema,
@@ -209,4 +231,6 @@ module.exports = {
   withdrawSchema,
   sendSchema,
   kycSubmitSchema,
+  blogPostSchema,
+  supportTicketSchema,
 };

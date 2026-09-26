@@ -72,10 +72,15 @@ router.get('/', async (req, res) => {
 
 // GET /api/v1/store/workers — Browse workers
 router.get('/workers', async (req, res) => {
-  const { page = 1, limit = 20, search, sort, category } = req.query;
+  const { sort } = req.query;
+  const search = typeof req.query.search === 'string' ? req.query.search.trim().slice(0, 60) : '';
+  const category = typeof req.query.category === 'string' ? req.query.category.trim().slice(0, 60) : '';
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 50);
   const skip = (page - 1) * limit;
 
-  const where = { isAvailable: true, user: { isBanned: false } };
+  // Only people who keep their profile public show up in the directory
+  const where = { isAvailable: true, user: { isBanned: false, isPublic: true } };
   if (search) {
     where.OR = [
       { bio: { contains: search, mode: 'insensitive' } },
@@ -98,8 +103,8 @@ router.get('/workers', async (req, res) => {
   const [profiles, total] = await Promise.all([
     prisma.workerProfile.findMany({
       where,
-      skip: parseInt(skip),
-      take: parseInt(limit),
+      skip,
+      take: limit,
       orderBy,
       include: {
         user: { select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true } },
@@ -111,6 +116,7 @@ router.get('/workers', async (req, res) => {
   const mapped = profiles.map(p => ({
     id: p.userId,
     username: p.user.username || `${p.user.firstName} ${p.user.lastName}`,
+    name: `${p.user.firstName || ''} ${p.user.lastName || ''}`.trim() || p.user.username,
     avatarUrl: p.user.avatarUrl,
     bio: p.bio || 'No bio available yet',
     rating: p.avgRating,
@@ -133,13 +139,13 @@ router.get('/workers/:id', async (req, res) => {
       user: {
         select: {
           id: true, username: true, firstName: true, lastName: true,
-          avatarUrl: true, role: true, createdAt: true,
+          avatarUrl: true, role: true, createdAt: true, isPublic: true, isBanned: true,
         },
       },
     },
   });
 
-  if (!profile) throw ApiError.notFound('Worker not found');
+  if (!profile || !profile.user.isPublic || profile.user.isBanned) throw ApiError.notFound('Worker not found');
 
   const productCount = await prisma.storeItem.count({ where: { sellerId: req.params.id, isActive: true } });
 

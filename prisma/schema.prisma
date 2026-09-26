@@ -488,6 +488,7 @@ model Report {
   id          String    @id @default(uuid())
   userId      String    @map("user_id")
   category    String
+  subject     String?
   description String
   targetType  String?   @map("target_type")
   targetId    String?   @map("target_id")
@@ -669,6 +670,7 @@ model BlogPost {
   viewCount   Int       @default(0) @map("view_count")
   isPublished Boolean   @default(false) @map("is_published")
   publishedAt DateTime? @map("published_at")
+  submittedAt DateTime? @map("submitted_at") // sent for review, waiting for an admin
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
